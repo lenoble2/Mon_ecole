@@ -17,13 +17,21 @@ app.use(session({
 
 // --- CONNEXION BASE DE DONNÉES ---
 const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-client.connect()
-    .then(() => console.log("Connecté à la base de données !"))
-    .catch(err => console.error("Erreur connexion DB :", err));
+// TEST DE CONNEXION IMMÉDIAT
+client.connect((err) => {
+  if (err) {
+    console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
+  } else {
+    console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
+  }
+});
+
 
 // --- ROUTES DE BASE ---
 app.get('/', (req, res) => res.sendFile(__dirname + '/login.html'));
