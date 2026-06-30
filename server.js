@@ -526,6 +526,20 @@ app.post('/logout', (req, res) => {
 // Assurez-vous que ce dossier existe sur votre serveur Render
 app.use('/uploads', express.static('uploads'));
 
+
+
+app.get('/test-db', async (req, res) => {
+    try {
+        const result = await client.query('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'');
+        res.json({ success: true, tables: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+
+
+
 // --- LANCEMENT ---
 const PORT = process.env.PORT || 8081;
 app.listen(PORT, '0.0.0.0', () => console.log(`Serveur actif sur le port ${PORT}`));
