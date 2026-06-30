@@ -26,30 +26,28 @@ app.use(session({
 }));
 
 
-// --- CONNEXION BASE DE DONNÉES ROBUSTE ---
+// --- CONNEXION BASE DE DONNÉES SÉCURISÉE ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// Utilisation d'une fonction asynchrone pour éviter la double connexion
-async function connectToDatabase() {
+// On gère la connexion en dehors de tout flux répétitif
+async function initializeDB() {
     try {
         await client.connect();
         console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
     } catch (err) {
-        // Si l'erreur est "already been connected", on ignore car c'est déjà bon
         if (err.message.includes('already been connected')) {
-            console.log('Déjà connecté à la base de données.');
-        } else {
-            console.error('ERREUR CRITIQUE DE CONNEXION :', err.message);
+            // C'est normal si le serveur redémarre vite, on ignore
+            return;
         }
+        console.error('ERREUR DE CONNEXION :', err.message);
     }
 }
 
-// On appelle la connexion une seule fois
-connectToDatabase();
-
+// Initialisation unique
+initializeDB();
 
 // TEST DE CONNEXION
 client.connect((err) => {
