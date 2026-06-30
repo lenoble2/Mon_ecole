@@ -26,11 +26,21 @@ app.use(session({
 }));
 
 
+
 // --- CONNEXION BASE DE DONNÉES ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // <--- C'est cette ligne qui va tout débloquer
+        rejectUnauthorized: false // <--- C'est cette ligne qui corrige l'erreur
+    }
+});
+
+// TEST DE CONNEXION
+client.connect((err) => {
+    if (err) {
+        console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
+    } else {
+        console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
     }
 });
 
