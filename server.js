@@ -25,11 +25,12 @@ app.use(session({
     saveUninitialized: false
 }));
 
+
 // --- CONNEXION BASE DE DONNÉES ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // C'est cette ligne qui corrige l'erreur
+        rejectUnauthorized: false // C'est la ligne magique qui règle votre erreur
     }
 });
 
