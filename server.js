@@ -28,8 +28,11 @@ app.use(session({
 // --- CONNEXION BASE DE DONNÉES ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: {
+        rejectUnauthorized: false // C'est cette ligne qui corrige l'erreur
+    }
 });
+
 
 client.connect((err) => {
     if (err) console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
