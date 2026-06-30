@@ -10,14 +10,13 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-// Configuration PostgreSQL avec forçage SSL pour Aiven
+// Configuration PostgreSQL
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { 
-        rejectUnauthorized: false // Permet de passer outre les certificats SSL auto-signés d'Aiven
+    ssl: {
+        rejectUnauthorized: false
     }
 });
-
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -32,7 +31,7 @@ app.use(session({
 client.connect().then(async () => {
     console.log('Connecté à Aiven avec succès !');
 
-    // INITIALISATION DES TABLES (PostgreSQL)
+    // INITIALISATION DES TABLES
     try {
         await client.query(`CREATE TABLE IF NOT EXISTS configuration (
             nom_ecole TEXT PRIMARY KEY,
@@ -59,9 +58,11 @@ client.connect().then(async () => {
     } catch (err) {
         console.error('Erreur lors de la création des tables :', err);
     }
+}).catch(err => {
+    console.error('Erreur de connexion à la base de données :', err);
+}); 
+// Notez bien la fermeture du bloc ci-dessus }); et .catch()
 
-
-// Utilisez le port que Render vous donne, ou 8081 par défaut pour vos tests locaux
 const PORT = process.env.PORT || 8081;
 
 app.listen(PORT, '0.0.0.0', () => {
