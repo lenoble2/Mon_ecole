@@ -15,8 +15,9 @@ const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false,
-        // En précisant sslmode explicitement, vous calmez l'avertissement de sécurité
-        sslmode: 'require' 
+        // Ces deux paramètres indiquent que nous voulons chiffrer la connexion 
+        // sans chercher à valider la chaîne de confiance du certificat Aiven
+        requestCert: false
     }
 });
 
