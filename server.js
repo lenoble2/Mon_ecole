@@ -26,7 +26,7 @@ app.use(session({
 }));
 
 
-// --- CONNEXION BASE DE DONNÉES ---
+// --- CONNEXION BASE DE DONNÉES UNIQUE ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -34,15 +34,27 @@ const client = new Client({
     }
 });
 
-// Connexion unique lors du démarrage
-client.connect()
-    .then(() => console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !'))
-    .catch(err => {
-        // On vérifie si l'erreur est juste parce qu'il est déjà connecté
-        if (err.message !== 'Client has already been connected. You cannot reuse a client.') {
-            console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
+// On utilise une variable pour éviter les reconnexions multiples
+let isConnected = false;
+
+const connectDB = async () => {
+    if (!isConnected) {
+        try {
+            await client.connect();
+            isConnected = true;
+            console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
+        } catch (err) {
+            // Si l'erreur indique qu'il est déjà connecté, on ignore
+            if (err.message.includes('already been connected')) {
+                isConnected = true;
+            } else {
+                console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
+            }
         }
-    });
+    }
+};
+
+connectDB();
 
 // TEST DE CONNEXION
 client.connect((err) => {
