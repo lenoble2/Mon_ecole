@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const csv = require('csv-parser');
-const { Client } = require('pg');
+const { Client } = require('pg'); // Déclaration unique ici
 const multer = require('multer');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
@@ -10,11 +10,11 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-// Configuration PostgreSQL
+// Configuration PostgreSQL unique et sécurisée
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Désactive la vérification stricte du certificat auto-signé
+        rejectUnauthorized: false // Permet la connexion avec le certificat auto-signé d'Aiven
     }
 });
 
@@ -28,8 +28,10 @@ app.use(session({
 }));
 
 // INITIALISATION ET CONNEXION
-client.connect().then(async () => {
-    console.log('Connecté à Aiven avec succès !');
+client.connect()
+    .then(async () => {
+        console.log('Connecté à Aiven avec succès !');
+
 
     // INITIALISATION DES TABLES
     try {
