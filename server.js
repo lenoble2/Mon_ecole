@@ -15,7 +15,7 @@ const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false,
-        // Ajouter cette ligne pour supprimer l'avertissement :
+        // En précisant sslmode explicitement, vous calmez l'avertissement de sécurité
         sslmode: 'require' 
     }
 });
