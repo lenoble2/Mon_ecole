@@ -25,39 +25,18 @@ app.use(session({
     saveUninitialized: false
 }));
 
-
-// --- CONNEXION BASE DE DONNÉES UNIQUE ---
+// --- CONNEXION BASE DE DONNÉES ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// Connexion unique gérée proprement
-client.connect()
-    .then(() => console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !'))
-    .catch(err => {
-        // On ignore uniquement l'erreur de "déjà connecté"
-        if (err.message.includes('already been connected')) {
-            console.log('Déjà connecté à la base de données.');
-        } else {
-            console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
-        }
-    });
-
-
-// TEST DE CONNEXION
 client.connect((err) => {
     if (err) {
         console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
     } else {
         console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
     }
-});
-
-
-client.connect((err) => {
-    if (err) console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
-    else console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
 });
 
 
@@ -551,15 +530,6 @@ app.post('/logout', (req, res) => {
 app.use('/uploads', express.static('uploads'));
 
 
-
-app.get('/test-db', async (req, res) => {
-    try {
-        const result = await client.query('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'');
-        res.json({ success: true, tables: result.rows });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
 
 
 
