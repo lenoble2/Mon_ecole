@@ -26,28 +26,24 @@ app.use(session({
 }));
 
 
-// --- CONNEXION BASE DE DONNÉES SÉCURISÉE ---
+// --- CONNEXION BASE DE DONNÉES UNIQUE ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// On gère la connexion en dehors de tout flux répétitif
-async function initializeDB() {
-    try {
-        await client.connect();
-        console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
-    } catch (err) {
+// Connexion unique gérée proprement
+client.connect()
+    .then(() => console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !'))
+    .catch(err => {
+        // On ignore uniquement l'erreur de "déjà connecté"
         if (err.message.includes('already been connected')) {
-            // C'est normal si le serveur redémarre vite, on ignore
-            return;
+            console.log('Déjà connecté à la base de données.');
+        } else {
+            console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
         }
-        console.error('ERREUR DE CONNEXION :', err.message);
-    }
-}
+    });
 
-// Initialisation unique
-initializeDB();
 
 // TEST DE CONNEXION
 client.connect((err) => {
