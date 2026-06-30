@@ -20,10 +20,11 @@ app.use(session({
     saveUninitialized: true
 }));
 
+
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Désactive la vérification stricte du certificat
+        rejectUnauthorized: false // C'est cette ligne qui corrige l'erreur
     }
 });
 
