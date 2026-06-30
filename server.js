@@ -14,7 +14,8 @@ const upload = multer({ dest: 'uploads/' });
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        sslmode: 'require' // Ajoutez cette ligne explicite
     }
 });
 
