@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const csv = require('csv-parser');
@@ -59,10 +60,13 @@ client.connect().then(async () => {
         console.error('Erreur lors de la création des tables :', err);
     }
 
-    // DÉMARRAGE DU SERVEUR
-    app.listen(8081, () => console.log('Serveur actif sur http://localhost:8081'));
-}).catch(err => console.error('Erreur connexion BDD :', err.message));
 
+// Utilisez le port que Render vous donne, ou 8081 par défaut pour vos tests locaux
+const PORT = process.env.PORT || 8081;
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Serveur actif sur le port ${PORT}`);
+});
 
 
 // --- INSCRIPTION ---
