@@ -22,7 +22,9 @@ app.use(session({
 
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: {
+        rejectUnauthorized: false // Désactive la vérification stricte du certificat
+    }
 });
 
 // --- DÉMARRAGE DU SERVEUR ---
