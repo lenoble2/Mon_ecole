@@ -530,6 +530,16 @@ app.post('/logout', (req, res) => {
 app.use('/uploads', express.static('uploads'));
 
 
+// Exemple pour lire les données de votre table
+client.query('SELECT * FROM "Monecole"', (err, res) => {
+    if (err) {
+        console.error('Erreur lors de la lecture :', err);
+    } else {
+        console.log('Données dans Monecole :', res.rows);
+    }
+});
+
+
 
 
 
