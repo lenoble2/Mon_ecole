@@ -15,8 +15,8 @@ const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false,
-        // On indique explicitement qu'on veut le mode 'require' pour supprimer l'avertissement
-        // tout en gardant 'rejectUnauthorized: false' pour accepter le certificat d'Aiven
+        // Ajouter cette ligne pour supprimer l'avertissement :
+        sslmode: 'require' 
     }
 });
 
