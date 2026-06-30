@@ -26,14 +26,23 @@ app.use(session({
 }));
 
 
-
 // --- CONNEXION BASE DE DONNÉES ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // <--- C'est cette ligne qui corrige l'erreur
+        rejectUnauthorized: false
     }
 });
+
+// Connexion unique lors du démarrage
+client.connect()
+    .then(() => console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !'))
+    .catch(err => {
+        // On vérifie si l'erreur est juste parce qu'il est déjà connecté
+        if (err.message !== 'Client has already been connected. You cannot reuse a client.') {
+            console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
+        }
+    });
 
 // TEST DE CONNEXION
 client.connect((err) => {
