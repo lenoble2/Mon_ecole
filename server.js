@@ -12,9 +12,9 @@ const upload = multer({ dest: 'uploads/' });
 
 // Configuration PostgreSQL
 const client = new Client({
-    connectionString: process.env.DATABASE_URL + "?sslmode=require", // Ajoutez ceci
+    connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false // Désactive la vérification stricte du certificat auto-signé
     }
 });
 
