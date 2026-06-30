@@ -14,10 +14,7 @@ const upload = multer({ dest: 'uploads/' });
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false,
-        // Ces deux paramètres indiquent que nous voulons chiffrer la connexion 
-        // sans chercher à valider la chaîne de confiance du certificat Aiven
-        requestCert: false
+        rejectUnauthorized: false
     }
 });
 
