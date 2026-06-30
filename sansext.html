@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Élèves - Sansext</title>
+    <style>
+        @page { size: A4 portrait; margin: 20px; }
+        body { font-family: sans-serif; font-size: 12px; margin: 20px; }
+
+        .header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-left { font-weight: bold; line-height: 1.4; }
+        .logo-display { display: flex; gap: 10px; align-items: center; }
+        .logo-display img { height: 50px; max-width: 70px; object-fit: contain; }
+
+        .filter-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        #annee-select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid black; padding: 6px; text-align: center; }
+        th { background-color: #f0f0f0; }
+        .col-nom { text-align: left !important; }
+        
+        .blue-text { color: #0000CD; font-weight: bold; }
+        .red-text { color: #DC143C; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header-info">
+    <div class="header-left">
+        <div id="drena-display">DRENA : </div>
+        <div id="iepp-display">IEPP : </div>
+        <div id="ecole-display">ÉCOLE : </div>
+    </div>
+    <div class="logo-display">
+        <img id="img-iepp" src="" alt="IEPP" onerror="this.style.display='none';">
+        <img id="img-ecole" src="" alt="Ecole" onerror="this.style.display='none';">
+    </div>
+    <div style="font-weight: bold;">
+        ANNÉE : <span id="annee-label"></span>
+    </div>
+</div>
+
+<div class="filter-container">
+    <h2>LISTE DES ÉLÈVES SANS EXTRAIT</h2>
+    <select id="annee-select" onchange="chargerEleves()">
+        <option value="2030">2030-2031</option>
+        <option value="2029">2029-2030</option>
+        <option value="2028">2028-2029</option>
+        <option value="2027">2027-2028</option>
+        <option value="2026">2026-2027</option>
+        <option value="2025" selected>2025-2026</option>
+        <option value="2024">2024-2025</option>
+        <option value="2023">2023-2024</option>
+    </select>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 40px;">N°</th>
+            <th style="width: 100px;">Matricule</th>
+            <th class="col-nom">Nom & Prénoms</th>
+            <th style="width: 100px;">Date Naiss.</th>
+            <th style="width: 80px;">Classe</th>
+        </tr>
+    </thead>
+    <tbody id="tbody-liste"></tbody>
+</table>
+
+<script>
+    // Fonction qui définit les conditions pour "Sans Extrait"
+    function estSansExtrait(matricule) {
+        const matStr = matricule ? matricule.toString().trim() : "";
+        
+        // Condition 1 : La case est vide
+        if (matStr === "") return true;
+        
+        // Condition 2 : Commence par une lettre alphabétique
+        const commenceParLettre = /^[a-zA-Z]/.test(matStr);
+        if (commenceParLettre) return true;
+        
+        // Condition 3 : Ne contient aucune lettre (purement numérique)
+        // \d correspond à un chiffre, ^\d+$ signifie que la chaîne n'est composée que de chiffres
+        const sansAucuneLettre = /^\d+$/.test(matStr);
+        if (sansAucuneLettre) return true;
+        
+        return false;
+    }
+
+    // Chargement des entêtes
+    fetch('/api/config-prof').then(res => res.json()).then(data => {
+        if(data.drena) document.getElementById('drena-display').innerText = "DRENA : " + data.drena;
+        if(data.iepp) document.getElementById('iepp-display').innerText = "IEPP : " + data.iepp;
+        const imgIepp = document.getElementById('img-iepp');
+        if(data.logo_iepp) { imgIepp.src = data.logo_iepp; imgIepp.style.display = 'block'; }
+        const imgEcole = document.getElementById('img-ecole');
+        if(data.logo_ecole) { imgEcole.src = data.logo_ecole; imgEcole.style.display = 'block'; }
+    });
+
+    fetch('/api/nom-ecole').then(res => res.json()).then(data => {
+        if(data.nom) document.getElementById('ecole-display').innerText = "ÉCOLE : " + data.nom;
+    });
+
+    // Charger les élèves
+    function chargerEleves() {
+        const annee = document.getElementById('annee-select').value;
+        document.getElementById('annee-label').innerText = annee + "-" + (parseInt(annee) + 1);
+
+        fetch(`/api/eleves/${annee}`).then(res => res.json()).then(data => {
+            // Filtrage : On garde uniquement les cas correspondant aux 3 conditions
+            const listeFiltree = data.filter(e => estSansExtrait(e.matricule));
+            afficherTableau(listeFiltree);
+        });
+    }
+
+    function changerAnnee() {
+        chargerEleves();
+    }
+
+    function afficherTableau(data) {
+        const tbody = document.getElementById('tbody-liste');
+        tbody.innerHTML = '';
+        
+        // Tri alphabétique
+        const tri = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
+
+        tri.forEach((e, index) => {
+            const couleur = e.sexe === 'M' ? 'blue-text' : 'red-text';
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${e.matricule || ''}</td>
+                    <td class="col-nom ${couleur}">${e.nom || ''} ${e.prenoms || ''}</td>
+                    <td>${e.date_naissance || ''}</td>
+                    <td>${e.niveau || ''}</td>
+                </tr>
+            `;
+        });
+    }
+
+    chargerEleves();
+</script>
+
+</body>
+</html>

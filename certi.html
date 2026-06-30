@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificat de Scolarité</title>
+    <style>
+        /* Optimisation rigoureuse pour une seule page A4 avec marges ajustées */
+        @page { size: A4; margin: 25px; }
+        body { font-family: 'Times New Roman', serif; margin: 0; padding: 25px 25px 10px 25px; line-height: 1.2; font-size: 12pt; }
+        
+        .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .header-left { text-align: left; font-size: 0.85em; }
+        .header-right { text-align: center; }
+        .armoiries { width: 60px; display: block; margin: 0 auto; }
+        
+        .titre { text-decoration: underline; font-weight: bold; font-size: 1.3em; margin: 10px 0; text-align: center; }
+        .contenu { margin-bottom: 10px; text-align: justify; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 0.9em; }
+        th, td { border: 1px solid black; padding: 6px; text-align: center; }
+
+        /* Ajustement du bloc signature pour le garder compact */
+        .table-signature { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .table-signature td { height: 100px; vertical-align: top; padding: 5px; }
+        .footer-note { font-style: italic; font-size: 0.75em; margin-top: 10px; border-top: 1px solid #000; padding-top: 2px; }
+        .btn { padding: 6px 12px; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        @media print {
+            #zone-recherche { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-container">
+    <div class="header-left">
+        <p>MINISTÈRE DE L'ÉDUCATION NATIONALE<br>ET DE L'ALPHABÉTISATION</p>
+        <p>---------------------------</p>
+        <p>DIRECTION RÉGIONALE D'<span id="drena-val"></span></p>
+        <p>---------------------------</p>
+        <p>INSPECTION DE L'ENSEIGNEMENT PRIMAIRE<br>ET PRÉSCOLAIRE D'<span id="iepp-val"></span></p>
+        <p style="margin: 5px 0;">Adresse: <span id="adresse-val"></span> | Mail: <span id="mail-val"></span> | Tel: <span id="tel-val"></span></p>
+    </div>
+    <div class="header-right">
+        <div style="font-weight: bold; font-size: 0.9em;">RÉPUBLIQUE DE CÔTE D'IVOIRE</div>
+        <img src="Armoiries.jpg" alt="Armoiries" class="armoiries">
+        <div style="font-size: 0.8em;">Union-Discipline-Travail</div>
+        <p style="margin: 5px 0;"><strong>École : <span id="nom-ecole-top"></span></strong></p>
+    </div>
+</div>
+
+<div class="titre">CERTIFICAT DE SCOLARITÉ</div>
+
+<div class="contenu">
+    <p>Le Directeur de l'école primaire publique <strong><span id="nom-ecole-body"></span></strong>; Circonscription de l'enseignement préscolaire et primaire d'<span id="iepp-body"></span>, certifie que l'élève: <strong><span id="nom-eleve"></span></strong> né(e) le <strong><span id="date-naiss"></span></strong> à <strong class="capitalize-text"><span id="lieu-naiss"></span></strong>, selon l'acte de naissance ou jugement supplétif N°<strong><span id="num_acte"></span></strong> du <strong><span id="date_etab"></span></strong>, inscrit dans le registre de l'établissement sous N°.......... du matricule <strong><span id="num-reg"></span></strong>, est régulièrement inscrit(e) dans notre établissement et y suit une scolarité assidue. </p>
+    <p>En foi de quoi, le présent certificat est délivré pour servir et valoir ce que de droit.</p>
+</div>
+
+<table>
+    <thead>
+        <tr><th>ANNÉE SCOLAIRE</th><th>COURS FRÉQUENTÉ</th><th>MOYENNE</th><th>CLASSEMENT</th><th>OBSERVATIONS</th></tr>
+    </thead>
+    <tbody id="tableau-scolarite"></tbody>
+</table>
+
+<div style="text-align: right; margin-bottom: 10px; font-size: 0.9em;">
+    <p style="margin: 3px 0;">Appréciation générale : Bon-travail <strong><span id="appreciation-travail"></span></strong></p>
+    <p style="margin: 3px 0;">Conduite : Bonne conduite <strong><span id="appreciation-conduite"></span></strong></p>
+    <p style="margin: 3px 0;">Fait à .......................<span id="ville-signature"></span>, le <span id="date-jour"></span></p>
+</div>
+
+<table class="table-signature">
+    <tr>
+        <th style="padding: 5px; border: 1px solid black; width: 50%;">NOM ET PRÉNOMS DU DIRECTEUR</th>
+        <th style="padding: 5px; border: 1px solid black; width: 50%;">CACHET DE L'ÉTABLISSEMENT ET SIGNATURE DU DIRECTEUR</th>
+    </tr>
+    <tr>
+        <td style="text-align: left; vertical-align: top;"><span id="nom-directeur"></span></td>
+        <td></td>
+    </tr>
+</table>
+
+<div id="zone-recherche" style="margin-top: 15px; padding: 10px; border-top: 2px dashed #ccc;">
+    <label for="recherche-eleve"><strong>Rechercher : </strong></label>
+    <input list="liste-eleves" id="recherche-eleve" placeholder="Matricule..." style="padding: 4px; width: 200px;">
+    <datalist id="liste-eleves"></datalist>
+    <button onclick="chargerEleve()" class="btn" style="background-color: #007bff;">Importer</button>
+    <button onclick="window.print()" class="btn" style="background-color: #28a745;">Imprimer le certificat</button>
+</div>
+
+<div class="footer-note">
+    NB : Les ratures, grattages, surcharges ou omissions conduisent à la nullité de la présente pièce. Toute falsification sera punie des peines prévues par la loi.
+</div>
+
+<script>
+    function formaterLieu(texte) {
+        if (!texte) return '';
+        let t = texte.trim().toLowerCase();
+        return t.charAt(0).toUpperCase() + t.slice(1);
+    }
+
+    Promise.all([
+        fetch('/api/config-prof').then(res => res.json()),
+        fetch('/api/nom-ecole').then(res => res.json()),
+        fetch('/api/eleves/tous').then(res => res.json())
+    ]).then(([config, ecoleData, eleves]) => {
+        document.getElementById('drena-val').innerText = (config.drena || '').toUpperCase();
+        document.getElementById('iepp-val').innerText = (config.iepp || '').toUpperCase();
+        document.getElementById('iepp-body').innerText = (config.iepp || '').toUpperCase();
+        document.getElementById('adresse-val').innerText = config.adresse || '';
+        document.getElementById('mail-val').innerText = config.mail || '';
+        document.getElementById('tel-val').innerText = config.tel || '';
+        document.getElementById('ville-signature').innerText = config.ville || '';
+        document.getElementById('nom-directeur').innerText = config.nom_directeur || '';
+        document.getElementById('nom-ecole-top').innerText = ecoleData.nom || '';
+        document.getElementById('nom-ecole-body').innerText = ecoleData.nom || '';
+        const datalist = document.getElementById('liste-eleves');
+        eleves.forEach(e => {
+            let option = document.createElement('option');
+            option.value = e.matricule;
+            option.textContent = `${e.nom} ${e.prenoms} (${e.matricule})`;
+            datalist.appendChild(option);
+        });
+    });
+
+    function chargerEleve() {
+        const id = document.getElementById('recherche-eleve').value;
+        if(id) window.location.href = `certi.html?id=${id}`;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const eleveId = urlParams.get('id');
+
+    if (eleveId) {
+        fetch(`/api/eleves/details/${eleveId}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('nom-eleve').innerText = (data.nom || '') + ' ' + (data.prenoms || '');
+            document.getElementById('date-naiss').innerText = data.date_naissance || '';
+            const rawLieu = data.localite || data.lieu_naissance || '';
+            document.getElementById('lieu-naiss').innerText = formaterLieu(rawLieu);
+            document.getElementById('num_acte').innerText = data.num_acte || '';
+            document.getElementById('date_etab').innerText = data.date_etab || '';
+            document.getElementById('num-reg').innerText = data.matricule || '';
+            document.getElementById('appreciation-travail').innerText = data.appreciation_travail || '';
+            document.getElementById('appreciation-conduite').innerText = data.appreciation_conduite || '';
+            document.getElementById('date-jour').innerText = new Date().toLocaleDateString('fr-FR');
+            
+            const tbody = document.getElementById('tableau-scolarite');
+            tbody.innerHTML = '';
+            if (data.historique && Array.isArray(data.historique)) {
+                data.historique.forEach(h => {
+                    const anneeSuivante = parseInt(h.annee) + 1;
+                    const anneeAffichage = `${h.annee}-${anneeSuivante}`;
+                    const m = parseFloat(h.moyenne);
+                    const niv = (h.niveau || '').toUpperCase();
+                    let moyAffichage = h.moyenne || '';
+                    let obs = h.observation || '';
+                    
+                    if (['CP1', 'CP2', 'CE1', 'CE2'].includes(niv)) {
+                        moyAffichage += ' /10';
+                        if (!obs) {
+                            if (m < 3) obs = "Insuffisant";
+                            else if (m < 5) obs = "Médiocre";
+                            else if (m < 6) obs = "Passable";
+                            else if (m < 8) obs = "Assez-bien";
+                            else if (m < 9) obs = "Bien";
+                            else obs = "Très-bien";
+                        }
+                    } else if (['CM1', 'CM2'].includes(niv)) {
+                        moyAffichage += ' /20';
+                        if (!obs) {
+                            if (m < 6) obs = "Insuffisant";
+                            else if (m < 10) obs = "Médiocre";
+                            else if (m < 12) obs = "Passable";
+                            else if (m < 15) obs = "Assez-bien";
+                            else if (m < 18) obs = "Bien";
+                            else obs = "Très bien";
+                        }
+                    }
+                    let rangAffichage = h.rang || '';
+                    if (rangAffichage) {
+                        rangAffichage = (parseInt(rangAffichage) === 1) ? "1er" : rangAffichage + "e";
+                    }
+                    tbody.innerHTML += `<tr><td>${anneeAffichage}</td><td>${h.niveau || ''}</td><td>${moyAffichage}</td><td>${rangAffichage}</td><td>${obs}</td></tr>`;
+                });
+            }
+        })
+        .catch(err => console.error("Erreur chargement détails élève :", err));
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Scolaire - Années</title>
+    <style>
+        /* Utilisation de Flexbox pour coller le footer */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            min-height: 10vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            position: relative;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            margin: -20px -20px 20px -20px;
+            background: linear-gradient(to bottom, #ffffff 60%, #f4f7f6 100%);
+        }
+        .logo-armoiries { width: 80px; height: auto; display: block; margin: 0 auto 10px; }
+        h1 { color: #2e7d32; margin: 0; font-size: 1.5em; }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
+        .menu-card {
+            background: white;
+            padding: 15px 5px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #2e7d32;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+        .menu-card:hover { transform: scale(1.05); background: #f9fff9; }
+
+        /* Style du Footer */
+        .footer {
+            text-align: center;
+            font-size: 0.75em;
+            color: #777;
+            margin-top: 300px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="Armoiries.jpg" alt="Armoiries" class="logo-armoiries">
+        <h1>Années scolaires</h1>
+    </header>
+
+    <div class="menu-grid">
+        <a href="liste.html?annee=2023" class="menu-card">2023-2024</a>
+        <a href="liste.html?annee=2024" class="menu-card">2024-2025</a>
+        <a href="liste.html?annee=2025" class="menu-card">2025-2026</a>
+        <a href="liste.html?annee=2026" class="menu-card">2026-2027</a>
+        <a href="liste.html?annee=2027" class="menu-card">2027-2028</a>
+        <a href="liste.html?annee=2028" class="menu-card">2028-2029</a>
+        <a href="liste.html?annee=2029" class="menu-card">2029-2030</a>
+        <a href="liste.html?annee=2030" class="menu-card">2030-2031</a>
+    </div>
+
+    <div class="footer">
+        <p>© 2024 - 2026 Mon École, v3.5.1</p>
+        <p>Développé par LENOBLE STUDIO</p>
+    </div>
+
+</body>
+</html>

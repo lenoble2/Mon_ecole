@@ -1,0 +1,19 @@
+# Dépendances (Ne jamais pousser node_modules)
+node_modules/
+
+# Fichiers de base de données locaux (Plus besoin si vous utilisez Aiven)
+ecole.db
+*.db
+
+# Dossiers de fichiers utilisateur (Bonne pratique)
+uploads/
+
+# Fichiers système et logs
+.DS_Store
+*.log
+npm-debug.log*
+
+# Fichiers de configuration sensibles (Très important !)
+.env
+
+

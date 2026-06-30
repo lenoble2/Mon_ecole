@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion Élèves - Fichier Scolaire</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        h2 { color: #333; }
+        /* Style des boutons de filtre */
+        .filter-container { margin-bottom: 15px; }
+        .filter-btn { padding: 8px 15px; margin-right: 5px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; }
+        .filter-btn:hover { background-color: #e2e6ea; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .checkbox { text-align: center; width: 30px; }
+        .btn { padding: 10px 20px; color: white; text-decoration: none; border-radius: 5px; display: inline-block; cursor: pointer; border: none; }
+
+        .nom-lien { text-decoration: none; color: #000; }
+        .nom-lien:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <h2 id="titre-annee">Fichier élèves</h2>
+
+    <div class="filter-container">
+        <button class="filter-btn" onclick="filtrer('Tous')">Tous</button>
+        <button class="filter-btn" onclick="filtrer('CP1')">CP1</button>
+        <button class="filter-btn" onclick="filtrer('CP2')">CP2</button>
+        <button class="filter-btn" onclick="filtrer('CE1')">CE1</button>
+        <button class="filter-btn" onclick="filtrer('CE2')">CE2</button>
+        <button class="filter-btn" onclick="filtrer('CM1')">CM1</button>
+        <button class="filter-btn" onclick="filtrer('CM2')">CM2</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="checkbox"><input type="checkbox" id="select-all"></th>
+                <th>Matricule</th><th>Nom</th><th>Prénoms</th><th>Sexe</th><th>date_naissance</th><th>Niveau</th><th>Nationalité</th>
+                 <th>Âge</th>
+            </tr>
+        </thead>
+        <tbody id="tableau-eleves"></tbody>
+    </table>
+
+    <div style="margin-top: 20px;">
+        <a href="ajout_eleve.html" class="btn" style="background-color: #28a745;">+ Ajouter un élève</a>
+        <button id="delete-btn" class="btn" style="background-color: #d32f2f;">Supprimer sélectionnés</button>
+        <a href="/exporter" class="btn" style="background-color: #007bff;">Télécharger liste (CSV)</a>
+        <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour vers Accueil</a>
+    </div>
+
+    <form action="/importer" method="POST" enctype="multipart/form-data" style="margin-top: 20px;">
+        <input type="hidden" name="annee_import" id="annee_import">
+        <input type="file" name="fichier_csv" accept=".csv">
+        <button type="submit" class="btn" style="background-color: #555;">Importer les élèves</button>
+    </form>
+
+    <form id="delete-form" action="/supprimer-eleves" method="POST" style="display:none;">
+        <input type="hidden" name="ids" id="hidden-ids">
+    </form>
+
+
+<script>
+    let listeEleves = [];
+
+    // 1. Récupérer l'année dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const anneeSelectionnee = urlParams.get('annee') || '2025';
+
+    // Remplir le champ caché pour le formulaire d'import
+    document.getElementById('annee_import').value = anneeSelectionnee;
+
+    // Mise à jour dynamique du titre
+    const titreElement = document.getElementById('titre-annee');
+    const anneeSuivante = parseInt(anneeSelectionnee) + 1;
+    titreElement.textContent = `Fichier élèves ${anneeSelectionnee}-${anneeSuivante}`;
+
+    // Fonction corrigée : extrait uniquement l'année pour éviter les erreurs de format jour/mois
+    function calculerAge(dateNaissance) {
+        if (!dateNaissance) return '';
+        
+        // On prend les 4 derniers caractères de la chaîne pour récupérer l'année
+        // Cela fonctionne pour "15/05/2018" ou "2018-05-15"
+        const anneeStr = dateNaissance.toString().slice(-4);
+        const anneeNaiss = parseInt(anneeStr);
+        
+        if (isNaN(anneeNaiss)) return '';
+        return parseInt(anneeSelectionnee) - anneeNaiss;
+    }
+
+    // 2. Chargement des données
+    fetch(`/api/eleves/${anneeSelectionnee}`)
+      .then(res => res.json())
+      .then(eleves => {
+        listeEleves = eleves;
+        afficherTableau(listeEleves);
+      })
+      .catch(err => console.error("Erreur chargement :", err));
+
+    function afficherTableau(data) {
+        const tbody = document.getElementById('tableau-eleves');
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Aucun élève trouvé.</td></tr>';
+            return;
+        }
+        data.forEach(e => {
+            tbody.innerHTML += `<tr>
+                <td class="checkbox"><input type="checkbox" class="row-checkbox" data-id="${e.matricule}"></td>
+                <td>${e.matricule || ''}</td>
+                <td><a href="details.html?id=${e.matricule}" class="nom-lien">${e.nom || ''}</a></td>
+                <td>${e.prenoms || ''}</td>
+                <td>${e.sexe || ''}</td>
+                <td>${e.date_naissance || ''}</td>
+                <td>${e.niveau || ''}</td>
+                <td>${e.nationalite || ''}</td>
+                <td>${calculerAge(e.date_naissance)}</td>
+            </tr>`;
+        });
+    }
+
+    function filtrer(niveau) {
+        if (niveau === 'Tous') {
+            afficherTableau(listeEleves);
+        } else {
+            const filtre = listeEleves.filter(e => e.niveau === niveau);
+            afficherTableau(filtre);
+        }
+    }
+
+    document.getElementById('select-all').addEventListener('change', (e) => {
+        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
+    });
+
+    document.getElementById('delete-btn').addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        const ids = Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
+        if(ids.length > 0) {
+            if(confirm("Supprimer les " + ids.length + " élève(s) sélectionné(s) ?")) {
+                document.getElementById('hidden-ids').value = JSON.stringify(ids);
+                document.getElementById('delete-form').submit();
+            }
+        } else {
+            alert("Veuillez d'abord cocher les cases des élèves à supprimer.");
+        }
+    });
+
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+            window.location.reload();
+        }
+    });
+</script>
+
+</body>
+</html>

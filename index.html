@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Gestion Élèves</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+        form {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+        }
+        .logo { width: 80px; margin-bottom: 10px; }
+        .header-text { margin-bottom: 15px; }
+        .header-text p { font-weight: bold; font-size: 13px; margin: 0 0 8px 0; color: #333; }
+
+        .flag-bar { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; }
+        .orange { background-color: #FF8C00; flex: 1; }
+        .white { background-color: #FFFFFF; flex: 1; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
+        .green { background-color: #009E60; flex: 1; }
+
+        h2 { color: #333; margin: 15px 0; font-size: 20px; }
+        input[type="password"], input[type="text"], input[type="tel"] {
+            margin: 8px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+        button:hover { background: #1b5e20; }
+        .toggle-container { text-align: left; font-size: 13px; margin-top: 5px; }
+        
+        /* Nouveau style pour le lien de bas de page */
+        .login-link { margin-top: 20px; font-size: 13px; color: #666; }
+        .login-link a { color: #2e7d32; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<form action="/inscription" method="POST">
+    <img src="Armoiries.jpg" alt="Armoiries" class="logo">
+
+    <div class="header-text">
+        <p>RÉPUBLIQUE DE CÔTE D'IVOIRE</p>
+        <div class="flag-bar">
+            <div class="orange"></div>
+            <div class="white"></div>
+            <div class="green"></div>
+        </div>
+    </div>
+
+    <h2>Inscription</h2>
+
+    <input type="text" id="schoolName" name="schoolName" placeholder="Nom de l'école" required>
+
+    <input type="tel" id="tel" name="telephone" placeholder="Numéro de téléphone" required>
+
+    <input type="password" id="passInput" name="password" placeholder="Mot de passe" required>
+
+    <input type="password" id="confirmPassInput" name="confirmPassword" placeholder="Confirmer mot de passe" required>
+
+    <div class="toggle-container">
+        <label>
+            <input type="checkbox" onclick="togglePass()"> Voir les mots de passe
+        </label>
+    </div>
+
+    <button type="submit">S'inscrire</button>
+
+    <div class="login-link">
+        Déjà inscrit ? <a href="login.html">Se connecter</a>
+    </div>
+</form>
+
+<script>
+function togglePass() {
+    var x = document.getElementById("passInput");
+    var y = document.getElementById("confirmPassInput");
+    if (x.type === "password") {
+        x.type = "text";
+        y.type = "text";
+    } else {
+        x.type = "password";
+        y.type = "password";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails de l'élève</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .container { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+        .main-form { flex: 2; min-width: 300px; }
+        .side-panel { flex: 1; background: white; padding: 20px; border-radius: 8px; text-align: center; min-width: 250px; }
+        section { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+        h3 { background-color: #2e7d32; color: white; padding: 8px; margin-top: 0; border-radius: 5px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 0.9em; }
+        input { padding: 8px; width: 90%; border: 1px solid #ccc; border-radius: 4px; }
+        .preview-photo { width: 120px; height: 150px; border: 1px solid #ddd; object-fit: cover; display: block; margin: 0 auto 10px; }
+        .preview-doc { width: 220px; height: 300px; border: 2px dashed #aaa; object-fit: contain; display: block; margin: 0 auto 10px; }
+    </style>
+</head>
+<body>
+    <h2>Détails complets de l'élève</h2>
+    <form id="details-form" class="container" enctype="multipart/form-data">
+        <div class="main-form">
+            <section>
+                <h3>Identification</h3>
+                <div class="form-group"><label>Année :</label> <input type="text" name="annee" id="annee"></div>
+                <div class="form-group"><label>Matricule :</label> <input type="text" name="matricule" id="matricule"></div>
+                <div class="form-group"><label>Nom :</label> <input type="text" name="nom" id="nom"></div>
+                <div class="form-group"><label>Prénoms :</label> <input type="text" name="prenoms" id="prenoms"></div>
+                <div class="form-group"><label>Sexe :</label> <input type="text" name="sexe" id="sexe"></div>
+                <div class="form-group"><label>Date de naissance :</label> <input type="text" name="date_naissance" id="date_naissance"></div>
+                <div class="form-group"><label>Pays :</label> <input type="text" name="pays" id="pays"></div>
+                <div class="form-group"><label>Localité :</label> <input type="text" name="localite" id="localite"></div>
+                <div class="form-group"><label>Mère :</label> <input type="text" name="mere" id="mere"></div>
+                <div class="form-group"><label>Père :</label> <input type="text" name="pere" id="pere"></div>
+                <div class="form-group"><label>Contact parent :</label> <input type="text" name="contact" id="contact"></div>
+                <div class="form-group"><label>Nationalité :</label> <input type="text" name="nationalite" id="nationalite"></div>
+                <div class="form-group"><label>N° acte de naissance :</label> <input type="text" name="num_acte" id="num_acte"></div>
+                <div class="form-group"><label>Date établissement :</label> <input type="text" name="date_etab" id="date_etab"></div>
+                <div class="form-group"><label>Lieu établissement :</label> <input type="text" name="lieu_etab" id="lieu_etab"></div>
+                <div class="form-group"><label>Niveau :</label> <input type="text" name="niveau" id="niveau"></div>
+                <div class="form-group"><label>École :</label> <input type="text" name="ecole" id="ecole"></div>
+            </section>
+        </div>
+
+        <div class="side-panel">
+            <h3>Médias</h3>
+            <img id="photo-preview" class="preview-photo" src="" alt="Photo">
+            <input type="file" name="photo" accept="image/*">
+            <label style="margin-top:20px;">Acte de naissance :</label>
+            <img id="doc-preview" class="preview-doc" src="" alt="Document">
+            <input type="file" name="document" accept="image/*">
+            <button type="submit" style="width: 100%; margin-top: 20px; padding: 12px; background-color: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer;">Enregistrer les modifications</button>
+        </div>
+    </form>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+
+        // Chargement des données
+        if (id) {
+            fetch(`/api/eleve/${encodeURIComponent(id)}`)
+                .then(res => res.json())
+                .then(e => {
+                    const fields = [
+                        'annee', 'matricule', 'nom', 'prenoms', 'sexe', 'date_naissance', 
+                        'pays', 'localite', 'mere', 'pere', 'contact', 'nationalite', 
+                        'num_acte', 'date_etab', 'lieu_etab', 'niveau', 'ecole'
+                    ];
+                    
+                    fields.forEach(field => {
+                        const el = document.getElementById(field);
+                        if (el) el.value = e[field] || '';
+                    });
+
+                    if (e.photo) document.getElementById('photo-preview').src = e.photo;
+                    if (e.document) document.getElementById('doc-preview').src = e.document;
+                })
+                .catch(err => console.error("Erreur de chargement :", err));
+        }
+
+        function setupPreview(inputId, previewId) {
+            const input = document.querySelector(`input[name="${inputId}"]`);
+            const preview = document.getElementById(previewId);
+            if (input && preview) {
+                input.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) { preview.src = e.target.result; }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+        
+        setupPreview('photo', 'photo-preview');
+        setupPreview('document', 'doc-preview');
+
+        document.getElementById('details-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch(`/api/eleve/${encodeURIComponent(id)}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Modification enregistrée !");
+                    window.location.href = 'liste.html';
+                } else {
+                    alert("Erreur lors de l'enregistrement.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuration Professeur</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f7f6; }
+        .form-container { background: white; padding: 20px; border-radius: 8px; max-width: 500px; margin: auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 10px 20px; background-color: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .logo-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        .logo-preview { display: flex; gap: 20px; margin-top: 10px; justify-content: center; }
+        .logo-preview img { max-width: 80px; border: 1px solid #ddd; padding: 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Configuration Professeur</h2>
+    <form id="prof-form" enctype="multipart/form-data">
+        <div class="form-group"><label>DRENA :</label> <input type="text" id="drena" name="drena"></div>
+        <div class="form-group"><label>IEPP :</label> <input type="text" id="iepp" name="iepp"></div>
+        <div class="form-group">
+            <label>ÉCOLE :</label>
+            <input type="text" id="ecole" name="ecole" readonly style="background-color: #e9ecef;">
+        </div>
+        <div class="form-group"><label>Nom & Prénoms du Directeur :</label> <input type="text" id="nom_directeur" name="nom_directeur"></div>
+
+        <div class="logo-section">
+            <div class="form-group"><label>Logo IEPP :</label> <input type="file" name="logo_iepp" accept="image/*"></div>
+            <div class="form-group"><label>Logo École :</label> <input type="file" name="logo_ecole" accept="image/*"></div>
+        </div>
+
+        <button type="submit" class="btn">Enregistrer les paramètres</button>
+    </form>
+
+    <div class="logo-preview" id="display-area">
+        <img id="img-iepp" src="" style="display:none;">
+        <img id="img-ecole" src="" style="display:none;">
+    </div>
+</div>
+
+<script>
+    fetch('/api/nom-ecole')
+        .then(res => res.json())
+        .then(data => {
+            const ecoleInput = document.getElementById('ecole');
+            if (ecoleInput) ecoleInput.value = data.nom || '';
+        });
+
+    fetch('/api/config-prof')
+        .then(res => res.json())
+        .then(data => {
+            if (data.drena) document.getElementById('drena').value = data.drena;
+            if (data.iepp) document.getElementById('iepp').value = data.iepp;
+            if (data.nom_directeur) document.getElementById('nom_directeur').value = data.nom_directeur;
+            if (data.logo_iepp) { const img = document.getElementById('img-iepp'); img.src = data.logo_iepp; img.style.display = 'block'; }
+            if (data.logo_ecole) { const img = document.getElementById('img-ecole'); img.src = data.logo_ecole; img.style.display = 'block'; }
+        });
+
+    document.getElementById('prof-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        fetch('/api/config-prof', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) { alert("Enregistré !"); location.reload(); }
+            else { alert("Erreur serveur."); }
+        });
+    });
+</script>
+</body>
+</html>

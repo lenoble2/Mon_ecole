@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Gestion Scolaire</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #f4f7f6; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+
+        .login-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 90%; 
+            max-width: 350px; 
+            text-align: center; 
+        }
+
+        .logo-armoiries { width: 80px; margin-bottom: 15px; }
+
+        h1 { color: #2e7d32; font-size: 1.5em; margin-bottom: 20px; }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 0.85em; color: #666; margin-bottom: 5px; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 1em;
+        }
+
+        .toggle-pass { 
+            text-align: left; 
+            font-size: 0.8em; 
+            margin-bottom: 15px; 
+            cursor: pointer; 
+        }
+
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background-color: #2e7d32; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 1em; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+
+        button:hover { background-color: #1b5e20; }
+
+        .footer-link { 
+            margin-top: 20px; 
+            font-size: 0.9em; 
+            color: #666; 
+        }
+        .footer-link a { 
+            color: #2e7d32; 
+            text-decoration: none; 
+            font-weight: bold; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <img src="Armoiries.jpg" alt="Armoiries" class="logo-armoiries">
+        <h1>Connexion</h1>
+        
+        <form action="/login" method="POST">
+            <div class="input-group">
+                <label for="schoolName">Nom de l'école</label>
+                <input type="text" id="schoolName" name="schoolName" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="toggle-pass">
+                <input type="checkbox" id="showPass" onclick="togglePassword()">
+                <label style="display:inline;" for="showPass">Voir le mot de passe</label>
+            </div>
+            
+            <button type="submit">Accéder à mon espace</button>
+        </form>
+
+        <div class="footer-link">
+            Pas encore inscrit ? <a href="index.html">S'inscrire ici</a>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            var passInput = document.getElementById("password");
+            if (passInput.type === "password") {
+                passInput.type = "text";
+            } else {
+                passInput.type = "password";
+            }
+        }
+    </script>
+</body>
+</html>

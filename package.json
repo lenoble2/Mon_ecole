@@ -1,0 +1,24 @@
+{
+  "name": "ecole_projet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "csv-parser": "^3.2.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "multer": "^2.2.0",
+    "nedb-promises": "^6.2.3",
+    "pg": "^8.22.0",
+    "sql.js": "^1.14.1",
+    "sqlite": "^5.1.1"
+  }
+}
