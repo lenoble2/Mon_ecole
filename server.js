@@ -26,35 +26,30 @@ app.use(session({
 }));
 
 
-// --- CONNEXION BASE DE DONNÉES UNIQUE ---
+// --- CONNEXION BASE DE DONNÉES ROBUSTE ---
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    ssl: { rejectUnauthorized: false }
 });
 
-// On utilise une variable pour éviter les reconnexions multiples
-let isConnected = false;
-
-const connectDB = async () => {
-    if (!isConnected) {
-        try {
-            await client.connect();
-            isConnected = true;
-            console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
-        } catch (err) {
-            // Si l'erreur indique qu'il est déjà connecté, on ignore
-            if (err.message.includes('already been connected')) {
-                isConnected = true;
-            } else {
-                console.error('ERREUR CRITIQUE DE CONNEXION :', err.stack);
-            }
+// Utilisation d'une fonction asynchrone pour éviter la double connexion
+async function connectToDatabase() {
+    try {
+        await client.connect();
+        console.log('CONNEXION RÉUSSIE À LA BASE DE DONNÉES AIVEN !');
+    } catch (err) {
+        // Si l'erreur est "already been connected", on ignore car c'est déjà bon
+        if (err.message.includes('already been connected')) {
+            console.log('Déjà connecté à la base de données.');
+        } else {
+            console.error('ERREUR CRITIQUE DE CONNEXION :', err.message);
         }
     }
-};
+}
 
-connectDB();
+// On appelle la connexion une seule fois
+connectToDatabase();
+
 
 // TEST DE CONNEXION
 client.connect((err) => {
