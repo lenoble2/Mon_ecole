@@ -11,12 +11,10 @@ const app = express();
 const upload = multer({ dest: 'uploads/' });
 
 // Configuration PostgreSQL unique et sécurisée
-
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false, // Désactive la vérification stricte du certificat
-        requestCert: false         // Ajout important pour éviter le blocage de la chaîne
+        rejectUnauthorized: false
     }
 });
 
