@@ -11,10 +11,12 @@ const app = express();
 const upload = multer({ dest: 'uploads/' });
 
 // Configuration PostgreSQL unique et sécurisée
+const { Client } = require('pg');
+
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Permet la connexion avec le certificat auto-signé d'Aiven
+        rejectUnauthorized: false
     }
 });
 
