@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const csv = require('csv-parser');
-const { Client } = require('pg'); // Importation unique
+const { Pool } = require('pg'); // Importation unique de Pool
 const multer = require('multer');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
@@ -10,13 +10,21 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-// Configuration PostgreSQL
-const client = new Client({
+// Configuration PostgreSQL avec Pool (plus robuste)
+const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Indispensable pour Aiven sur Render
-    }
+        rejectUnauthorized: false
+    },
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000
 });
+
+// Test de connexion
+pool.query('SELECT NOW()')
+    .then(() => console.log('Connecté à Aiven avec succès !'))
+    .catch(err => console.error('Erreur connexion base de données :', err));
 
 // Middlewares
 app.use(express.urlencoded({ extended: true }));
@@ -28,54 +36,68 @@ app.use(session({
     saveUninitialized: true
 }));
 
-// Votre reste du code (routes, etc.) suit ici...
+// ATTENTION : Partout dans votre code, remplacez 'client.query' par 'pool.query'
 
+// --- INITIALISATION DES TABLES ---
+// On utilise une fonction asynchrone auto-exécutée pour créer les tables au démarrage
+(async () => {
+    try {
+        await pool.query(`CREATE TABLE IF NOT EXISTS configuration (
+            nom_ecole TEXT PRIMARY KEY,
+            drena TEXT, 
+            iepp TEXT, 
+            nom_directeur TEXT, 
+            logo_iepp TEXT, 
+            logo_ecole TEXT
+        )`);
 
-// INITIALISATION ET CONNEXION
-client.connect()
-    .then(async () => {
-        console.log('Connecté à Aiven avec succès !');
+        await pool.query(`CREATE TABLE IF NOT EXISTS eleves (
+            id SERIAL PRIMARY KEY,
+            annee TEXT, 
+            matricule TEXT, 
+            nom TEXT, 
+            prenoms TEXT, 
+            sexe TEXT,
+            date_naissance TEXT, 
+            pays TEXT, 
+            localite TEXT, 
+            mere TEXT, 
+            pere TEXT, 
+            contact TEXT, 
+            nationalite TEXT, 
+            num_acte TEXT, 
+            date_etab TEXT, 
+            lieu_etab TEXT, 
+            ecole TEXT, 
+            niveau TEXT, 
+            nom_ecole TEXT,
+            moyenne REAL, 
+            rang INTEGER, 
+            photo TEXT, 
+            document TEXT
+        )`);
 
-        try {
-            // Création des tables
-            await client.query(`CREATE TABLE IF NOT EXISTS configuration (
-                nom_ecole TEXT PRIMARY KEY,
-                drena TEXT, iepp TEXT, nom_directeur TEXT, logo_iepp TEXT, logo_ecole TEXT
-            )`);
+        await pool.query(`CREATE TABLE IF NOT EXISTS utilisateurs (
+            id SERIAL PRIMARY KEY,
+            nom_ecole TEXT UNIQUE,
+            password TEXT,
+            telephone TEXT
+        )`);
+        
+        console.log('Tables vérifiées/créées avec succès.');
+    } catch (err) {
+        console.error('Erreur lors de la création des tables :', err);
+    }
+})();
 
-            await client.query(`CREATE TABLE IF NOT EXISTS eleves (
-                id SERIAL PRIMARY KEY,
-                annee TEXT, matricule TEXT, nom TEXT, prenoms TEXT, sexe TEXT,
-                date_naissance TEXT, pays TEXT, localite TEXT, mere TEXT, pere TEXT,
-                contact TEXT, nationalite TEXT, num_acte TEXT, date_etab TEXT,
-                lieu_etab TEXT, ecole TEXT, niveau TEXT, nom_ecole TEXT,
-                moyenne REAL, rang INTEGER, photo TEXT, document TEXT
-            )`);
-
-            await client.query(`CREATE TABLE IF NOT EXISTS utilisateurs (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE,
-                password TEXT,
-                nom_ecole TEXT,
-                telephone TEXT
-            )`);
-            console.log('Tables vérifiées/créées.');
-        } catch (err) {
-            console.error('Erreur lors de la création des tables :', err);
-        }
-    })
-    .catch(err => {
-        console.error('Erreur de connexion à la base de données :', err);
-    });
-
-// --- EXEMPLE DE ROUTE (À étoffer selon vos besoins) ---
+// --- ROUTE DE STATUT ---
 app.get('/api/status', (req, res) => {
     res.json({ message: "Serveur et Base de données opérationnels" });
 });
 
 // Fermeture propre en cas d'arrêt du processus
 process.on('SIGINT', async () => {
-    await client.end();
+    await pool.end(); // On ferme le pool proprement
     process.exit();
 });
 
@@ -92,7 +114,7 @@ app.post('/inscription', async (req, res) => {
 
     try {
         // Vérifier si l'école existe déjà
-        const check = await client.query("SELECT * FROM utilisateurs WHERE nom_ecole = $1", [schoolName]);
+        const check = await pool.query("SELECT * FROM utilisateurs WHERE nom_ecole = $1", [schoolName]);
         if (check.rows.length > 0) {
             return res.send("<script>alert('Cette école est déjà enregistrée.'); window.history.back();</script>");
         }
@@ -102,7 +124,7 @@ app.post('/inscription', async (req, res) => {
         const hash = await bcrypt.hash(password, saltRounds);
 
         // Insertion
-        await client.query(
+        await pool.query(
             "INSERT INTO utilisateurs (nom_ecole, telephone, password) VALUES ($1, $2, $3)",
             [schoolName, telephone, hash]
         );
@@ -120,7 +142,7 @@ app.post('/login', async (req, res) => {
 
     try {
         // 1. Récupérer l'utilisateur
-        const result = await client.query("SELECT * FROM utilisateurs WHERE nom_ecole = $1", [schoolName]);
+        const result = await pool.query("SELECT * FROM utilisateurs WHERE nom_ecole = $1", [schoolName]);
 
         if (result.rows.length === 0) {
             return res.send("<script>alert('École non trouvée.'); window.history.back();</script>");
@@ -134,7 +156,7 @@ app.post('/login', async (req, res) => {
         if (match) {
             // 3. Créer la session
             req.session.nomEcole = user.nom_ecole;
-            req.session.userId = user.id; // Bonne pratique : stocker aussi l'ID
+            req.session.userId = user.id;
             
             res.redirect('/accueil.html');
         } else {
@@ -149,7 +171,7 @@ app.post('/login', async (req, res) => {
 
 
 
-// --- API CONFIGURATION ---
+// --- CONFIGURATION ---
 app.get('/api/nom-ecole', (req, res) => {
     res.json({ nom: req.session.nomEcole || "Nom de l'école" });
 });
@@ -157,9 +179,9 @@ app.get('/api/nom-ecole', (req, res) => {
 // --- GESTION ÉLÈVES (Isolation par école) ---
 app.get('/api/eleves/:annee', async (req, res) => {
     if (!req.session.nomEcole) return res.status(401).send("Non connecté");
-    
+
     try {
-        const result = await client.query(
+        const result = await pool.query(
             "SELECT * FROM eleves WHERE annee = $1 AND nom_ecole = $2 ORDER BY nom ASC",
             [req.params.annee, req.session.nomEcole]
         );
@@ -170,7 +192,7 @@ app.get('/api/eleves/:annee', async (req, res) => {
     }
 });
 
-// --- IMPORTATION CSV (Optimisée) ---
+// --- IMPORTATION CSV (Optimisée avec Pool) ---
 app.post('/importer', upload.single('fichier_csv'), (req, res) => {
     if (!req.file) return res.status(400).send("Aucun fichier sélectionné.");
     if (!req.session.nomEcole) return res.status(401).send("Non connecté");
@@ -183,19 +205,20 @@ app.post('/importer', upload.single('fichier_csv'), (req, res) => {
         .pipe(csv())
         .on('data', (data) => results.push(data))
         .on('end', async () => {
-            const clientQuery = await client.connect(); // Utilisation d'un client dédié pour la transaction
+            // On extrait un client du pool pour gérer la transaction
+            const client = await pool.connect(); 
             try {
-                await clientQuery.query('BEGIN');
-                
+                await client.query('BEGIN');
+
                 const sql = `INSERT INTO eleves (
                     annee, matricule, nom, prenoms, sexe, date_naissance,
-                    pays, localite, mere, pere, contact, nationalite, 
+                    pays, localite, mere, pere, contact, nationalite,
                     num_acte, date_etab, lieu_etab, ecole, niveau, nom_ecole
                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`;
 
                 // Insertion sécurisée
                 for (const row of results) {
-                    await clientQuery.query(sql, [
+                    await client.query(sql, [
                         anneeImport, row.matricule || '', row.nom || '', row.prenoms || '',
                         row.sexe || '', row.date_naissance || '', row.pays || '',
                         row.localite || '', row.mere || '', row.pere || '',
@@ -205,15 +228,15 @@ app.post('/importer', upload.single('fichier_csv'), (req, res) => {
                     ]);
                 }
 
-                await clientQuery.query('COMMIT');
+                await client.query('COMMIT');
                 fs.unlinkSync(req.file.path);
                 res.redirect(`/liste.html?annee=${anneeImport}`);
             } catch (err) {
-                await clientQuery.query('ROLLBACK');
+                await client.query('ROLLBACK');
                 console.error("Erreur lors de l'insertion CSV :", err);
                 res.status(500).send("Erreur lors de l'importation.");
             } finally {
-                clientQuery.release(); // Libération du client vers le pool
+                client.release(); // Libération du client vers le pool
             }
         });
 });
@@ -227,19 +250,20 @@ app.post('/ajouter-eleve', upload.fields([{ name: 'photo' }, { name: 'document' 
         const nomEcole = req.session.nomEcole;
         if (!nomEcole) return res.status(401).send("Erreur : session expirée.");
 
-        const date_naissance = (d.jour && d.mois && d.annee_nais) ? `${d.jour}/${d.mois}/${d.annee_nais}` : (d.date_naissance || '');
-        
+        const date_naissance = (d.jour && d.mois && d.annee_nais) ? `${d.jour}/${d.mois}/${d.annee_nais}` : '';
+
         const sql = `INSERT INTO eleves (
             annee, matricule, nom, prenoms, sexe, date_naissance, pays, localite,
             mere, pere, contact, nationalite, num_acte, date_etab, lieu_etab,
             ecole, niveau, nom_ecole
         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`;
 
-        await client.query(sql, [
+        await pool.query(sql, [
             d.annee, d.matricule?.trim() || '', d.nom?.trim() || '', d.prenoms?.trim() || '',
             d.sexe, date_naissance, d.pays, d.localite, d.mere, d.pere, d.contact,
             d.nationalite, d.num_acte, d.date_etab, d.lieu_etab, d.ecole, d.niveau, nomEcole
         ]);
+        
         res.redirect(`/liste.html?annee=${d.annee}`);
     } catch (err) {
         console.error("Erreur ajout manuel :", err);
@@ -249,39 +273,48 @@ app.post('/ajouter-eleve', upload.fields([{ name: 'photo' }, { name: 'document' 
 
 // --- SUPPRESSION ---
 app.post('/supprimer-eleves', async (req, res) => {
+    if (!req.session.nomEcole) return res.status(401).send("Non connecté");
+    
     try {
         const ids = JSON.parse(req.body.ids);
-        if (!ids || ids.length === 0) return res.status(400).send("Aucun identifiant.");
-        
+        if (!ids || ids.length === 0) return res.status(400).send("Aucun identifiant reçu.");
+
+        // Construction dynamique des placeholders pour la requête IN
         const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
 
-        await client.query(
+        await pool.query(
             `DELETE FROM eleves WHERE matricule IN (${placeholders}) AND nom_ecole = $${ids.length + 1}`,
             [...ids, req.session.nomEcole]
         );
         res.redirect('/liste.html');
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Erreur suppression.");
+        console.error("Erreur suppression :", err);
+        res.status(500).send("Erreur lors de la suppression.");
     }
 });
 
 // --- DÉTAIL ÉLÈVE ---
 app.get('/api/eleve/:id', async (req, res) => {
+    if (!req.session.nomEcole) return res.status(401).send("Non connecté");
+
     try {
-        const result = await client.query(
+        const result = await pool.query(
             "SELECT * FROM eleves WHERE TRIM(matricule) = $1 AND nom_ecole = $2",
             [req.params.id.trim(), req.session.nomEcole]
         );
-        result.rows.length > 0 ? res.json(result.rows[0]) : res.status(404).send("Non trouvé");
+        
+        result.rows.length > 0 ? res.json(result.rows[0]) : res.status(404).send("Élève non trouvé");
     } catch (err) {
-        console.error(err);
+        console.error("Erreur détail élève :", err);
         res.status(500).send("Erreur serveur");
     }
 });
 
+
 // --- MODIFICATION ÉLÈVE ---
 app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' }]), async (req, res) => {
+    if (!req.session.nomEcole) return res.status(401).send("Non connecté");
+    
     const matricule = req.params.id.trim();
     const d = req.body;
     const nomEcole = req.session.nomEcole;
@@ -292,11 +325,21 @@ app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' 
         let i = 1;
 
         const updateFields = {
-            nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '', sexe: d.sexe,
-            date_naissance: d.date_naissance, pays: d.pays, localite: d.localite,
-            mere: d.mere, pere: d.pere, contact: d.contact, nationalite: d.nationalite,
-            num_acte: d.num_acte, date_etab: d.date_etab, lieu_etab: d.lieu_etab,
-            niveau: d.niveau, ecole: d.ecole
+            nom: d.nom?.trim() || '', 
+            prenoms: d.prenoms?.trim() || '', 
+            sexe: d.sexe || '',
+            date_naissance: d.date_naissance || '', 
+            pays: d.pays || '', 
+            localite: d.localite || '',
+            mere: d.mere || '', 
+            pere: d.pere || '', 
+            contact: d.contact || '', 
+            nationalite: d.nationalite || '',
+            num_acte: d.num_acte || '', 
+            date_etab: d.date_etab || '', 
+            lieu_etab: d.lieu_etab || '',
+            niveau: d.niveau || '', 
+            ecole: d.ecole || ''
         };
 
         for (const [key, value] of Object.entries(updateFields)) {
@@ -306,9 +349,12 @@ app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' 
 
         // Ajout des conditions WHERE
         params.push(matricule, nomEcole);
-        const query = `UPDATE eleves SET ${fields.join(', ')} WHERE matricule = $${i++} AND nom_ecole = $${i++}`;
+        
+        // La requête finale : SET fields WHERE matricule=$i AND nom_ecole=$(i+1)
+        const query = `UPDATE eleves SET ${fields.join(', ')} WHERE matricule=$${i++} AND nom_ecole=$${i}`;
 
-        await client.query(query, params);
+        await pool.query(query, params);
+        
         res.send("<script>alert('Modification réussie !'); window.location.href='/liste.html';</script>");
     } catch (err) {
         console.error("Erreur modification :", err);
@@ -317,9 +363,10 @@ app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' 
 });
 
 
-
-// --- MODIFICATION ÉLÈVE (Suite et fin) ---
+// --- MODIFICATION ÉLÈVE (Avec gestion fichiers) ---
 app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' }]), async (req, res) => {
+    if (!req.session.nomEcole) return res.status(401).json({ success: false, error: "Non connecté" });
+
     const matricule = req.params.id.trim();
     const d = req.body;
     const nomEcole = req.session.nomEcole;
@@ -330,11 +377,11 @@ app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' 
         let i = 1;
 
         const updateFields = {
-            nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '', sexe: d.sexe,
-            date_naissance: d.date_naissance, pays: d.pays, localite: d.localite,
-            mere: d.mere, pere: d.pere, contact: d.contact, nationalite: d.nationalite,
-            num_acte: d.num_acte, date_etab: d.date_etab, lieu_etab: d.lieu_etab,
-            niveau: d.niveau, ecole: d.ecole
+            nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '', sexe: d.sexe || '',
+            date_naissance: d.date_naissance || '', pays: d.pays || '', localite: d.localite || '',
+            mere: d.mere || '', pere: d.pere || '', contact: d.contact || '', nationalite: d.nationalite || '',
+            num_acte: d.num_acte || '', date_etab: d.date_etab || '', lieu_etab: d.lieu_etab || '',
+            niveau: d.niveau || '', ecole: d.ecole || ''
         };
 
         for (const [key, value] of Object.entries(updateFields)) {
@@ -353,26 +400,27 @@ app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' 
         }
 
         params.push(matricule, nomEcole);
-        const sql = `UPDATE eleves SET ${fields.join(', ')} WHERE TRIM(matricule)=$${i++} AND nom_ecole=$${i++}`;
+        const sql = `UPDATE eleves SET ${fields.join(', ')} WHERE TRIM(matricule)=$${i++} AND nom_ecole=$${i}`;
 
-        await client.query(sql, params);
+        await pool.query(sql, params);
         res.json({ success: true });
     } catch (err) {
-        console.error("Erreur lors de la modification :", err);
+        console.error("Erreur modification :", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// --- ROUTE D'EXPORTATION ---
+// --- ROUTE D'EXPORTATION CSV ---
 app.get('/exporter', async (req, res) => {
-    try {
-        const nomEcole = req.session.nomEcole;
-        if (!nomEcole) return res.status(401).send("Non autorisé");
+    const nomEcole = req.session.nomEcole;
+    if (!nomEcole) return res.status(401).send("Non autorisé");
 
-        const result = await client.query("SELECT * FROM eleves WHERE nom_ecole = $1", [nomEcole]);
+    try {
+        const result = await pool.query("SELECT * FROM eleves WHERE nom_ecole = $1", [nomEcole]);
         
+        // Définition des colonnes attendues
         const headers = ["annee","matricule","nom","prenoms","sexe","date_naissance","pays","localite","mere","pere","contact","nationalite","num_acte","date_etab","lieu_etab","ecole","niveau"];
-        
+
         let csvContent = headers.join(",") + "\n";
         result.rows.forEach(row => {
             const values = headers.map(h => row[h] || '');
@@ -384,10 +432,11 @@ app.get('/exporter', async (req, res) => {
         res.setHeader('Content-Disposition', 'attachment; filename="eleves.csv"');
         res.send(csvContent);
     } catch (err) {
-        console.error("Erreur lors de l'exportation :", err);
+        console.error("Erreur exportation :", err);
         res.status(500).send("Erreur serveur : " + err.message);
     }
 });
+
 
 // --- BASCULEMENT DES ÉLÈVES ---
 app.post('/api/basculer-eleves', async (req, res) => {
@@ -396,11 +445,12 @@ app.post('/api/basculer-eleves', async (req, res) => {
     const nomEcole = req.session.nomEcole;
 
     if (!nomEcole) return res.status(401).json({ error: "Non autorisé" });
-    
+
     const passageNiveau = { 'CP1': 'CP2', 'CP2': 'CE1', 'CE1': 'CE2', 'CE2': 'CM1', 'CM1': 'CM2', 'CM2': 'FIN' };
 
+    const client = await pool.connect(); // On extrait un client du pool
     try {
-        await client.query('BEGIN'); // Début de transaction
+        await client.query('BEGIN');
 
         for (const item of decisions) {
             const resSelect = await client.query(
@@ -411,7 +461,7 @@ app.post('/api/basculer-eleves', async (req, res) => {
             if (resSelect.rows.length > 0) {
                 const e = resSelect.rows[0];
                 let nouveauNiveau = (item.decision === 'A' && passageNiveau[e.niveau]) ? passageNiveau[e.niveau] : e.niveau;
-                
+
                 await client.query(`INSERT INTO eleves (
                     annee, matricule, nom, prenoms, sexe, date_naissance, pays,
                     localite, mere, pere, contact, nationalite, num_acte,
@@ -422,16 +472,16 @@ app.post('/api/basculer-eleves', async (req, res) => {
                  e.date_etab, e.lieu_etab, e.ecole, nouveauNiveau, nomEcole]);
             }
         }
-        await client.query('COMMIT'); // Validation
+        await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK'); // Annulation en cas d'erreur
+        await client.query('ROLLBACK');
         console.error("Erreur lors de la bascule :", err);
         res.status(500).json({ error: err.message });
+    } finally {
+        client.release(); // Libération indispensable
     }
 });
-
-
 
 // --- MISE À JOUR NOTES ---
 app.post('/api/update-notes', async (req, res) => {
@@ -439,26 +489,31 @@ app.post('/api/update-notes', async (req, res) => {
     if (!nomEcole) return res.status(401).json({ error: "Non autorisé" });
 
     const { updates, annee } = req.body;
+    const client = await pool.connect(); // Extraction d'un client pour la transaction
     try {
-        await client.query('BEGIN'); // Début de transaction pour garantir l'intégrité
-        
+        await client.query('BEGIN');
+
         for (const u of updates) {
             await client.query(
-                `UPDATE eleves 
-                 SET moyenne = $1, rang = $2 
+                `UPDATE eleves
+                 SET moyenne = $1, rang = $2
                  WHERE matricule = $3 AND annee = $4 AND nom_ecole = $5`,
                 [u.moyenne, u.rang, u.matricule, annee, nomEcole]
             );
         }
-        
-        await client.query('COMMIT'); // Validation des changements
+
+        await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK'); // Annulation en cas d'erreur
+        await client.query('ROLLBACK');
         console.error("Erreur mise à jour notes :", err);
         res.status(500).json({ error: err.message });
+    } finally {
+        client.release(); // Libération indispensable
     }
 });
+
+
 
 // --- CONFIGURATION PROF ---
 app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo_ecole' }]), async (req, res) => {
@@ -469,11 +524,13 @@ app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo
         return res.status(401).json({ success: false, message: "Non connecté" });
     }
 
+    // Gestion des chemins des logos (null si aucun fichier envoyé)
     const lIepp = req.files['logo_iepp'] ? '/uploads/' + req.files['logo_iepp'][0].filename : null;
     const lEcole = req.files['logo_ecole'] ? '/uploads/' + req.files['logo_ecole'][0].filename : null;
 
     try {
         // Upsert PostgreSQL (Insert ou Update si le nom_ecole existe déjà)
+        // On utilise COALESCE pour conserver l'ancien logo si le nouveau est null
         const sql = `
             INSERT INTO configuration (nom_ecole, drena, iepp, nom_directeur, logo_iepp, logo_ecole)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -484,9 +541,10 @@ app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo
                 logo_iepp = COALESCE(EXCLUDED.logo_iepp, configuration.logo_iepp),
                 logo_ecole = COALESCE(EXCLUDED.logo_ecole, configuration.logo_ecole)
         `;
+
+        await pool.query(sql, [nomEcole, drena, iepp, nom_directeur, lIepp, lEcole]);
         
-        await client.query(sql, [nomEcole, drena, iepp, nom_directeur, lIepp, lEcole]);
-        res.json({ success: true });
+        res.json({ success: true, message: "Configuration enregistrée avec succès" });
     } catch (err) {
         console.error("Erreur config:", err);
         res.status(500).json({ success: false, error: err.message });
@@ -499,11 +557,10 @@ app.get('/api/config-prof', async (req, res) => {
     if (!req.session.nomEcole) return res.status(401).json({ error: "Non connecté" });
 
     try {
-        const result = await client.query("SELECT * FROM configuration WHERE nom_ecole = $1", [req.session.nomEcole]);
+        const result = await pool.query("SELECT * FROM configuration WHERE nom_ecole = $1", [req.session.nomEcole]);
         if (result.rows.length > 0) {
             res.json(result.rows[0]);
         } else {
-            // Retourne un objet vide par défaut si aucune configuration n'est encore définie
             res.json({ drena: '', iepp: '', nom_directeur: '', logo_iepp: '', logo_ecole: '' });
         }
     } catch (err) {
@@ -520,22 +577,19 @@ app.get('/api/eleves/details/:id', async (req, res) => {
     if (!nomEcole) return res.status(401).json({ error: "Non connecté" });
 
     try {
-        // Récupère toutes les entrées de l'élève pour voir son évolution sur plusieurs années
-        const result = await client.query(
+        const result = await pool.query(
             "SELECT * FROM eleves WHERE matricule = $1 AND nom_ecole = $2 ORDER BY annee DESC",
             [matricule, nomEcole]
         );
 
         if (result.rows.length > 0) {
-            // Construit un historique simple basé sur les années
             const historique = result.rows.map(row => ({
                 annee: row.annee,
                 niveau: row.niveau,
                 moyenne: row.moyenne !== null ? row.moyenne : 'N/A',
                 rang: row.rang !== null ? row.rang : 'N/A'
             }));
-            
-            // Retourne les infos principales (la ligne la plus récente) + l'historique
+
             res.json({ ...result.rows[0], historique });
         } else {
             res.status(404).json({ error: "Élève non trouvé" });
@@ -558,8 +612,7 @@ app.post('/logout', (req, res) => {
 });
 
 
-
-
+// --- LANCEMENT DU SERVEUR ---
 const PORT = process.env.PORT || 8081;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveur actif sur le port ${PORT}`);
