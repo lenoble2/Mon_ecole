@@ -5,6 +5,9 @@ const { Pool } = require('pg');
 const session = require('express-session');
 const path = require('path');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const csv = require('csv-parser');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -15,24 +18,29 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// Connexion robuste
+// Connexion robuste au pool
 async function connectDB() {
     try {
         await pool.query('SELECT NOW()');
         console.log('✅ Connecté à PostgreSQL avec succès !');
     } catch (err) {
-        console.error('❌ Erreur, nouvelle tentative dans 5s...', err.message);
+        console.error('❌ Erreur de connexion, nouvelle tentative dans 5s...', err.message);
         setTimeout(connectDB, 5000);
     }
 }
 connectDB();
 
-// Middlewares
+// Middlewares essentiels
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+    secret: 'secret-key-ecole',
+    resave: false,
+    saveUninitialized: false
+}));
 
-// Route test
+// Route test pour vérifier la connexion
 app.get('/test-db', async (req, res) => {
     try {
         const { rows } = await pool.query('SELECT NOW()');
@@ -42,9 +50,16 @@ app.get('/test-db', async (req, res) => {
     }
 });
 
+// Route racine pour éviter l'erreur "Cannot GET /"
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-// Assurez-vous d'avoir : const { Pool } = require('pg');
-// Assurez-vous d'avoir : const bcrypt = require('bcryptjs');
+// Servir les fichiers statiques (HTML, CSS, JS, Uploads)
+app.use(express.static(__dirname));
+app.use('/uploads', express.static('uploads'));
+
+
 
 // --- INITIALISATION DES TABLES ---
 async function initDB() {
@@ -146,7 +161,7 @@ app.get('/api/eleves/:annee', async (req, res) => {
         const result = await pool.query(
             "SELECT * FROM eleves WHERE annee = $1 AND nom_ecole = $2",
             [req.params.annee, req.session.nomEcole]
-        );
+/        );
         res.json(result.rows);
     } catch (err) {
         console.error("❌ Erreur récupération élèves :", err);
