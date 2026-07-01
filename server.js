@@ -154,6 +154,7 @@ app.get('/api/nom-ecole', (req, res) => {
     res.json({ nom: req.session.nomEcole || "Nom de l'école" });
 });
 
+
 // --- GESTION ÉLÈVES (Isolation par école) ---
 app.get('/api/eleves/:annee', async (req, res) => {
     try {
@@ -161,13 +162,14 @@ app.get('/api/eleves/:annee', async (req, res) => {
         const result = await pool.query(
             "SELECT * FROM eleves WHERE annee = $1 AND nom_ecole = $2",
             [req.params.annee, req.session.nomEcole]
-/        );
+           );
         res.json(result.rows);
     } catch (err) {
-        console.error("❌ Erreur récupération élèves :", err);
-        res.status(500).send("Erreur lors de la récupération.");
+        // ...
     }
 });
+
+
 
 // --- IMPORTATION CSV ---
 app.post('/importer', upload.single('fichier_csv'), (req, res) => {
@@ -181,7 +183,6 @@ app.post('/importer', upload.single('fichier_csv'), (req, res) => {
         .pipe(csv({ separator: ',' }))
         .on('data', (data) => results.push(data))
         .on('end', async () => {
-            // Demander une connexion au pool pour gérer la transaction
             const client = await pool.connect();
             try {
                 await client.query('BEGIN');
@@ -209,7 +210,7 @@ app.post('/importer', upload.single('fichier_csv'), (req, res) => {
                 console.error("❌ Erreur lors de l'insertion CSV :", err);
                 res.status(500).send("Erreur lors de l'importation.");
             } finally {
-                client.release(); // IMPORTANT : libérer la connexion au pool
+                client.release();
             }
         });
 });
@@ -420,6 +421,7 @@ app.post('/api/update-notes', async (req, res) => {
     }
 });
 
+
 // --- CONFIGURATION PROF ---
 app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo_ecole' }]), async (req, res) => {
     const { drena, iepp, nom_directeur } = req.body;
@@ -431,7 +433,6 @@ app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo
     const lEcole = req.files?.logo_ecole ? '/uploads/' + req.files['logo_ecole'][0].filename : null;
 
     try {
-        // Upsert PostgreSQL utilisant le pool directement
         const sql = `INSERT INTO configuration (nom_ecole, drena, iepp, nom_directeur, logo_iepp, logo_ecole)
                      VALUES ($1, $2, $3, $4, $5, $6)
                      ON CONFLICT (nom_ecole) DO UPDATE SET
@@ -449,11 +450,10 @@ app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo
     }
 });
 
-
 // --- GET CONFIGURATION ---
 app.get('/api/config-prof', async (req, res) => {
     if (!req.session.nomEcole) return res.status(401).json({ error: "Non connecté" });
-    
+
     try {
         const result = await pool.query("SELECT * FROM configuration WHERE nom_ecole = $1", [req.session.nomEcole]);
         if (result.rows.length > 0) {
@@ -471,15 +471,15 @@ app.get('/api/config-prof', async (req, res) => {
 app.get('/api/eleves/details/:id', async (req, res) => {
     const matricule = req.params.id;
     const nomEcole = req.session.nomEcole;
-    
+
     if (!nomEcole) return res.status(401).json({ error: "Non connecté" });
-    
+
     try {
         const result = await pool.query(
             "SELECT * FROM eleves WHERE matricule = $1 AND nom_ecole = $2 ORDER BY annee DESC",
             [matricule, nomEcole]
         );
-        
+
         if (result.rows.length > 0) {
             const historique = result.rows.map(row => ({
                 annee: row.annee,
@@ -497,22 +497,9 @@ app.get('/api/eleves/details/:id', async (req, res) => {
     }
 });
 
-// --- LOGOUT ---
-app.post('/logout', (req, res) => {
-    req.session.destroy(() => res.redirect('/login.html'));
-});
-
-// --- SERVIR FICHIERS STATIQUES ---
-app.use('/uploads', express.static('uploads'));
-
-
-
-
-
 
 // Lancement
 const PORT = process.env.PORT || 8081;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Serveur actif sur le port ${PORT}`);
 });
-
