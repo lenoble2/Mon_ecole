@@ -52,6 +52,26 @@ app.get('/test-db', (req, res) => {
     });
 });
 
+
+
+// Route pour ajouter un élève
+app.post('/ajouter', (req, res) => {
+    const nomEleve = req.body.nom; // Le nom envoyé depuis votre formulaire HTML
+    
+    // On utilise bien les guillemets doubles pour le nom de la table
+    const query = 'INSERT INTO "Monecole" (nom) VALUES ($1)';
+    
+    client.query(query, [nomEleve], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout :', err);
+            return res.status(500).send('Erreur serveur');
+        }
+        res.send('Donnée ajoutée avec succès !');
+    });
+});
+
+
+
 app.listen(process.env.PORT || 8081, () => {
     console.log('Serveur actif sur le port ' + (process.env.PORT || 8081));
 });
