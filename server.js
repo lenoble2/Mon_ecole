@@ -40,6 +40,11 @@ app.use(session({
     saveUninitialized: false
 }));
 
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+
 // Route test pour vérifier la connexion
 app.get('/test-db', async (req, res) => {
     try {
