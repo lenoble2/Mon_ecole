@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon École | Admin Panel</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #002d72; color: white; }
+        button { cursor: pointer; padding: 5px 10px; margin: 2px; }
+        .btn-delete { color: red; }
+    </style>
+</head>
+<body>
+    <h2>Gestion des Écoles</h2>
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom de l'École</th>
+                <th>Téléphone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="userBody"></tbody>
+    </table>
+
+    <script>
+        // Charger les utilisateurs
+        fetch('/api/admin/utilisateurs')
+            .then(res => res.json())
+            .then(data => {
+                const body = document.getElementById('userBody');
+                body.innerHTML = '';
+                data.forEach(user => {
+                    body.innerHTML += `<tr>
+                        <td>${user.id}</td>
+                        <td>${user.nom_ecole}</td>
+                        <td>${user.telephone}</td>
+                        <td>
+                            <button onclick="resetPassword(${user.id})">Réinitialiser MDP</button>
+                            <button class="btn-delete" onclick="deleteAccount(${user.id})">Supprimer</button>
+                        </td>
+                    </tr>`;
+                });
+            });
+
+        // Fonction pour réinitialiser le mot de passe
+        async function resetPassword(id) {
+            const newPass = prompt("Entrez le nouveau mot de passe :");
+            if (newPass) {
+                const res = await fetch(`/api/admin/reset-password/${id}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ password: newPass })
+                });
+                if ((await res.json()).success) alert("Mot de passe mis à jour !");
+            }
+        }
+
+        // Fonction pour supprimer un compte
+        async function deleteAccount(id) {
+            if (confirm("Supprimer définitivement ce compte ?")) {
+                const res = await fetch(`/api/admin/delete-user/${id}`, { method: 'DELETE' });
+                if ((await res.json()).success) location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

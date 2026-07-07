@@ -508,3 +508,39 @@ const PORT = process.env.PORT || 8081;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Serveur actif sur le port ${PORT}`);
 });
+
+
+
+// admin-panel
+app.get('/api/admin/utilisateurs', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT id, nom_ecole, telephone FROM utilisateurs");
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: "Erreur lors de la récupération des utilisateurs" });
+    }
+});
+
+
+
+// Route pour réinitialiser le mot de passe
+app.post('/api/admin/reset-password/:id', async (req, res) => {
+    try {
+        const hash = await bcrypt.hash(req.body.password, 10);
+        await pool.query("UPDATE utilisateurs SET password = $1 WHERE id = $2", [hash, req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// Route pour supprimer un compte
+app.delete('/api/admin/delete-user/:id', async (req, res) => {
+    try {
+        await pool.query("DELETE FROM utilisateurs WHERE id = $1", [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
