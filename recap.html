@@ -30,7 +30,6 @@
         .blue-text { color: #0000CD; font-weight: 500; }
         .red-text { color: #DC143C; font-weight: 500; }
 
-        /* Style pour le bouton d'impression */
         .btn-print { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
 
         @media print {
@@ -71,16 +70,14 @@
         <button class="filter-btn" onclick="filtrer('CM2')">CM2</button>
     </div>
     <select id="annee-select" onchange="changerAnnee()">
-
          <option value="2028">2028-2029</option>
          <option value="2027">2027-2028</option>
          <option value="2026" selected>2026-2027</option>
          <option value="2025">2025-2026</option>
          <option value="2024">2024-2025</option>
          <option value="2023">2023-2024</option>
-	 <option value="2022">2022-2023</option>
-	 <option value="2021">2021-2022</option>
-
+         <option value="2022">2022-2023</option>
+         <option value="2021">2021-2022</option>
     </select>
 </div>
 
@@ -125,13 +122,13 @@
             <th>DESIGN</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th>
         </tr>
     </thead>
-    <tbody>
-        <tr><td rowspan="2">EFFECTIF</td><td>Garçons</td><td></td><td></td><td rowspan="6"></td><td>EFF - G</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td>Filles</td><td></td><td></td><td>EFF - F</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td rowspan="2">REDOUBLANTS(ES)</td><td>Garçons</td><td></td><td></td><td>RED - G</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td>Filles</td><td></td><td></td><td>RED - F</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td rowspan="2">NON REDOUBLANTS(ES)</td><td>Garçons</td><td></td><td></td><td>NON - G</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td>Filles</td><td></td><td></td><td>NON - F</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tbody id="tbody-stats">
+        <tr><td rowspan="2">EFFECTIF</td><td>Garçons</td><td id="eff-g">0</td><td></td><td rowspan="6"></td><td>EFF - G</td><td id="age-g-6">0</td><td id="age-g-7">0</td><td id="age-g-8">0</td><td id="age-g-9">0</td><td id="age-g-10">0</td><td id="age-g-11">0</td><td id="age-g-12">0</td><td id="age-g-13">0</td><td id="age-g-14">0</td></tr>
+        <tr><td>Filles</td><td id="eff-f">0</td><td></td><td>EFF - F</td><td id="age-f-6">0</td><td id="age-f-7">0</td><td id="age-f-8">0</td><td id="age-f-9">0</td><td id="age-f-10">0</td><td id="age-f-11">0</td><td id="age-f-12">0</td><td id="age-f-13">0</td><td id="age-f-14">0</td></tr>
+        <tr><td rowspan="2">REDOUBLANTS(ES)</td><td>Garçons</td><td id="red-g">0</td><td></td><td>RED - G</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>Filles</td><td id="red-f">0</td><td></td><td>RED - F</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td rowspan="2">NON REDOUBLANTS(ES)</td><td>Garçons</td><td id="nred-g">0</td><td></td><td>NON - G</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>Filles</td><td id="nred-f">0</td><td></td><td>NON - F</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
     </tbody>
 </table>
 
@@ -147,10 +144,10 @@
     let listeEleves = [];
 
     function calculerAge(dateNaissance, anneeScolaire) {
-        if (!dateNaissance) return '';
+        if (!dateNaissance) return null;
         const anneeStr = dateNaissance.toString().slice(-4);
         const anneeNaiss = parseInt(anneeStr);
-        if (isNaN(anneeNaiss)) return '';
+        if (isNaN(anneeNaiss)) return null;
         return parseInt(anneeScolaire) - anneeNaiss;
     }
 
@@ -176,9 +173,7 @@
         });
     }
 
-    function changerAnnee() {
-        chargerEleves();
-    }
+    function changerAnnee() { chargerEleves(); }
 
     function filtrer(niveau) {
         document.getElementById('classe-display').innerText = (niveau === 'Tous') ? "CLASSE : ----------" : "CLASSE : " + niveau;
@@ -190,28 +185,63 @@
         const tbody = document.getElementById('tbody-recap');
         tbody.innerHTML = '';
         const anneeCourante = document.getElementById('annee-select').value;
+        
+        const g = data.filter(e => e.sexe === 'M');
+        const f = data.filter(e => e.sexe === 'F');
+        const redG = g.filter(e => e.statut === 'Redoublant');
+        const redF = f.filter(e => e.statut === 'Redoublant');
+        
+        document.getElementById('eff-g').innerText = g.length;
+        document.getElementById('eff-f').innerText = f.length;
+        document.getElementById('red-g').innerText = redG.length;
+        document.getElementById('red-f').innerText = redF.length;
+        document.getElementById('nred-g').innerText = g.length - redG.length;
+        document.getElementById('nred-f').innerText = f.length - redF.length;
+
+        for(let age=6; age<=14; age++) {
+            document.getElementById(`age-g-${age}`).innerText = g.filter(e => calculerAge(e.date_naissance, anneeCourante) === age).length;
+            document.getElementById(`age-f-${age}`).innerText = f.filter(e => calculerAge(e.date_naissance, anneeCourante) === age).length;
+        }
+
         const triAlpha = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
-        const garcons = data.filter(e => e.sexe === 'M');
-        const filles = data.filter(e => e.sexe === 'F');
-        const totalLignes = Math.max(garcons.length + filles.length + 1, triAlpha.length);
+        
+        // Côté gauche : Garçons + Ligne séparation + Filles
+        const totalLignes = Math.max(g.length + 1 + f.length, triAlpha.length);
         const getColorClass = (sexe) => sexe === 'M' ? 'blue-text' : 'red-text';
 
         for (let i = 0; i < totalLignes; i++) {
-            let eG = null; let isSeparator = false;
-            if (i < garcons.length) { eG = garcons[i]; }
-            else if (i === garcons.length) { isSeparator = true; }
-            else if (i <= garcons.length + filles.length) { eG = filles[i - garcons.length - 1]; }
-
-            let eA = triAlpha[i] || null;
-            const ageG = eG ? calculerAge(eG.date_naissance, anneeCourante) : '';
-            if (isSeparator) {
-                tbody.innerHTML += `<tr><td colspan="6" class="separator-text">FILLES NOM & PRÉNOMS</td><td class="w-n">${eA ? i + 1 : ''}</td><td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? eA.nom + ' ' + eA.prenoms : ''}</td><td class="w-date">${eA ? eA.date_naissance || '' : ''}</td></tr>`;
-            } else {
-                tbody.innerHTML += `<tr><td class="w-n">${eG ? (i < garcons.length ? i + 1 : (i - garcons.length)) : ''}</td><td class="col-nom ${eG ? getColorClass(eG.sexe) : ''}">${eG ? eG.nom + ' ' + eG.prenoms : ''}</td><td>${ageG}</td><td></td><td></td><td class="w-mat">${eG ? eG.matricule || '' : ''}</td><td class="w-n">${eA ? i + 1 : ''}</td><td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? eA.nom + ' ' + eA.prenoms : ''}</td><td class="w-date">${eA ? eA.date_naissance || '' : ''}</td></tr>`;
+            let row = document.createElement('tr');
+            
+            // Logique côté gauche
+            let eL = null;
+            let isSeparator = false;
+            if (i < g.length) {
+                eL = g[i];
+            } else if (i === g.length) {
+                isSeparator = true;
+            } else if (i <= g.length + f.length) {
+                eL = f[i - g.length - 1];
             }
+
+            // Logique côté droit
+            let eA = triAlpha[i] || null;
+            
+            if (isSeparator) {
+                row.innerHTML = `<td colspan="6" class="separator-text">FILLES NOM & PRÉNOMS</td><td class="w-n">1</td><td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? eA.nom + ' ' + eA.prenoms : ''}</td><td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
+            } else {
+                row.innerHTML = `
+                    <td class="w-n">${eL ? (i < g.length ? i + 1 : i - g.length) : ''}</td>
+                    <td class="col-nom ${eL ? getColorClass(eL.sexe) : ''}">${eL ? eL.nom + ' ' + eL.prenoms : ''}</td>
+                    <td>${eL ? calculerAge(eL.date_naissance, anneeCourante) : ''}</td>
+                    <td></td><td></td>
+                    <td class="w-mat">${eL ? eL.matricule || '' : ''}</td>
+                    <td class="w-n">${eA ? i + 1 : ''}</td>
+                    <td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? eA.nom + ' ' + eA.prenoms : ''}</td>
+                    <td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
+            }
+            tbody.appendChild(row);
         }
     }
-
     chargerEleves();
 </script>
 </body>
