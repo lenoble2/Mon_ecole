@@ -8,28 +8,28 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; padding-bottom: 80px; }
 
         /* Header */
-        header { text-align: center; position: relative; padding-top: 20px; padding-bottom: 20px; margin: -20px -20px 20px -20px; background: white; }
-        
+        header { text-align: center; position: relative; padding-top: 20px; padding-bottom: 20px; margin: -20px -20px 20px -20px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
         /* Logo */
-        .logo-armoiries { width: 150px; height: auto; display: block; margin: 0 auto 10px; }
-        
-        /* Nom de l'école remonté */
-        h1 { color: #2e7d32; margin: -10px 0 0 0; font-size: 1.5em; }
-        
-        .user-profile { position: absolute; top: 10px; right: 15px; }
-        .profile-pic { width: 45px; height: 45px; background-color: #ddd; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+        .logo-armoiries { width: 120px; height: auto; display: block; margin: 0 auto 10px; }
+
+        /* Nom de l'école */
+        h1 { color: #2e7d32; margin: 0; font-size: 1.4em; }
+
+        .user-profile { position: absolute; top: 15px; right: 15px; }
+        .profile-pic { width: 40px; height: 40px; background-color: #ddd; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
 
         /* Grille de menus */
         .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .menu-card { background: white; padding: 10px 5px; border-radius: 15px; text-decoration: none; color: #333; text-align: center; }
-        .menu-card:hover { transform: scale(1.05); }
-        .icon { font-size: 20px; margin-bottom: 5px; display: block; }
-        .menu-card span { font-weight: 600; font-size: 0.70em; color: #2e7d32; display: block; }
+        .menu-card { background: white; padding: 12px 5px; border-radius: 12px; text-decoration: none; color: #333; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .menu-card:hover { transform: scale(1.03); }
+        .icon { font-size: 22px; margin-bottom: 5px; display: block; }
+        .menu-card span:last-child { font-weight: 600; font-size: 0.70em; color: #2e7d32; display: block; }
 
         /* Bannière Défilante */
-        .banner-container { width: 100%; height: 160px; overflow: hidden; border-radius: 15px; margin-bottom: 20px; position: relative; }
+        .banner-container { width: 100%; height: 160px; overflow: hidden; border-radius: 15px; margin-bottom: 20px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .banner-track { display: flex; width: 300%; animation: slide 17s infinite; }
-        .banner-track img { width: 33.33%; height: 160px; object-fit: cover; }
+        .banner-track img { width: 33.33%; height: 160px; object-type: cover; object-fit: cover; }
 
         @keyframes slide {
             0% { transform: translateX(0%); }
@@ -39,29 +39,55 @@
         }
 
         /* Barre de navigation bas */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #ddd; }
-        .nav-item { text-decoration: none; color: #666; display: flex; flex-direction: column; align-items: center; font-size: 0.8em; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { text-decoration: none; color: #666; display: flex; flex-direction: column; align-items: center; font-size: 0.75em; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="user-profile"><div class="profile-pic"></div></div>
+        <div class="user-profile">
+            <div class="profile-pic">L</div>
+        </div>
         <img src="icon.png" alt="Armoiries" class="logo-armoiries">
         <h1 id="nom-ecole-affiche">Chargement...</h1>
     </header>
 
-<div class="menu-grid">
-        <a href="/annee.html" class="menu-card"><span class="icon">📋</span><span>Élèves</span></>
-        <a href="/ajout_eleve.html" class="menu-card"><span class="icon">➕</span><span>Ajout</sp>
-        <a href="/moyen.html" class="menu-card"><span class="icon">📤</span><span>Moyennes</span>
-        <a href="/compo.html" class="menu-card"><span class="icon">⚙️</span><span>Moyennes compos</span></a>
-        <a href="/prof.html" class="menu-card"><span class="icon"> 👤</span><span>Prof</span></a>
-        <a href="/recap.html" class="menu-card"><span class="icon">📚</span><span>Tableau Récapit>
-        <a href="/sansext.html" class="menu-card"><span class="icon">💰</span><span>Sans Extrait<>
-        <a href="certi.html" class="menu-card"><span class="icon"> 📊</span><span>Certificat de s>
-    </div>                                                                                                              
-    
+    <div class="menu-grid">
+        <a href="/annee.html" class="menu-card">
+            <span class="icon">📅</span>
+            <span>Année</span>
+        </a>
+        <a href="/ajout_eleve.html" class="menu-card">
+            <span class="icon">➕</span>
+            <span>Ajout</span>
+        </a>
+        <a href="/moyen.html" class="menu-card">
+            <span class="icon">📤</span>
+            <span>Moyennes</span>
+        </a>
+        <a href="/compo.html" class="menu-card">
+            <span class="icon">⚙️</span>
+            <span>Compos</span>
+        </a>
+        <a href="/prof.html" class="menu-card">
+            <span class="icon">👨‍🏫</span>
+            <span>Directeur</span>
+        </a>
+        <a href="/recap.html" class="menu-card">
+            <span class="icon">📚</span>
+            <span>Tableaux Récapitulatif</span>
+        </a>
+        <a href="/sansext.html" class="menu-card">
+            <span class="icon">💰</span>
+            <span>Sans Extrait</span>
+        </a>
+        <a href="certi.html" class="menu-card">
+            <span class="icon">📊</span>
+            <span>Certificat</span>
+        </a>
+    </div>
+
     <div class="banner-container">
         <div class="banner-track">
             <img src="banniere_finale.jpg" alt="Bannière Officielle">
@@ -75,7 +101,7 @@
         <a href="/liste.html" class="nav-item"><span>🔍</span><span>Explorer</span></a>
         <a href="#" class="nav-item"><span>🏆</span><span>Classement</span></a>
         <a href="#" class="nav-item"><span>💳</span><span>Portefeuille</span></a>
-    </nav>                                                                                                              
+    </nav>
 
     <script>
         fetch('/api/nom-ecole')
