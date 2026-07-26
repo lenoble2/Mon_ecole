@@ -1,0 +1,603 @@
+
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Notes et Compositions</title>
+    <!-- Inclusion de SheetJS (xlsx) pour la génération et l'exportation de fichiers Excel multi-onglets -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
+        h2 { color: #333; }
+        .top-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .compo-nav-container { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .compo-btn { padding: 9px 16px; cursor: pointer; border: 1px solid #00acc1; background-color: #00bcd4; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; }
+        .compo-btn.active { background-color: #007bff; border-color: #007bff; }
+        .filter-container { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; font-weight: bold; }
+        .filter-btn.active { background-color: #007bff; color: white; border-color: #007bff; }
+        .btn-group { display: flex; gap: 8px; margin-top: 15px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+        .btn-group-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn { padding: 10px 15px; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; border: none; font-size: 0.9em; font-weight: bold; }
+        .btn-effacer-rond {
+            width: 42px;
+            height: 42px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.2s;
+        }
+        .btn-effacer-rond:hover { background-color: #bd2130; }
+        #conteneurTableau { overflow-x: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ddd; max-height: 550px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.75em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; white-space: nowrap; }
+        th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }
+        td:nth-child(3), td:nth-child(4) { text-align: left; }
+        input[type="number"] { width: 50px; padding: 4px; text-align: center; }
+        select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+    <div class="top-container">
+        <h2 id="titre-annee">Gestion des Notes et Compositions</h2>
+        <select id="annee-select" onchange="changerAnnee()">
+            <option value="2028">2028-2029</option>
+            <option value="2027">2027-2028</option>
+            <option value="2026">2026-2027</option>
+            <option value="2025" selected>2025-2026</option>
+            <option value="2024">2024-2025</option>
+            <option value="2023">2023-2024</option>
+            <option value="2022">2022-2023</option>
+            <option value="2021">2021-2022</option>
+        </select>
+    </div>
+
+    <!-- Boutons de sélection des Compositions / Périodes -->
+    <div class="compo-nav-container">
+        <button type="button" class="compo-btn active" onclick="changerPeriode('COMPO1', this)">COMPO1</button>
+        <button type="button" class="compo-btn" onclick="changerPeriode('COMPO2', this)">COMPO2</button>
+        <button type="button" class="compo-btn" onclick="changerPeriode('COMPO3', this)">COMPO3</button>
+        <button type="button" class="compo-btn" onclick="changerPeriode('PASSAGE', this)">COMPO DE PASSAGE</button>
+        <button type="button" class="compo-btn" onclick="changerPeriode('FIN_ANNEE', this)">RESULTATS FIN ANNEE</button>
+    </div>
+
+    <!-- Boutons de filtres des classes -->
+    <div class="filter-container">
+        <button type="button" class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CP2', this)">CP2</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CE1', this)">CE1</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CE2', this)">CE2</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>
+    </div>
+
+    <div id="conteneurTableau">
+        <p style="text-align:center; padding: 20px; color: #666;">Chargement des élèves...</p>
+    </div>
+
+    <!-- Input fichier caché pour l'import Excel -->
+    <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">
+
+    <div class="btn-group">
+        <div class="btn-group-left">
+            <button type="button" id="btnActiverModif" class="btn" style="background-color: #ffc107; color: #212529;" onclick="basculerModeEdition()">Modifier</button>
+            <button type="button" class="btn" style="background-color: #28a745;" onclick="enregistrerModifsBase()">Enregistrer</button>
+            <button type="button" class="btn" style="background-color: #6c757d;" onclick="declencherAjoutFichier()">Ajouter fichier</button>
+            <span id="nomFichierAffiche" style="font-size: 0.85em; color: #555; font-style: italic; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Aucun fichier choisi">Aucun fichier</span>
+            <button type="button" class="btn" style="background-color: #212529;" onclick="importerFichier()">Importer fichier</button>
+            <button type="button" id="btnTelechargerExcel" class="btn" style="background-color: #007bff;" onclick="telechargerExcelActuel()">Télécharger Excel</button>
+            <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour</a>
+        </div>
+        <div>
+            <button type="button" class="btn-effacer-rond" onclick="effacerNotesTableau()" title="Effacer toutes les notes affichées">🗑️</button>
+        </div>
+    </div>
+
+    <script>
+        let listeEleves = [];
+        let modeEditionActif = false;
+        let classeFiltreeActuelle = 'Tous';
+        let periodeActuelle = 'COMPO1';
+        let cachePeriodes = {};
+
+        const colonnesParNiveau = {
+            'CP1': {
+                'COMPO1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'lecture', 'dessin'],
+                'COMPO2': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'COMPO3': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'PASSAGE': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'FIN_ANNEE': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'lecture', 'dessin']
+            },
+            'CP2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+            'CE1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+            'CE2': ['exp_texte', 'dictee', 'aem', 'math'],
+            'CM1': ['exp_texte', 'dictee', 'aem', 'math'],
+            'CM2': ['exp_texte', 'dictee', 'aem', 'math']
+        };
+
+        function getMatieresNiveau(niveau, periode) {
+            if (niveau === 'CP1') {
+                if (colonnesParNiveau['CP1'][periode]) {
+                    return colonnesParNiveau['CP1'][periode];
+                }
+                return colonnesParNiveau['CP1']['COMPO1'];
+            }
+            return colonnesParNiveau[niveau] || [];
+        }
+
+        const toutesLesMatieresPossibles = ['graphisme', 'disc_visuelle', 'exp_ecrite', 'copie', 'dictee', 'ecriture', 'exp_texte', 'aem', 'math', 'edhc', 'lecture', 'dessin', 'poesie'];
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const annee = urlParams.get('annee') || '2025';
+        document.getElementById('annee-select').value = annee;
+
+        function changerAnnee() {
+            const valAnnee = document.getElementById('annee-select').value;
+            const pageActuelle = window.location.pathname.split('/').pop() || 'compo.html';
+            window.location.href = `${pageActuelle}?annee=${valAnnee}&periode=${periodeActuelle}`;
+        }
+
+        function changerPeriode(periode, btnElement) {
+            periodeActuelle = periode;
+            document.querySelectorAll('.compo-btn').forEach(b => b.classList.remove('active'));
+            if(btnElement) {
+                btnElement.classList.add('active');
+            } else {
+                document.querySelectorAll('.compo-btn').forEach(b => {
+                    if(b.textContent.includes(periode)) b.classList.add('active');
+                });
+            }
+            chargerDonnees();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlPeriode = urlParams.get('periode');
+            if(urlPeriode) {
+                periodeActuelle = urlPeriode;
+                document.querySelectorAll('.compo-btn').forEach(b => {
+                    b.classList.remove('active');
+                    if(b.textContent.includes(urlPeriode) || (urlPeriode === 'PASSAGE' && b.textContent.includes('PASSAGE'))) {
+                        b.classList.add('active');
+                    }
+                });
+            }
+            chargerDonnees();
+        });
+
+        function chargerDonnees() {
+            document.getElementById('conteneurTableau').innerHTML = `<p style="text-align:center; padding: 20px; color: #666;">Chargement des élèves...</p>`;
+            fetch(`/api/eleves/${annee}?periode=${periodeActuelle}`)
+            .then(res => res.json())
+            .then(data => {
+                listeEleves = Array.isArray(data) ? data : (data.eleves || []);
+                cachePeriodes[periodeActuelle] = listeEleves;
+                filtrer(classeFiltreeActuelle);
+            })
+            .catch(err => {
+                console.error("Erreur chargement:", err);
+                document.getElementById('conteneurTableau').innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement des données.</p>`;
+            });
+        }
+
+        function afficherTableau(data, niveauFiltre) {
+            const conteneur = document.getElementById('conteneurTableau');
+            if (!data || data.length === 0) {
+                conteneur.innerHTML = `<p style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</p>`;
+                return;
+            }
+
+            if (periodeActuelle === 'FIN_ANNEE') {
+                let html = "<table id='tableauDonnees'>";
+                html += `<tr>
+                    <th>N°</th>
+                    <th>Matricule</th>
+                    <th style="text-align: left;">Nom</th>
+                    <th style="text-align: left;">Prénoms</th>
+                    <th>Date Naiss.</th>
+                    <th>Sexe</th>
+                    <th>moyen_compo1</th>
+                    <th>moyen_compo2</th>
+                    <th>moyen_compo3</th>
+                    <th>moyen_compoN</th>
+                    <th>moyen_passage</th>
+                    <th>moyen_total</th>
+                    <th>Decision</th>
+                </tr>`;
+
+                data.forEach((e, index) => {
+                    let m1 = e.m1 !== undefined ? e.m1 : (e.moyen_compo1 !== undefined ? e.moyen_compo1 : '0.00');
+                    let m2 = e.m2 !== undefined ? e.m2 : (e.moyen_compo2 !== undefined ? e.moyen_compo2 : '0.00');
+                    let m3 = e.m3 !== undefined ? e.m3 : (e.moyen_compo3 !== undefined ? e.moyen_compo3 : '0.00');
+                    let mPassage = e.moyen_compo_de_passage !== undefined ? e.moyen_compo_de_passage : '0.00';
+                    let mN = e.moyen_compoN !== undefined ? e.moyen_compoN : '0.00';
+                    let mTotal = e.moyen_total !== undefined ? e.moyen_total : '0.00';
+
+                    html += `<tr data-id="${e.matricule || ''}">
+                        <td>${index + 1}</td>
+                        <td>${e.matricule || ''}</td>
+                        <td style="text-align: left;">${e.nom || ''}</td>
+                        <td style="text-align: left;">${e.prenoms || ''}</td>
+                        <td>${e.date_naissance || ''}</td>
+                        <td>${e.sexe || ''}</td>
+                        <td><input type="number" step="0.01" class="edit-m1" value="${m1}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                        <td><input type="number" step="0.01" class="edit-m2" value="${m2}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                        <td><input type="number" step="0.01" class="edit-m3" value="${m3}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                        <td><input type="number" step="0.01" class="edit-mcompon" value="${mN}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                        <td><input type="number" step="0.01" class="edit-mpassage" value="${mPassage}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                        <td><input type="number" step="0.01" class="edit-mtotal" value="${mTotal}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                        <td>
+                            <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>
+                                <option value="" ${!e.decision ? 'selected' : ''}>--</option>
+                                <option value="A" ${e.decision === 'A' ? 'selected' : ''}>A</option>
+                                <option value="R" ${e.decision === 'R' ? 'selected' : ''}>R</option>
+                            </select>
+                        </td>
+                    </tr>`;
+                });
+                html += "</table>";
+                conteneur.innerHTML = html;
+                return;
+            }
+
+            let matieres = (niveauFiltre !== 'Tous') ? getMatieresNiveau(niveauFiltre, periodeActuelle) : toutesLesMatieresPossibles;
+
+            let html = "<table id='tableauDonnees'>";
+            html += `<tr>
+                <th>N°</th>
+                <th>Matricule</th>
+                <th style="text-align: left;">Nom</th>
+                <th style="text-align: left;">Prénoms</th>
+                <th>Date Naiss.</th>
+                <th>Sexe</th>`;
+            matieres.forEach(m => {
+                html += `<th>${m.toUpperCase()}</th>`;
+            });
+            html += `<th>Total</th>
+                <th>Moyen</th>
+                <th>Rang</th>
+                <th>Decision</th>
+            </tr>`;
+
+            data.forEach((e, index) => {
+                html += `<tr data-id="${e.matricule || ''}">
+                    <td>${index + 1}</td>
+                    <td>${e.matricule || ''}</td>
+                    <td style="text-align: left;">${e.nom || ''}</td>
+                    <td style="text-align: left;">${e.prenoms || ''}</td>
+                    <td>${e.date_naissance || ''}</td>
+                    <td>${e.sexe || ''}</td>`;
+
+                matieres.forEach(m => {
+                    let valeurNote = (e.notes && e.notes[m] !== undefined) ? e.notes[m] : (e[m] !== undefined ? e[m] : '');
+                    html += `<td><input type="number" step="0.5" class="edit-note" data-matiere="${m}" value="${valeurNote}" ${!modeEditionActif ? 'disabled' : ''}></td>`;
+                });
+
+                let valeurMoyen = e.moyen !== undefined ? e.moyen : (e.moyenne !== undefined ? e.moyenne : (e.mg !== undefined ? e.mg : '0.00'));
+                if (valeurMoyen === null || valeurMoyen === '') valeurMoyen = '0.00';
+                let valeurTotal = e.total !== undefined && e.total !== null && e.total !== '' ? e.total : '0.00';
+                let valeurRang = e.rang !== undefined && e.rang !== null && e.rang !== '' ? e.rang : (index + 1);
+
+                html += `<td><input type="number" step="0.01" class="edit-total" value="${valeurTotal}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                    <td><input type="number" step="0.01" class="edit-mg edit-moyen" value="${valeurMoyen}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                    <td><input type="number" class="edit-rang" value="${valeurRang}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                    <td>
+                        <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>
+                            <option value="" ${!e.decision ? 'selected' : ''}>--</option>
+                            <option value="A" ${e.decision === 'A' ? 'selected' : ''}>A</option>
+                            <option value="R" ${e.decision === 'R' ? 'selected' : ''}>R</option>
+                        </select>
+                    </td>
+                </tr>`;
+            });
+            html += "</table>";
+            conteneur.innerHTML = html;
+        }
+
+        function filtrer(niveau, btnElement) {
+            classeFiltreeActuelle = niveau;
+            if(btnElement) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btnElement.classList.add('active');
+            } else {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    if(b.textContent.trim() === niveau) b.classList.add('active');
+                    else b.classList.remove('active');
+                });
+            }
+
+            const btnDL = document.getElementById('btnTelechargerExcel');
+            if (niveau !== 'Tous') {
+                btnDL.textContent = `Télécharger ${niveau}`;
+            } else {
+                btnDL.textContent = "Télécharger Excel Global";
+            }
+
+            if (niveau === 'Tous') {
+                afficherTableau(listeEleves, 'Tous');
+            } else {
+                afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()), niveau);
+            }
+        }
+
+        function basculerModeEdition() {
+            modeEditionActif = !modeEditionActif;
+            const btn = document.getElementById('btnActiverModif');
+            btn.innerText = modeEditionActif ? "Verrouiller" : "Modifier";
+            filtrer(classeFiltreeActuelle);
+        }
+
+        function enregistrerModifsBase() {
+            const lignes = document.querySelectorAll('#tableauDonnees tr[data-id]');
+            if (lignes.length === 0) {
+                alert("Aucune donnée à enregistrer.");
+                return;
+            }
+
+            const updates = [];
+            lignes.forEach(tr => {
+                if (periodeActuelle === 'FIN_ANNEE') {
+                    updates.push({
+                        matricule: tr.getAttribute('data-id'),
+                        moyen_compo1: tr.querySelector('.edit-m1')?.value || 0,
+                        moyen_compo2: tr.querySelector('.edit-m2')?.value || 0,
+                        moyen_compo3: tr.querySelector('.edit-m3')?.value || 0,
+                        moyen_compoN: tr.querySelector('.edit-mcompon')?.value || 0,
+                        moyen_compo_de_passage: tr.querySelector('.edit-mpassage')?.value || 0,
+                        moyen_total: tr.querySelector('.edit-mtotal')?.value || 0,
+                        decision: tr.querySelector('.dfa-select').value
+                    });
+                } else {
+                    let notesObj = {};
+                    tr.querySelectorAll('.edit-note').forEach(input => {
+                        notesObj[input.getAttribute('data-matiere')] = input.value;
+                    });
+                    updates.push({
+                        matricule: tr.getAttribute('data-id'),
+                        notes: notesObj,
+                        total: tr.querySelector('.edit-total').value,
+                        moyen: tr.querySelector('.edit-mg').value,
+                        rang: tr.querySelector('.edit-rang').value,
+                        decision: tr.querySelector('.dfa-select').value
+                    });
+                }
+            });
+
+            fetch('/api/update-notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ updates: updates, annee: annee, periode: periodeActuelle })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert("✅ Enregistrement effectué avec succès !");
+                } else {
+                    alert("⚠️ Erreur lors de l'enregistrement.");
+                }
+            })
+            .catch(err => {
+                console.error("Erreur réseau:", err);
+                alert("❌ Erreur réseau.");
+            });
+        }
+
+        function effacerNotesTableau() {
+            if (!modeEditionActif) {
+                alert("⚠️ Veuillez d'abord cliquer sur le bouton 'Modifier' pour activer le mode édition avant d'effacer les notes.");
+                return;
+            }
+            if (confirm("Voulez-vous vraiment effacer toutes les notes et totaux du tableau affiché ?")) {
+                document.querySelectorAll('.edit-note').forEach(input => input.value = '');
+                document.querySelectorAll('.edit-total').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.edit-mg').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.edit-m1').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.edit-m2').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.edit-m3').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.edit-mcompon').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.edit-mpassage').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.edit-mtotal').forEach(input => input.value = '0.00');
+                document.querySelectorAll('.dfa-select').forEach(select => select.value = '');
+                alert("🗑️ Notes effacées. Pensez à cliquer sur 'Enregistrer' pour sauvegarder le vide dans la base de données.");
+            }
+        }
+
+        function declencherAjoutFichier() {
+            document.getElementById('inputFichierExcel').click();
+        }
+
+        function afficherNomFichier(input) {
+            const spanNom = document.getElementById('nomFichierAffiche');
+            if (input.files && input.files[0]) {
+                spanNom.textContent = input.files[0].name;
+                spanNom.title = input.files[0].name;
+            } else {
+                spanNom.textContent = "Aucun fichier";
+                spanNom.title = "Aucun fichier choisi";
+            }
+        }
+
+        async function importerFichier() {
+            const inputFichier = document.getElementById('inputFichierExcel');
+            if (!inputFichier.files || inputFichier.files.length === 0) {
+                alert("Veuillez d'abord cliquer sur 'Ajouter fichier' pour sélectionner un fichier Excel.");
+                return;
+            }
+            const fichier = inputFichier.files[0];
+            const lecteur = new FileReader();
+            lecteur.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const premiereFeuilleNom = workbook.SheetNames[0];
+                    const feuille = workbook.Sheets[premiereFeuilleNom];
+                    const donneesBrutes = XLSX.utils.sheet_to_json(feuille);
+
+                    if (!donneesBrutes || donneesBrutes.length === 0) {
+                        alert("Le fichier sélectionné est vide ou mal formaté.");
+                        return;
+                    }
+
+                    let updatesPourServeur = [];
+                    donneesBrutes.forEach((row) => {
+                        let rowNormalise = {};
+                        for (let [k, v] of Object.entries(row)) {
+                            let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                            rowNormalise[clePropre] = v;
+                        }
+                        let cleMatricule = Object.keys(rowNormalise).find(k => k === 'matricule' || k.includes('mat'));
+                        let matriculeExtrait = '';
+                        if (cleMatricule && rowNormalise[cleMatricule]) {
+                            matriculeExtrait = String(rowNormalise[cleMatricule]).trim();
+                        } else {
+                            let nomVal = rowNormalise['nom'] ? String(rowNormalise['nom']).trim() : '';
+                            let prenomVal = rowNormalise['prenoms'] || rowNormalise['prenom'] ? String(rowNormalise['prenoms'] || rowNormalise['prenom']).trim() : '';
+                            if (nomVal || prenomVal) {
+                                let eleveTrouve = listeEleves.find(el =>
+                                    (el.nom && el.nom.trim().toLowerCase() === nomVal.toLowerCase()) &&
+                                    (el.prenoms && el.prenoms.trim().toLowerCase() === prenomVal.toLowerCase())
+                                );
+                                if (eleveTrouve) {
+                                    matriculeExtrait = eleveTrouve.matricule;
+                                }
+                            }
+                        }
+
+                        if (matriculeExtrait) {
+                            if (periodeActuelle === 'FIN_ANNEE') {
+                                updatesPourServeur.push({
+                                    matricule: matriculeExtrait,
+                                    moyen_compo1: rowNormalise['moyen_compo1'] || rowNormalise['m1'] || 0,
+                                    moyen_compo2: rowNormalise['moyen_compo2'] || rowNormalise['m2'] || 0,
+                                    moyen_compo3: rowNormalise['moyen_compo3'] || rowNormalise['m3'] || 0,
+                                    moyen_compoN: rowNormalise['moyen_compon'] || 0,
+                                    moyen_compo_de_passage: rowNormalise['moyen_compo_de_passage'] || 0,
+                                    moyen_total: rowNormalise['moyen_total'] || 0,
+                                    decision: rowNormalise['decision_a/r'] || rowNormalise['decision'] || ''
+                                });
+                            } else {
+                                let notesObj = {};
+                                toutesLesMatieresPossibles.forEach(mat => {
+                                    let valeurTrouvee = undefined;
+                                    for (let [cleExcel, valExcel] of Object.entries(rowNormalise)) {
+                                        if (cleExcel === mat || cleExcel.includes(mat)) {
+                                            valeurTrouvee = valExcel;
+                                            break;
+                                        }
+                                    }
+                                    if (valeurTrouvee !== undefined && valeurTrouvee !== null && valeurTrouvee !== '') {
+                                        notesObj[mat] = String(valeurTrouvee);
+                                    }
+                                });
+                                let totalExtrait = rowNormalise['total'] !== undefined ? String(rowNormalise['total']) : '';
+                                let moyenExtrait = '';
+                                if (rowNormalise['moyen'] !== undefined) moyenExtrait = String(rowNormalise['moyen']);
+                                else if (rowNormalise['moyenne'] !== undefined) moyenExtrait = String(rowNormalise['moyenne']);
+                                else if (rowNormalise['mg'] !== undefined) moyenExtrait = String(rowNormalise['mg']);
+
+                                let rangExtrait = rowNormalise['rang'] !== undefined ? String(rowNormalise['rang']) : '';
+                                let cleDecision = Object.keys(rowNormalise).find(k => k.includes('decision') || k.includes('dfa') || k.includes('dec'));
+                                let decisionExtrait = cleDecision !== undefined ? String(rowNormalise[cleDecision]) : '';
+
+                                updatesPourServeur.push({
+                                    matricule: matriculeExtrait,
+                                    notes: notesObj,
+                                    total: totalExtrait,
+                                    moyen: moyenExtrait,
+                                    rang: rangExtrait,
+                                    decision: decisionExtrait
+                                });
+                            }
+                        }
+                    });
+
+                    if (updatesPourServeur.length === 0) {
+                        alert("⚠️ Aucun élève correspondant n'a pu être identifié.");
+                        return;
+                    }
+
+                    const res = await fetch('/api/update-notes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ annee: annee, periode: periodeActuelle, updates: updatesPourServeur })
+                    });
+                    const reponse = await res.json();
+                    if (reponse.success) {
+                        alert("✅ Notes importées avec succès !");
+                        inputFichier.value = "";
+                        document.getElementById('nomFichierAffiche').textContent = "Aucun fichier";
+                        chargerDonnees();
+                    } else {
+                        alert("⚠️ Erreur serveur : " + (reponse.message || "Inconnue"));
+                    }
+                } catch (erreur) {
+                    console.error("Erreur lecture fichier:", erreur);
+                    alert("❌ Impossible de lire ce fichier Excel : " + erreur.message);
+                }
+            };
+            lecteur.readAsArrayBuffer(fichier);
+        }
+
+        async function telechargerExcelActuel() {
+            let dataPeriode = cachePeriodes[periodeActuelle];
+            if (!dataPeriode || dataPeriode.length === 0) {
+                try {
+                    const res = await fetch(`/api/eleves/${annee}?periode=${periodeActuelle}`);
+                    dataPeriode = await res.json();
+                    cachePeriodes[periodeActuelle] = dataPeriode;
+                } catch (e) {
+                    dataPeriode = [];
+                }
+            }
+            if (!dataPeriode || dataPeriode.length === 0) {
+                alert("Aucune donnée disponible pour l'export.");
+                return;
+            }
+
+            let elevesExport = (classeFiltreeActuelle !== 'Tous') ? dataPeriode.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase()) : dataPeriode;
+            if (elevesExport.length === 0) {
+                alert(`Aucun élève trouvé pour ${classeFiltreeActuelle}.`);
+                return;
+            }
+
+            const lignesExcel = elevesExport.map((e, idx) => {
+                let ligne = {
+                    "N°": idx + 1,
+                    "Matricule": e.matricule || '',
+                    "Nom": e.nom || '',
+                    "Prénoms": e.prenoms || '',
+                    "Niveau": e.niveau || '',
+                    "Date Naiss.": e.date_naissance || '',
+                    "Sexe": e.sexe || ''
+                };
+                toutesLesMatieresPossibles.forEach(m => {
+                    let val = (e.notes && e.notes[m] !== undefined) ? e.notes[m] : (e[m] !== undefined ? e[m] : '');
+                    ligne[m.toUpperCase()] = val;
+                });
+                ligne["Total"] = e.total || 0;
+                ligne["Moyen"] = e.moyen || e.moyenne || e.mg || 0;
+                ligne["Rang"] = e.rang || idx + 1;
+                ligne["Decision"] = e.decision || '';
+                return ligne;
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(lignesExcel);
+            XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
+            XLSX.writeFile(wb, `Notes_${classeFiltreeActuelle}_${periodeActuelle}_${annee}.xlsx`);
+        }
+    </script>
+</body>
+</html>
