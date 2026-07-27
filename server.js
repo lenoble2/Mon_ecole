@@ -174,6 +174,7 @@ app.get('/api/nom-ecole', (req, res) => {
     res.json({ nom: req.session.nomEcole || "Nom de l'école" });
 });
 
+
 app.get('/api/eleves/:annee', async (req, res) => {
     try {
         const { annee } = req.params;
@@ -181,17 +182,75 @@ app.get('/api/eleves/:annee', async (req, res) => {
         const nomEcole = req.session.nomEcole;
 
         if (periode) {
+            if (periode === 'FIN_ANNEE') {
+                const queryFinAnnee = `
+                    SELECT e.*, 
+                           rc_fin.total, rc_fin.moyen, rc_fin.rang, rc_fin.decision,
+                           rc1.moyen AS moyen_compo1,
+                           rc2.moyen AS moyen_compo2,
+                           rc3.moyen AS moyen_compo3,
+                           rc_pass.moyen AS moyen_passage_brut
+                    FROM eleves e
+                    LEFT JOIN resultats_compositions rc_fin 
+                      ON TRIM(e.matricule) = TRIM(rc_fin.matricule) AND e.annee = rc_fin.annee AND e.nom_ecole = rc_fin.nom_ecole AND rc_fin.periode = 'FIN_ANNEE'
+                    LEFT JOIN resultats_compositions rc1 
+                      ON TRIM(e.matricule) = TRIM(rc1.matricule) AND e.annee = rc1.annee AND e.nom_ecole = rc1.nom_ecole AND rc1.periode = 'COMPO1'
+                    LEFT JOIN resultats_compositions rc2 
+                      ON TRIM(e.matricule) = TRIM(rc2.matricule) AND e.annee = rc2.annee AND e.nom_ecole = rc2.nom_ecole AND rc2.periode = 'COMPO2'
+                    LEFT JOIN resultats_compositions rc3 
+                      ON TRIM(e.matricule) = TRIM(rc3.matricule) AND e.annee = rc3.annee AND e.nom_ecole = rc3.nom_ecole AND rc3.periode = 'COMPO3'
+                    LEFT JOIN resultats_compositions rc_pass 
+                      ON TRIM(e.matricule) = TRIM(rc_pass.matricule) AND e.annee = rc_pass.annee AND e.nom_ecole = rc_pass.nom_ecole AND rc_pass.periode = 'PASSAGE'
+                    WHERE e.annee = $1 AND e.nom_ecole = $2
+                    ORDER BY e.nom ASC
+                `;
+                const result = await pool.query(queryFinAnnee, [annee, nomEcole]);
+                
+                // Application de vos règles de calcul exactes
+                const rowsCalculated = result.rows.map(row => {
+                    let m1 = parseFloat(row.moyen_compo1) || 0;
+                    let m2 = parseFloat(row.moyen_compo2) || 0;
+                    let m3 = parseFloat(row.moyen_compo3) || 0;
+                    let mPassBrut = parseFloat(row.moyen_passage_brut) || 0;
+
+                    // 1. moyen_compoN = (moyen compo1 + moyen compo2 + moyen compo3) / 3
+                    let moyenCompoN = (m1 > 0 || m2 > 0 || m3 > 0) ? ((m1 + m2 + m3) / 3) : 0;
+
+                    // 2. moyen_passage = moyen_passage_brut * 2
+                    let moyenPassage = mPassBrut * 2;
+
+                    // 3. moyen_total = (moyen_compoN + moyen_passage) / 3
+                    let moyenTotal = (moyenCompoN > 0 || moyenPassage > 0) ? ((moyenCompoN + moyenPassage) / 3) : 0;
+
+                    return {
+                        ...row,
+                        moyen_compo1: m1.toFixed(2),
+                        moyen_compo2: m2.toFixed(2),
+                        moyen_compo3: m3.toFixed(2),
+                        moyen_compoN: moyenCompoN.toFixed(2),
+                        moyen_compo_de_passage: moyenPassage.toFixed(2),
+                        moyen_total: moyenTotal.toFixed(2)
+                    };
+                });
+
+                return res.json(rowsCalculated);
+            }
+
+            // Comportement normal pour COMPO1, COMPO2, COMPO3, PASSAGE
             const query = `
-                SELECT e.*, rc.graphisme, rc.disc_visuelle, rc.exp_ecrite, rc.copie, rc.dictee,
-                       rc.ecriture, rc.exp_texte, rc.aem, rc.math, rc.edhc, rc.lecture,
-                       rc.dessin, rc.poesie, rc.total, rc.moyen, rc.rang, rc.decision
+                SELECT e.*, rc.graphisme, rc.disc_visuelle, rc.exp_ecrite, rc.copie,
+                       rc.dictee, rc.ecriture, rc.exp_texte, rc.aem, rc.math, rc.edhc,
+                       rc.lecture, rc.dessin, rc.poesie, rc.total, rc.moyen, rc.rang, rc.decision,
+                       rc.moyen_compo1, rc.moyen_compo2, rc.moyen_compo3, rc.moyen_compoN,
+                       rc.moyen_compo_de_passage, rc.moyen_total
                 FROM eleves e
                 LEFT JOIN resultats_compositions rc
-                  ON e.matricule = rc.matricule
+                  ON TRIM(e.matricule) = TRIM(rc.matricule)
                   AND e.annee = rc.annee
                   AND e.nom_ecole = rc.nom_ecole
                   AND rc.periode = $3
                 WHERE e.annee = $1 AND e.nom_ecole = $2
+                ORDER BY e.nom ASC
             `;
             const result = await pool.query(query, [annee, nomEcole, periode]);
             
@@ -199,26 +258,16 @@ app.get('/api/eleves/:annee', async (req, res) => {
                 return {
                     ...row,
                     notes: {
-                        graphisme: row.graphisme,
-                        disc_visuelle: row.disc_visuelle,
-                        exp_ecrite: row.exp_ecrite,
-                        copie: row.copie,               // 👈 Ajouté
-                        dictee: row.dictee,             // 👈 Ajouté
-                        ecriture: row.ecriture,         // 👈 Ajouté
-                        exp_texte: row.exp_texte,
-                        aem: row.aem,
-                        math: row.math,
-                        edhc: row.edhc,
-                        lecture: row.lecture,
-                        dessin: row.dessin,
-                        poesie: row.poesie              // 👈 Ajouté
+                        graphisme: row.graphisme, disc_visuelle: row.disc_visuelle, exp_ecrite: row.exp_ecrite,
+                        copie: row.copie, dictee: row.dictee, ecriture: row.ecriture, exp_texte: row.exp_texte,
+                        aem: row.aem, math: row.math, edhc: row.edhc, lecture: row.lecture, dessin: row.dessin, poesie: row.poesie
                     }
                 };
             });
             return res.json(rowsFormatted);
         } else {
             const result = await pool.query(
-                "SELECT * FROM eleves WHERE annee = $1 AND nom_ecole = $2",
+                "SELECT * FROM eleves WHERE annee = $1 AND nom_ecole = $2 ORDER BY nom ASC",
                 [annee, nomEcole]
             );
             res.json(result.rows);
@@ -228,6 +277,7 @@ app.get('/api/eleves/:annee', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 app.post('/importer', upload.single('fichier_csv'), (req, res) => {
     const anneeImport = req.body.annee_import || '2025';
@@ -467,22 +517,40 @@ app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' 
 app.get('/exporter', async (req, res) => {
     try {
         const nomEcole = req.session.nomEcole;
-        const result = await pool.query("SELECT * FROM eleves WHERE nom_ecole = $1", [nomEcole]);
-        const headers = ["annee", "matricule", "nom", "prenoms", "sexe", "date_naissance", "pays", "localite", "mere", "pere", "contact", "nationalite", "num_acte", "date_etab", "lieu_etab", "ecole", "niveau"];
-        let csvContent = headers.join(",") + "\n";
+        const annee = req.query.annee || '2025'; // Récupère l'année si transmise
+
+        // Requête combinant élèves et leurs derniers résultats pour l'export
+        const query = `
+            SELECT e.annee, e.matricule, e.nom, e.prenoms, e.sexe, e.niveau, 
+                   rc.total, rc.moyen, rc.rang, rc.decision
+            FROM eleves e
+            LEFT JOIN resultats_compositions rc 
+              ON TRIM(e.matricule) = TRIM(rc.matricule) 
+              AND e.annee = rc.annee 
+              AND e.nom_ecole = rc.nom_ecole
+            WHERE e.nom_ecole = $1 AND e.annee = $2
+        `;
+        
+        const result = await pool.query(query, [nomEcole, annee]);
+        
+        const headers = ["annee", "matricule", "nom", "prenoms", "sexe", "niveau", "total", "moyen", "rang", "decision"];
+        let csvContent = "\uFEFF" + headers.join(",") + "\n"; // Ajout du BOM UTF-8 pour Excel
+
         result.rows.forEach(row => {
-            const values = headers.map(h => row[h] || '');
+            const values = headers.map(h => row[h] !== null && row[h] !== undefined ? row[h] : '');
             const sanitized = values.map(v => `"${String(v).replace(/"/g, '""')}"`);
             csvContent += sanitized.join(",") + "\n";
         });
+
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-        res.setHeader('Content-Disposition', 'attachment; filename="eleves.csv"');
+        res.setHeader('Content-Disposition', 'attachment; filename="resultats_eleves.csv"');
         res.send(csvContent);
     } catch (err) {
         console.error("❌ Erreur lors de l'exportation :", err);
         res.status(500).send("Erreur serveur : " + err.message);
     }
 });
+
 
 app.post('/api/basculer-eleves', async (req, res) => {
     const { decisions, annee_source } = req.body;
@@ -518,6 +586,7 @@ app.post('/api/basculer-eleves', async (req, res) => {
         client.release();
     }
 });
+
 
 app.post('/api/update-notes', async (req, res) => {
     const nomEcole = req.session.nomEcole;
@@ -577,16 +646,16 @@ app.post('/api/update-notes', async (req, res) => {
                 n.graphisme !== '' && n.graphisme !== undefined ? n.graphisme : null,
                 n.disc_visuelle !== '' && n.disc_visuelle !== undefined ? n.disc_visuelle : null,
                 n.exp_ecrite !== '' && n.exp_ecrite !== undefined ? n.exp_ecrite : null,
-                n.copie !== '' && n.copie !== undefined ? n.copie : null,               // 👈 Paramètre $9
-                n.dictee !== '' && n.dictee !== undefined ? n.dictee : null,             // 👈 Paramètre $10
-                n.ecriture !== '' && n.ecriture !== undefined ? n.ecriture : null,       // 👈 Paramètre $11
+                n.copie !== '' && n.copie !== undefined ? n.copie : null,
+                n.dictee !== '' && n.dictee !== undefined ? n.dictee : null,
+                n.ecriture !== '' && n.ecriture !== undefined ? n.ecriture : null,
                 n.exp_texte !== '' && n.exp_texte !== undefined ? n.exp_texte : null,
                 n.aem !== '' && n.aem !== undefined ? n.aem : null,
                 n.math !== '' && n.math !== undefined ? n.math : null,
                 n.edhc !== '' && n.edhc !== undefined ? n.edhc : null,
                 n.lecture !== '' && n.lecture !== undefined ? n.lecture : null,
                 n.dessin !== '' && n.dessin !== undefined ? n.dessin : null,
-                n.poesie !== '' && n.poesie !== undefined ? n.poesie : null,             // 👈 Paramètre $18
+                n.poesie !== '' && n.poesie !== undefined ? n.poesie : null,
                 u.total !== '' && u.total !== undefined ? u.total : 0,
                 valeurMoyen,
                 u.rang !== '' && u.rang !== undefined ? u.rang : 0,
@@ -776,6 +845,9 @@ app.delete('/api/admin/delete-user/:id', async (req, res) => {
         res.status(500).json({ success: false });
     }
 });
+
+
+
 
 async function startServer() {
     await initDB();
