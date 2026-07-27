@@ -44,7 +44,7 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; white-space: nowrap; }
         th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }
         td:nth-child(3), td:nth-child(4) { text-align: left; }
-        input[type="number"] { width: 50px; padding: 4px; text-align: center; }
+        input[type="number"] { width: 65px; padding: 4px; text-align: center; }
         select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
     </style>
 </head>
@@ -113,32 +113,58 @@
         let periodeActuelle = 'COMPO1';
         let cachePeriodes = {};
 
+        // Configuration rigoureuse des matières par niveau et par période
         const colonnesParNiveau = {
             'CP1': {
-                'COMPO1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'lecture', 'dessin'],
+                'COMPO1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
                 'COMPO2': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
                 'COMPO3': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
                 'PASSAGE': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
                 'FIN_ANNEE': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'lecture', 'dessin']
             },
-            'CP2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-            'CE1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
-            'CE2': ['exp_texte', 'dictee', 'aem', 'math'],
-            'CM1': ['exp_texte', 'dictee', 'aem', 'math'],
-            'CM2': ['exp_texte', 'dictee', 'aem', 'math']
+            'CP2': {
+                'COMPO1': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'COMPO2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'COMPO3': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'PASSAGE': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie']
+            },
+            'CE1': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math', 'lecture']
+            },
+            'CE2': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
+            },
+            'CM1': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
+            },
+            'CM2': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
+            }
         };
 
         function getMatieresNiveau(niveau, periode) {
-            if (niveau === 'CP1') {
-                if (colonnesParNiveau['CP1'][periode]) {
-                    return colonnesParNiveau['CP1'][periode];
+            if (!niveau || niveau === 'Tous') return [];
+            const nivUpper = niveau.toUpperCase();
+            if (colonnesParNiveau[nivUpper]) {
+                if (colonnesParNiveau[nivUpper][periode]) {
+                    return colonnesParNiveau[nivUpper][periode];
                 }
-                return colonnesParNiveau['CP1']['COMPO1'];
+                return colonnesParNiveau[nivUpper]['COMPO1'] || [];
             }
-            return colonnesParNiveau[niveau] || [];
+            return [];
         }
-
-        const toutesLesMatieresPossibles = ['graphisme', 'disc_visuelle', 'exp_ecrite', 'copie', 'dictee', 'ecriture', 'exp_texte', 'aem', 'math', 'edhc', 'lecture', 'dessin', 'poesie'];
 
         const urlParams = new URLSearchParams(window.location.search);
         const annee = urlParams.get('annee') || '2025';
@@ -199,6 +225,7 @@
                 return;
             }
 
+            // Vue globale / Spécifique FIN_ANNEE
             if (periodeActuelle === 'FIN_ANNEE') {
                 let html = "<table id='tableauDonnees'>";
                 html += `<tr>
@@ -206,11 +233,12 @@
                     <th>Matricule</th>
                     <th style="text-align: left;">Nom</th>
                     <th style="text-align: left;">Prénoms</th>
+                    <th>Niveau</th>
                     <th>Date Naiss.</th>
                     <th>Sexe</th>
-                    <th>moyen_compo1</th>
-                    <th>moyen_compo2</th>
-                    <th>moyen_compo3</th>
+                    <th>MOYEN COMPO1</th>
+                    <th>MOYEN COMPO2</th>
+                    <th>MOYEN COMPO3</th>
                     <th>moyen_compoN</th>
                     <th>moyen_passage</th>
                     <th>moyen_total</th>
@@ -218,18 +246,20 @@
                 </tr>`;
 
                 data.forEach((e, index) => {
-                    let m1 = e.m1 !== undefined ? e.m1 : (e.moyen_compo1 !== undefined ? e.moyen_compo1 : '0.00');
-                    let m2 = e.m2 !== undefined ? e.m2 : (e.moyen_compo2 !== undefined ? e.moyen_compo2 : '0.00');
-                    let m3 = e.m3 !== undefined ? e.m3 : (e.moyen_compo3 !== undefined ? e.moyen_compo3 : '0.00');
-                    let mPassage = e.moyen_compo_de_passage !== undefined ? e.moyen_compo_de_passage : '0.00';
-                    let mN = e.moyen_compoN !== undefined ? e.moyen_compoN : '0.00';
-                    let mTotal = e.moyen_total !== undefined ? e.moyen_total : '0.00';
+                    let m1 = (parseFloat(e.moyen_compo1 ?? e.m1) || 0).toFixed(2);
+                    let m2 = (parseFloat(e.moyen_compo2 ?? e.m2) || 0).toFixed(2);
+                    let m3 = (parseFloat(e.moyen_compo3 ?? e.m3) || 0).toFixed(2);
+                    let mPassage = (parseFloat(e.moyen_compo_de_passage) || 0).toFixed(2);
+                    let mN = (parseFloat(e.moyen_compoN) || 0).toFixed(2);
+                    let mTotal = (parseFloat(e.moyen_total ?? e.moyen) || 0).toFixed(2);
+                    let decisionVal = e.decision ?? '';
 
-                    html += `<tr data-id="${e.matricule || ''}">
+                    html += `<tr data-id="${e.matricule || ''}" data-niveau="${e.niveau || ''}">
                         <td>${index + 1}</td>
                         <td>${e.matricule || ''}</td>
                         <td style="text-align: left;">${e.nom || ''}</td>
                         <td style="text-align: left;">${e.prenoms || ''}</td>
+                        <td>${e.niveau || ''}</td>
                         <td>${e.date_naissance || ''}</td>
                         <td>${e.sexe || ''}</td>
                         <td><input type="number" step="0.01" class="edit-m1" value="${m1}" ${!modeEditionActif ? 'disabled' : ''}></td>
@@ -240,9 +270,9 @@
                         <td><input type="number" step="0.01" class="edit-mtotal" value="${mTotal}" ${!modeEditionActif ? 'disabled' : ''}></td>
                         <td>
                             <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>
-                                <option value="" ${!e.decision ? 'selected' : ''}>--</option>
-                                <option value="A" ${e.decision === 'A' ? 'selected' : ''}>A</option>
-                                <option value="R" ${e.decision === 'R' ? 'selected' : ''}>R</option>
+                                <option value="" ${!decisionVal ? 'selected' : ''}>--</option>
+                                <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>
+                                <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
                             </select>
                         </td>
                     </tr>`;
@@ -252,7 +282,13 @@
                 return;
             }
 
-            let matieres = (niveauFiltre !== 'Tous') ? getMatieresNiveau(niveauFiltre, periodeActuelle) : toutesLesMatieresPossibles;
+            // Si "Tous" est sélectionné, on avertit l'utilisateur de choisir une classe
+            if (niveauFiltre === 'Tous') {
+                conteneur.innerHTML = `<p style="padding:20px; color:#666; text-align:center;">Veuillez sélectionner une classe spécifique (CP1, CP2, CE1, CE2, CM1, CM2) pour afficher les matières et les tableaux de calcul adaptés.</p>`;
+                return;
+            }
+
+            let matieres = getMatieresNiveau(niveauFiltre, periodeActuelle);
 
             let html = "<table id='tableauDonnees'>";
             html += `<tr>
@@ -260,6 +296,7 @@
                 <th>Matricule</th>
                 <th style="text-align: left;">Nom</th>
                 <th style="text-align: left;">Prénoms</th>
+                <th>Niveau</th>
                 <th>Date Naiss.</th>
                 <th>Sexe</th>`;
             matieres.forEach(m => {
@@ -272,32 +309,38 @@
             </tr>`;
 
             data.forEach((e, index) => {
-                html += `<tr data-id="${e.matricule || ''}">
+                let decisionVal = e.decision ?? '';
+                html += `<tr data-id="${e.matricule || ''}" data-niveau="${e.niveau || ''}">
                     <td>${index + 1}</td>
                     <td>${e.matricule || ''}</td>
                     <td style="text-align: left;">${e.nom || ''}</td>
                     <td style="text-align: left;">${e.prenoms || ''}</td>
+                    <td>${e.niveau || ''}</td>
                     <td>${e.date_naissance || ''}</td>
                     <td>${e.sexe || ''}</td>`;
 
                 matieres.forEach(m => {
-                    let valeurNote = (e.notes && e.notes[m] !== undefined) ? e.notes[m] : (e[m] !== undefined ? e[m] : '');
+                    let valeurNote = '';
+                    if (e.notes && e.notes[m] !== undefined && e.notes[m] !== null) {
+                        valeurNote = e.notes[m];
+                    } else if (e[m] !== undefined && e[m] !== null) {
+                        valeurNote = e[m];
+                    }
                     html += `<td><input type="number" step="0.5" class="edit-note" data-matiere="${m}" value="${valeurNote}" ${!modeEditionActif ? 'disabled' : ''}></td>`;
                 });
 
-                let valeurMoyen = e.moyen !== undefined ? e.moyen : (e.moyenne !== undefined ? e.moyenne : (e.mg !== undefined ? e.mg : '0.00'));
-                if (valeurMoyen === null || valeurMoyen === '') valeurMoyen = '0.00';
-                let valeurTotal = e.total !== undefined && e.total !== null && e.total !== '' ? e.total : '0.00';
-                let valeurRang = e.rang !== undefined && e.rang !== null && e.rang !== '' ? e.rang : (index + 1);
+                let valeurMoyen = (parseFloat(e.moyen ?? e.moyenne ?? e.mg) || 0).toFixed(2);
+                let valeurTotal = (parseFloat(e.total) || 0).toFixed(2);
+                let valeurRang = e.rang ?? (index + 1);
 
                 html += `<td><input type="number" step="0.01" class="edit-total" value="${valeurTotal}" ${!modeEditionActif ? 'disabled' : ''}></td>
                     <td><input type="number" step="0.01" class="edit-mg edit-moyen" value="${valeurMoyen}" ${!modeEditionActif ? 'disabled' : ''}></td>
                     <td><input type="number" class="edit-rang" value="${valeurRang}" ${!modeEditionActif ? 'disabled' : ''}></td>
                     <td>
                         <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>
-                            <option value="" ${!e.decision ? 'selected' : ''}>--</option>
-                            <option value="A" ${e.decision === 'A' ? 'selected' : ''}>A</option>
-                            <option value="R" ${e.decision === 'R' ? 'selected' : ''}>R</option>
+                            <option value="" ${!decisionVal ? 'selected' : ''}>--</option>
+                            <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>
+                            <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
                         </select>
                     </td>
                 </tr>`;
@@ -357,6 +400,7 @@
                         moyen_compoN: tr.querySelector('.edit-mcompon')?.value || 0,
                         moyen_compo_de_passage: tr.querySelector('.edit-mpassage')?.value || 0,
                         moyen_total: tr.querySelector('.edit-mtotal')?.value || 0,
+                        moyen: tr.querySelector('.edit-mtotal')?.value || 0,
                         decision: tr.querySelector('.dfa-select').value
                     });
                 } else {
@@ -444,7 +488,6 @@
                     const premiereFeuilleNom = workbook.SheetNames[0];
                     const feuille = workbook.Sheets[premiereFeuilleNom];
                     const donneesBrutes = XLSX.utils.sheet_to_json(feuille);
-
                     if (!donneesBrutes || donneesBrutes.length === 0) {
                         alert("Le fichier sélectionné est vide ou mal formaté.");
                         return;
@@ -485,11 +528,15 @@
                                     moyen_compoN: rowNormalise['moyen_compon'] || 0,
                                     moyen_compo_de_passage: rowNormalise['moyen_compo_de_passage'] || 0,
                                     moyen_total: rowNormalise['moyen_total'] || 0,
+                                    moyen: rowNormalise['moyen_total'] || 0,
                                     decision: rowNormalise['decision_a/r'] || rowNormalise['decision'] || ''
                                 });
                             } else {
                                 let notesObj = {};
-                                toutesLesMatieresPossibles.forEach(mat => {
+                                let niveauEleve = listeEleves.find(el => el.matricule === matriculeExtrait)?.niveau || classeFiltreeActuelle;
+                                let matieresCibles = getMatieresNiveau(niveauEleve, periodeActuelle);
+
+                                matieresCibles.forEach(mat => {
                                     let valeurTrouvee = undefined;
                                     for (let [cleExcel, valExcel] of Object.entries(rowNormalise)) {
                                         if (cleExcel === mat || cleExcel.includes(mat)) {
@@ -501,12 +548,9 @@
                                         notesObj[mat] = String(valeurTrouvee);
                                     }
                                 });
-                                let totalExtrait = rowNormalise['total'] !== undefined ? String(rowNormalise['total']) : '';
-                                let moyenExtrait = '';
-                                if (rowNormalise['moyen'] !== undefined) moyenExtrait = String(rowNormalise['moyen']);
-                                else if (rowNormalise['moyenne'] !== undefined) moyenExtrait = String(rowNormalise['moyenne']);
-                                else if (rowNormalise['mg'] !== undefined) moyenExtrait = String(rowNormalise['mg']);
 
+                                let totalExtrait = rowNormalise['total'] !== undefined ? String(rowNormalise['total']) : '';
+                                let moyenExtrait = rowNormalise['moyen'] ?? rowNormalise['moyenne'] ?? rowNormalise['mg'] ?? '';
                                 let rangExtrait = rowNormalise['rang'] !== undefined ? String(rowNormalise['rang']) : '';
                                 let cleDecision = Object.keys(rowNormalise).find(k => k.includes('decision') || k.includes('dfa') || k.includes('dec'));
                                 let decisionExtrait = cleDecision !== undefined ? String(rowNormalise[cleDecision]) : '';
@@ -582,22 +626,180 @@
                     "Date Naiss.": e.date_naissance || '',
                     "Sexe": e.sexe || ''
                 };
-                toutesLesMatieresPossibles.forEach(m => {
-                    let val = (e.notes && e.notes[m] !== undefined) ? e.notes[m] : (e[m] !== undefined ? e[m] : '');
-                    ligne[m.toUpperCase()] = val;
-                });
-                ligne["Total"] = e.total || 0;
-                ligne["Moyen"] = e.moyen || e.moyenne || e.mg || 0;
-                ligne["Rang"] = e.rang || idx + 1;
-                ligne["Decision"] = e.decision || '';
+
+                let rowNum = idx + 2;
+                let nivCible = (e.niveau || classeFiltreeActuelle).toUpperCase();
+
+                if (periodeActuelle === 'FIN_ANNEE') {
+                    ligne["MOYEN COMPO1"] = parseFloat(e.moyen_compo1 ?? e.m1 ?? 0).toFixed(2);
+                    ligne["MOYEN COMPO2"] = parseFloat(e.moyen_compo2 ?? e.m2 ?? 0).toFixed(2);
+                    ligne["MOYEN COMPO3"] = parseFloat(e.moyen_compo3 ?? e.m3 ?? 0).toFixed(2);
+                    ligne["moyen_compoN"] = { t: 'n', f: `AVERAGE(H${rowNum}:J${rowNum})`, v: parseFloat(e.moyen_compoN || 0).toFixed(2) };
+                    ligne["moyen_passage"] = parseFloat(e.moyen_compo_de_passage || 0).toFixed(2);
+                    ligne["moyen_total"] = { t: 'n', f: `AVERAGE(K${rowNum},L${rowNum})`, v: parseFloat(e.moyen_total || 0).toFixed(2) };
+                    
+                    let formuleDecisionFin = (['CE2', 'CM1', 'CM2'].includes(nivCible))
+                        ? `IF(M${rowNum}<10; "R"; "A")`
+                        : `IF(M${rowNum}<5; "R"; "A")`;
+                    ligne["Decision"] = { t: 's', f: formuleDecisionFin, v: e.decision || '' };
+                } else {
+                    let matieresCibles = getMatieresNiveau(e.niveau || classeFiltreeActuelle, periodeActuelle);
+
+                    matieresCibles.forEach(m => {
+                        let val = (e.notes && e.notes[m] !== undefined) ? e.notes[m] : (e[m] !== undefined ? e[m] : '');
+                        ligne[m.toUpperCase()] = val;
+                    });
+                    
+                    let premiereLettreCol = 'H';
+                    let derniereLettreCol = String.fromCharCode(72 + matieresCibles.length - 1);
+
+                    ligne["Total"] = { t: 'n', f: `SUM(${premiereLettreCol}${rowNum}:${derniereLettreCol}${rowNum})`, v: parseFloat(e.total || 0).toFixed(2) };
+                    
+                    let diviseur = 8.5;
+                    if (nivCible === 'CP1' && periodeActuelle === 'COMPO1') {
+                        diviseur = 6;
+                    } else if (nivCible === 'CP1' || nivCible === 'CP2') {
+                        diviseur = 9;
+                    } else if (nivCible === 'CE2') {
+                        diviseur = 11;
+                    } else if (nivCible === 'CE1') {
+                        diviseur = 12;
+                    }
+                    
+                    let colTotalLettre = String.fromCharCode(72 + matieresCibles.length);
+                    ligne["Moyen"] = { t: 'n', f: `${colTotalLettre}${rowNum}/${diviseur}`, v: parseFloat(e.moyen || 0).toFixed(2) };
+                    
+                    let derniereLigne = elevesExport.length + 1;
+                    let colMoyenLettre = String.fromCharCode(73 + matieresCibles.length);
+                    ligne["Rang"] = { t: 'n', f: `RANK(${colMoyenLettre}${rowNum};$${colMoyenLettre}$2:$${colMoyenLettre}$${derniereLigne})`, v: e.rang || idx + 1 };
+                    
+                    let formuleDecisionCompo = (['CE2', 'CM1', 'CM2'].includes(nivCible))
+                        ? `IF(${colMoyenLettre}${rowNum}<10; "R"; "A")`
+                        : `IF(${colMoyenLettre}${rowNum}<5; "R"; "A")`;
+                    ligne["Decision"] = { t: 's', f: formuleDecisionCompo, v: e.decision || '' };
+                }
                 return ligne;
             });
 
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(lignesExcel);
+            const ws = XLSX.utils.json_to_sheet(lignesExcel, { cellDates: true });
             XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
             XLSX.writeFile(wb, `Notes_${classeFiltreeActuelle}_${periodeActuelle}_${annee}.xlsx`);
         }
+
+        // ==========================================
+        // LOGIQUE DE CALCUL AUTOMATIQUE INTERACTIVE
+        // ==========================================
+        function recalculerLigne(tr, niveauClasse) {
+            let nivUpper = niveauClasse ? niveauClasse.toUpperCase() : '';
+
+            if (periodeActuelle === 'FIN_ANNEE') {
+                let m1 = parseFloat(tr.querySelector('.edit-m1')?.value) || 0;
+                let m2 = parseFloat(tr.querySelector('.edit-m2')?.value) || 0;
+                let m3 = parseFloat(tr.querySelector('.edit-m3')?.value) || 0;
+                let moyenCompoN = (m1 + m2 + m3) / 3;
+                let inputCompon = tr.querySelector('.edit-mcompon');
+                if (inputCompon) inputCompon.value = moyenCompoN.toFixed(2);
+
+                let mPassage = parseFloat(tr.querySelector('.edit-mpassage')?.value) || 0;
+                let moyenTotal = (moyenCompoN + mPassage) / 2;
+                let inputTotal = tr.querySelector('.edit-mtotal');
+                if (inputTotal) inputTotal.value = moyenTotal.toFixed(2);
+
+                let selectDecision = tr.querySelector('.dfa-select');
+                if (selectDecision) {
+                    if (['CE2', 'CM1', 'CM2'].includes(nivUpper)) {
+                        selectDecision.value = (moyenTotal < 10) ? 'R' : 'A';
+                    } else {
+                        selectDecision.value = (moyenTotal < 5) ? 'R' : 'A';
+                    }
+                }
+                return;
+            }
+
+            let inputsNotes = tr.querySelectorAll('.edit-note');
+            let sommeTotal = 0;
+            
+            inputsNotes.forEach(input => {
+                let val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    sommeTotal += val;
+                }
+            });
+
+            let inputTotal = tr.querySelector('.edit-total');
+            if (inputTotal) {
+                inputTotal.value = sommeTotal.toFixed(2);
+            }
+
+            let coefficientDiviseur = 8.5; 
+            if (nivUpper === 'CP1' && periodeActuelle === 'COMPO1') {
+                coefficientDiviseur = 6;
+            } else if (nivUpper === 'CP1' || nivUpper === 'CP2') {
+                coefficientDiviseur = 9;
+            } else if (nivUpper === 'CE2') {
+                coefficientDiviseur = 11;
+            } else if (nivUpper === 'CE1') {
+                coefficientDiviseur = 12;
+            } else if (nivUpper === 'CM1' || nivUpper === 'CM2') {
+                coefficientDiviseur = 8.5;
+            }
+
+            let moyenne = sommeTotal / coefficientDiviseur;
+
+            let inputMoyen = tr.querySelector('.edit-mg');
+            if (inputMoyen) {
+                inputMoyen.value = moyenne.toFixed(2);
+            }
+
+            let selectDecision = tr.querySelector('.dfa-select');
+            if (selectDecision) {
+                if (['CE2', 'CM1', 'CM2'].includes(nivUpper)) {
+                    selectDecision.value = (moyenne < 10) ? 'R' : 'A';
+                } else {
+                    selectDecision.value = (moyenne < 5) ? 'R' : 'A';
+                }
+            }
+        }
+
+        function actualiserCalculsGlobaux() {
+            let lignes = document.querySelectorAll('#tableauDonnees tr[data-id]');
+            let elevesData = [];
+
+            lignes.forEach(tr => {
+                let tdNiveau = tr.querySelectorAll('td')[4]; 
+                let niveauEleve = tdNiveau ? tdNiveau.textContent.trim() : (tr.getAttribute('data-niveau') || classeFiltreeActuelle);
+                
+                recalculerLigne(tr, niveauEleve);
+                
+                let inputMoyen = tr.querySelector('.edit-mg') || tr.querySelector('.edit-mtotal');
+                let moyenneVal = inputMoyen ? parseFloat(inputMoyen.value) || 0 : 0;
+                
+                elevesData.push({ tr: tr, moyenne: moyenneVal });
+            });
+
+            if (periodeActuelle !== 'FIN_ANNEE') {
+                elevesData.sort((a, b) => b.moyenne - a.moyenne);
+                elevesData.forEach((item, index) => {
+                    let inputRang = item.tr.querySelector('.edit-rang');
+                    if (inputRang) {
+                        inputRang.value = index + 1;
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('edit-note') || e.target.classList.contains('edit-m1') || e.target.classList.contains('edit-m2') || e.target.classList.contains('edit-m3') || e.target.classList.contains('edit-mpassage')) {
+                let tr = e.target.closest('tr');
+                if (tr) {
+                    let tdNiveau = tr.querySelectorAll('td')[4];
+                    let niveauEleve = tdNiveau ? tdNiveau.textContent.trim() : (tr.getAttribute('data-niveau') || classeFiltreeActuelle);
+                    recalculerLigne(tr, niveauEleve);
+                    actualiserCalculsGlobaux();
+                }
+            }
+        });
     </script>
 </body>
 </html>
