@@ -1,16 +1,15 @@
 
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1200, initial-scale=1.0">
     <title>Gestion des Notes et Compositions</title>
     <!-- Inclusion de SheetJS (xlsx) pour la génération et l'exportation de fichiers Excel multi-onglets -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
+        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; min-width: 1150px; }
         h2 { color: #333; }
         .top-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .compo-nav-container { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -49,7 +48,6 @@
     </style>
 </head>
 <body>
-
     <div class="top-container">
         <h2 id="titre-annee">Gestion des Notes et Compositions</h2>
         <select id="annee-select" onchange="changerAnnee()">
@@ -220,6 +218,7 @@
 
         function afficherTableau(data, niveauFiltre) {
             const conteneur = document.getElementById('conteneurTableau');
+
             if (!data || data.length === 0) {
                 conteneur.innerHTML = `<p style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</p>`;
                 return;
@@ -485,9 +484,11 @@
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
+
                     const premiereFeuilleNom = workbook.SheetNames[0];
                     const feuille = workbook.Sheets[premiereFeuilleNom];
                     const donneesBrutes = XLSX.utils.sheet_to_json(feuille);
+
                     if (!donneesBrutes || donneesBrutes.length === 0) {
                         alert("Le fichier sélectionné est vide ou mal formaté.");
                         return;
@@ -500,6 +501,7 @@
                             let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                             rowNormalise[clePropre] = v;
                         }
+
                         let cleMatricule = Object.keys(rowNormalise).find(k => k === 'matricule' || k.includes('mat'));
                         let matriculeExtrait = '';
                         if (cleMatricule && rowNormalise[cleMatricule]) {
@@ -508,7 +510,7 @@
                             let nomVal = rowNormalise['nom'] ? String(rowNormalise['nom']).trim() : '';
                             let prenomVal = rowNormalise['prenoms'] || rowNormalise['prenom'] ? String(rowNormalise['prenoms'] || rowNormalise['prenom']).trim() : '';
                             if (nomVal || prenomVal) {
-                                let eleveTrouve = listeEleves.find(el =>
+                                let eleveTrouve = listeEleves.find(el => 
                                     (el.nom && el.nom.trim().toLowerCase() === nomVal.toLowerCase()) &&
                                     (el.prenoms && el.prenoms.trim().toLowerCase() === prenomVal.toLowerCase())
                                 );
@@ -637,7 +639,7 @@
                     ligne["moyen_compoN"] = { t: 'n', f: `AVERAGE(H${rowNum}:J${rowNum})`, v: parseFloat(e.moyen_compoN || 0).toFixed(2) };
                     ligne["moyen_passage"] = parseFloat(e.moyen_compo_de_passage || 0).toFixed(2);
                     ligne["moyen_total"] = { t: 'n', f: `AVERAGE(K${rowNum},L${rowNum})`, v: parseFloat(e.moyen_total || 0).toFixed(2) };
-                    
+
                     let formuleDecisionFin = (['CE2', 'CM1', 'CM2'].includes(nivCible))
                         ? `IF(M${rowNum}<10; "R"; "A")`
                         : `IF(M${rowNum}<5; "R"; "A")`;
@@ -649,12 +651,12 @@
                         let val = (e.notes && e.notes[m] !== undefined) ? e.notes[m] : (e[m] !== undefined ? e[m] : '');
                         ligne[m.toUpperCase()] = val;
                     });
-                    
+
                     let premiereLettreCol = 'H';
                     let derniereLettreCol = String.fromCharCode(72 + matieresCibles.length - 1);
 
                     ligne["Total"] = { t: 'n', f: `SUM(${premiereLettreCol}${rowNum}:${derniereLettreCol}${rowNum})`, v: parseFloat(e.total || 0).toFixed(2) };
-                    
+
                     let diviseur = 8.5;
                     if (nivCible === 'CP1' && periodeActuelle === 'COMPO1') {
                         diviseur = 6;
@@ -665,14 +667,14 @@
                     } else if (nivCible === 'CE1') {
                         diviseur = 12;
                     }
-                    
+
                     let colTotalLettre = String.fromCharCode(72 + matieresCibles.length);
                     ligne["Moyen"] = { t: 'n', f: `${colTotalLettre}${rowNum}/${diviseur}`, v: parseFloat(e.moyen || 0).toFixed(2) };
-                    
+
                     let derniereLigne = elevesExport.length + 1;
                     let colMoyenLettre = String.fromCharCode(73 + matieresCibles.length);
                     ligne["Rang"] = { t: 'n', f: `RANK(${colMoyenLettre}${rowNum};$${colMoyenLettre}$2:$${colMoyenLettre}$${derniereLigne})`, v: e.rang || idx + 1 };
-                    
+
                     let formuleDecisionCompo = (['CE2', 'CM1', 'CM2'].includes(nivCible))
                         ? `IF(${colMoyenLettre}${rowNum}<10; "R"; "A")`
                         : `IF(${colMoyenLettre}${rowNum}<5; "R"; "A")`;
@@ -719,7 +721,7 @@
 
             let inputsNotes = tr.querySelectorAll('.edit-note');
             let sommeTotal = 0;
-            
+
             inputsNotes.forEach(input => {
                 let val = parseFloat(input.value);
                 if (!isNaN(val)) {
@@ -732,7 +734,7 @@
                 inputTotal.value = sommeTotal.toFixed(2);
             }
 
-            let coefficientDiviseur = 8.5; 
+            let coefficientDiviseur = 8.5;
             if (nivUpper === 'CP1' && periodeActuelle === 'COMPO1') {
                 coefficientDiviseur = 6;
             } else if (nivUpper === 'CP1' || nivUpper === 'CP2') {
@@ -746,7 +748,6 @@
             }
 
             let moyenne = sommeTotal / coefficientDiviseur;
-
             let inputMoyen = tr.querySelector('.edit-mg');
             if (inputMoyen) {
                 inputMoyen.value = moyenne.toFixed(2);
@@ -767,14 +768,13 @@
             let elevesData = [];
 
             lignes.forEach(tr => {
-                let tdNiveau = tr.querySelectorAll('td')[4]; 
+                let tdNiveau = tr.querySelectorAll('td')[4];
                 let niveauEleve = tdNiveau ? tdNiveau.textContent.trim() : (tr.getAttribute('data-niveau') || classeFiltreeActuelle);
-                
                 recalculerLigne(tr, niveauEleve);
-                
+
                 let inputMoyen = tr.querySelector('.edit-mg') || tr.querySelector('.edit-mtotal');
                 let moyenneVal = inputMoyen ? parseFloat(inputMoyen.value) || 0 : 0;
-                
+
                 elevesData.push({ tr: tr, moyenne: moyenneVal });
             });
 
@@ -803,3 +803,4 @@
     </script>
 </body>
 </html>
+
