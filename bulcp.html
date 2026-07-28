@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1.0">
+    <title>Bulletins Scolaires - CP1 à CM1</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
+        .top-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h2 { color: #333; margin: 0; }
+        .btn-classe { padding: 8px 14px; cursor: pointer; border: 1px solid #6f42c1; background-color: #6f42c1; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-retour { background-color: #6c757d; border-color: #6c757d; }
+        .btn-imprimer { background-color: #28a745; border-color: #28a745; }
+
+        /* Mise en page type livret : 1 page A4 divisée en grille 2x2 (4 quarts par page) */
+        .bulletin-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm;
+            margin: 0 auto 20px auto;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            page-break-after: always;
+            position: relative;
+        }
+        .page-grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 12px;
+            height: 275mm;
+        }
+        .quart-livret {
+            border: 1px solid #333;
+            padding: 8px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.75em;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .entete-livret { text-align: center; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 6px; font-size: 0.85em; font-weight: bold; }
+        
+        /* Tableaux matières avec intégration des Visas sur le côté droit de la table */
+        .table-container-flex { display: flex; gap: 4px; align-items: stretch; margin-bottom: 6px; }
+        table.table-matieres { width: 100%; border-collapse: collapse; font-size: 0.68em; }
+        table.table-matieres th, table.table-matieres td { border: 1px solid #333; padding: 2.5px 3px; text-align: center; }
+        table.table-matieres th { background-color: #f1f1f1; }
+        table.table-matieres td:nth-child(1) { text-align: left; }
+
+        .visas-colonne {
+            width: 110px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 4px 2px;
+            font-size: 0.68em;
+            text-align: center;
+            background: #fff;
+        }
+        .visa-item { font-weight: bold; padding: 2px 0; border-bottom: 1px dotted #ccc; }
+        .visa-item:last-child { border-bottom: none; }
+
+        .resultats-synthese { font-weight: bold; font-size: 0.75em; background: #f8f9fa; padding: 4px 6px; border: 1px solid #333; margin-top: 4px; margin-bottom: 4px; }
+        .resultats-synthese div { display: flex; justify-content: space-between; margin: 2px 0; }
+
+        /* Blocs d'informations et fin d'année */
+        .box-titre { font-weight: bold; text-align: center; border: 1px solid #333; background: #f1f1f1; padding: 4px; margin-bottom: 6px; font-size: 0.8em; }
+        .info-ligne { margin-bottom: 6px; font-size: 0.75em; letter-spacing: 0.2px; }
+        .photo-box { width: 65px; height: 80px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75em; float: right; margin-left: 6px; background: #f9f9f9; }
+        
+        .signatures-grid { display: flex; justify-content: space-between; margin-top: 8px; text-align: center; font-size: 0.7em; font-weight: bold; }
+        .signature-box-livret { width: 48%; border: 1px solid #333; min-height: 45px; padding-top: 3px; }
+
+        /* Style Page de Garde (Bas-droite page 2) */
+        .couverture-box { text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 5px; }
+        .couverture-header { display: flex; justify-content: space-between; border: 1px solid #333; padding: 5px; font-weight: bold; font-size: 0.7em; background: #f1f1f1; }
+        .titre-bulletin-grand { border: 2px solid #333; border-radius: 8px; padding: 10px; background: #e9ecef; font-weight: bold; font-size: 1.1em; margin: 15px 0; letter-spacing: 1px; }
+
+        @media print {
+            body { background: none; margin: 0; }
+            .no-print { display: none !important; }
+            .bulletin-page { border: none; box-shadow: none; margin: 0; width: 100%; height: 100%; page-break-after: always; padding: 5mm; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-container no-print">
+        <h2>Impression des Bulletins (CP1 - CM1)</h2>
+        <div>
+            <button class="btn-classe btn-imprimer" onclick="window.print()">🖨️ Imprimer les bulletins</button>
+            <a href="compo.html" class="btn-classe btn-retour">Retour Gestion</a>
+        </div>
+    </div>
+
+    <div id="conteneurBulletins">
+        <p style="text-align:center; padding: 40px;">Chargement des données...</p>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const niveauActuel = (urlParams.get('niveau') || 'CP1').toUpperCase();
+        const annee = urlParams.get('annee') || '2025';
+
+        const colonnesParNiveauCompo1 = {
+            'CP1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
+            'CP2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+            'CE1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+            'CE2': ['exp_texte', 'dictee', 'aem', 'math'],
+            'CM1': ['exp_texte', 'dictee', 'aem', 'math']
+        };
+
+        const colonnesCp1Compo2Plus = ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'];
+
+        function getMatieres(niveau, numCompo) {
+            if (niveau === 'CP1' && (numCompo === '2' || numCompo === '3' || numCompo === 'PASSAGE')) {
+                return colonnesCp1Compo2Plus;
+            }
+            return colonnesParNiveauCompo1[niveau] || ['exp_texte', 'dictee', 'aem', 'math'];
+        }
+
+        async function chargerDonneesBulletins() {
+            try {
+                const [res1, res2, res3, resPass] = await Promise.all([
+                    fetch(`/api/eleves/${annee}?periode=COMPO1`).then(r => r.json()),
+                    fetch(`/api/eleves/${annee}?periode=COMPO2`).then(r => r.json()),
+                    fetch(`/api/eleves/${annee}?periode=COMPO3`).then(r => r.json()),
+                    fetch(`/api/eleves/${annee}?periode=PASSAGE`).then(r => r.json())
+                ]);
+
+                const f1 = Array.isArray(res1) ? res1 : (res1.eleves || []);
+                const f2 = Array.isArray(res2) ? res2 : (res2.eleves || []);
+                const f3 = Array.isArray(res3) ? res3 : (res3.eleves || []);
+                const fPass = Array.isArray(resPass) ? resPass : (resPass.eleves || []);
+
+                const filtrerNiv = list => list.filter(e => e.niveau && e.niveau.toUpperCase() === niveauActuel);
+
+                const mapEleves = {};
+                filtrerNiv(f1).forEach(e => { mapEleves[e.matricule] = { ...e, compo1: e }; });
+                filtrerNiv(f2).forEach(e => { if (!mapEleves[e.matricule]) mapEleves[e.matricule] = { ...e }; mapEleves[e.matricule].compo2 = e; });
+                filtrerNiv(f3).forEach(e => { if (!mapEleves[e.matricule]) mapEleves[e.matricule] = { ...e }; mapEleves[e.matricule].compo3 = e; });
+                filtrerNiv(fPass).forEach(e => { if (!mapEleves[e.matricule]) mapEleves[e.matricule] = { ...e }; mapEleves[e.matricule].passage = e; });
+
+                genererPagesBulletins(Object.values(mapEleves));
+            } catch (err) {
+                console.error("Erreur chargement bulletins:", err);
+                document.getElementById('conteneurBulletins').innerHTML = `<p style="color:red; text-align:center;">Erreur lors du chargement des données.</p>`;
+            }
+        }
+
+        function genererTableauMatiere(compoObj, niveau, numCompo) {
+            let matieres = getMatieres(niveau, numCompo);
+            let notes = compoObj ? (compoObj.notes || compoObj) : {};
+            let html = `
+                <div class="entete-livret">
+                    Mois de ............................................................................<br>
+                    <strong>COMPOSITION N° ${numCompo}</strong>
+                </div>
+                <div class="table-container-flex">
+                    <table class="table-matieres">
+                        <tr>
+                            <th>MATIERES</th>
+                            <th>Note</th>
+                        </tr>`;
+            matieres.forEach(m => {
+                let noteVal = notes[m] !== undefined && notes[m] !== null ? notes[m] : '';
+                html += `
+                        <tr>
+                            <td>${m.charAt(0).toUpperCase() + m.slice(1)}</td>
+                            <td>${noteVal}</td>
+                        </tr>`;
+            });
+            html += `
+                    </table>
+                    <div class="visas-colonne">
+                        <div class="visa-item">Visas du Maître</div>
+                        <div class="visa-item">Visas du Directeur</div>
+                        <div class="visa-item">Visas des Parents</div>
+                    </div>
+                </div>`;
+            return html;
+        }
+
+        function genererPagesBulletins(eleves) {
+            const conteneur = document.getElementById('conteneurBulletins');
+            if (!eleves || eleves.length === 0) {
+                conteneur.innerHTML = `<p style="text-align:center; padding:40px; color:#666;">Aucun élève trouvé pour la classe ${niveauActuel}.</p>`;
+                return;
+            }
+
+            let htmlGlobal = '';
+
+            eleves.forEach((el) => {
+                let matricule = el.matricule || 'N/A';
+                let dateNaiss = el.date_naissance || '............................';
+                let lieu = el.lieu_naissance || '............................';
+
+                let c1 = el.compo1 || {};
+                let t1 = parseFloat(c1.total || 0).toFixed(2);
+                let m1 = parseFloat(c1.moyen || c1.moyenne || 0).toFixed(2);
+                let r1 = c1.rang || '-';
+
+                let c2 = el.compo2 || {};
+                let t2 = parseFloat(c2.total || 0).toFixed(2);
+                let m2 = parseFloat(c2.moyen || c2.moyenne || 0).toFixed(2);
+                let r2 = c2.rang || '-';
+
+                let c3 = el.compo3 || {};
+                let t3 = parseFloat(c3.total || 0).toFixed(2);
+                let m3 = parseFloat(c3.moyen || c3.moyenne || 0).toFixed(2);
+                let r3 = c3.rang || '-';
+
+                let cPass = el.passage || {};
+                let tPass = parseFloat(cPass.total || 0).toFixed(2);
+                let mPass = parseFloat(cPass.moyen || cPass.moyenne || 0).toFixed(2);
+                let rPass = cPass.rang || '-';
+
+                // ==========================================
+                // PAGE 1 : 
+                // Haut-Gauche : Compo 1 | Haut-Droite : Compo 2
+                // Bas-Gauche : Informations Élèves/Parents/Enseignant | Bas-Droite : Résultats Fin d'Année & Décision
+                // ==========================================
+                htmlGlobal += `
+                <div class="bulletin-page">
+                    <div class="page-grid-2x2">
+                        <!-- 1. Haut-Gauche : Compo 1 -->
+                        <div class="quart-livret">
+                            <div>${genererTableauMatiere(c1, niveauActuel, '1')}</div>
+                            <div class="resultats-synthese">
+                                <div><span>TOTAL : ........................................</span> <span>${t1}</span></div>
+                                <div><span>MOYENNE : ....................................</span> <span>${m1}</span></div>
+                                <div><span>RANG : ...........................................</span> <span>${r1}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Haut-Droite : Compo 2 -->
+                        <div class="quart-livret">
+                            <div>${genererTableauMatiere(c2, niveauActuel, '2')}</div>
+                            <div class="resultats-synthese">
+                                <div><span>TOTAL : ........................................</span> <span>${t2}</span></div>
+                                <div><span>MOYENNE : ....................................</span> <span>${m2}</span></div>
+                                <div><span>RANG : ...........................................</span> <span>${r2}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Bas-Gauche : Informations Élèves, Parents & Enseignant -->
+                        <div class="quart-livret">
+                            <div>
+                                <div class="box-titre">INFORMATION ELEVES</div>
+                                <div class="photo-box">PHOTO</div>
+                                <div class="info-ligne"><strong>Nom :</strong> ${el.nom || '...................................................'}</div>
+                                <div class="info-ligne"><strong>Prénoms :</strong> ${el.prenoms || '...............................................'}</div>
+                                <div class="info-ligne"><strong>Date de naissance :</strong> ${dateNaiss}</div>
+                                <div class="info-ligne"><strong>Lieu :</strong> ${lieu}</div>
+                                <div style="clear: both;"></div>
+
+                                <div class="box-titre" style="margin-top: 6px;">INFORMATION PARENTS</div>
+                                <div class="info-ligne">Père [ &nbsp; ] &nbsp; Mère [ &nbsp; ] &nbsp; Tuteur [ &nbsp; ]</div>
+                                <div class="info-ligne"><strong>Nom et Prénoms :</strong> ....................................................</div>
+                                <div class="info-ligne"><strong>Profession :</strong> ............................................................</div>
+                                <div class="info-ligne"><strong>Quartier :</strong> ................................................................</div>
+                                <div class="info-ligne"><strong>Contacts :</strong> ................................................................</div>
+
+                                <div class="box-titre" style="margin-top: 6px;">INFORMATION ENSEIGNANT(E)</div>
+                                <div class="info-ligne"><strong>Nom et Prénoms :</strong> ....................................................</div>
+                                <div class="info-ligne"><strong>Contacts :</strong> ................................................................</div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Bas-Droite : Résultats de Fin d'Année & Décision -->
+                        <div class="quart-livret">
+                            <div>
+                                <div class="box-titre">RESULTATS DE FIN D'ANNEE</div>
+                                <table class="table-matieres" style="margin-bottom: 6px;">
+                                    <tr><td>Moyenne de la composition de passage</td><td>${mPass}</td></tr>
+                                    <tr><td>Moyenne des compositions</td><td>${m1} / ${m2} / ${m3}</td></tr>
+                                    <tr><td>Moyenne Annuelle</td><td>${mPass}</td></tr>
+                                    <tr><td>Rang</td><td>${rPass}</td></tr>
+                                </table>
+
+                                <div class="box-titre">DECISION DU CONSEIL DES MAÎTRES</div>
+                                <table class="table-matieres" style="margin-bottom: 6px;">
+                                    <tr><td colspan="2"><strong>ADMIS (E) EN CLASSE SUPERIEURE</strong></td></tr>
+                                    <tr><td>OUI [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td><td>NON [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td></tr>
+                                </table>
+                                <div style="text-align: right; font-size: 0.7em; margin-top: 4px;">
+                                    Fait à .................................... le ............ / ............ / 20......
+                                </div>
+                            </div>
+                            <div class="signatures-grid">
+                                <div class="signature-box-livret">Le maître Chargé de cours</div>
+                                <div class="signature-box-livret">Le Directeur</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+                // ==========================================
+                // PAGE 2 :
+                // Haut-Gauche : Compo 3 | Haut-Droite : Compo de Passage
+                // Bas-Gauche : Espace libre / Observations | Bas-Droite (3/4) : Page de Garde / Couverture du Bulletin
+                // ==========================================
+                htmlGlobal += `
+                <div class="bulletin-page">
+                    <div class="page-grid-2x2">
+                        <!-- 1. Haut-Gauche : Compo 3 -->
+                        <div class="quart-livret">
+                            <div>${genererTableauMatiere(c3, niveauActuel, '3')}</div>
+                            <div class="resultats-synthese">
+                                <div><span>TOTAL : ........................................</span> <span>${t3}</span></div>
+                                <div><span>MOYENNE : ....................................</span> <span>${m3}</span></div>
+                                <div><span>RANG : ...........................................</span> <span>${r3}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Haut-Droite : Compo de Passage -->
+                        <div class="quart-livret">
+                            <div>${genererTableauMatiere(cPass, niveauActuel, 'PASSAGE')}</div>
+                            <div class="resultats-synthese">
+                                <div><span>TOTAL : ........................................</span> <span>${tPass}</span></div>
+                                <div><span>MOYENNE : ....................................</span> <span>${mPass}</span></div>
+                                <div><span>RANG : ...........................................</span> <span>${rPass}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Bas-Gauche : Espace observations complémentaires -->
+                        <div class="quart-livret">
+                            <div>
+                                <div class="box-titre">OBSERVATIONS / OBSERVATIONS GENERALES</div>
+                                <div style="height: 140px; border: 1px dashed #ccc; padding: 6px; color: #777; font-size: 0.75em;">
+                                    Remarques générales du trimestre ou de l'année scolaire...<br><br>
+                                    ............................................................................................................<br>
+                                    ............................................................................................................
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Bas-Droite (3/4) : Page de Couverture / Garde du Bulletin -->
+                        <div class="quart-livret">
+                            <div class="couverture-box">
+                                <div class="couverture-header">
+                                    <span>IA : ........................................</span>
+                                    <span>ANNEE : 20...... - 20......</span>
+                                </div>
+                                <div style="text-align: center; font-size: 0.7em; margin-top: 4px;">
+                                    <strong>IEF : ........................................................................</strong>
+                                </div>
+                                <div style="text-align: center; font-weight: bold; margin-top: 8px; font-size: 0.8em; line-height: 1.4;">
+                                    ÉCOLE ÉLÉMENTAIRE DE<br><br>
+                                    CLASSE DE ${niveauActuel}
+                                </div>
+                                <div style="font-size: 0.7em; margin: 8px 0;">
+                                    Tenue par : ..................................................................................
+                                </div>
+                                <div class="titre-bulletin-grand">
+                                    BULLETIN DE NOTES
+                                </div>
+                                <div style="text-align: left; font-size: 0.75em; margin-top: 8px; line-height: 1.4;">
+                                    <strong>Prénoms :</strong> ${el.prenoms || '..................................................................'}<br>
+                                    <strong>Nom :</strong> ${el.nom || '..........................................................................'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            conteneur.innerHTML = htmlGlobal;
+        }
+
+        window.addEventListener('DOMContentLoaded', chargerDonneesBulletins);
+    </script>
+</body>
+</html>
