@@ -13,7 +13,6 @@
         .btn-classe { padding: 8px 14px; cursor: pointer; border: 1px solid #6f42c1; background-color: #6f42c1; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; text-decoration: none; display: inline-flex; align-items: center; }
         .btn-retour { background-color: #6c757d; border-color: #6c757d; }
         .btn-imprimer { background-color: #28a745; border-color: #28a745; }
-        
         .bulletin-page {
             background: white;
             width: 210mm;
@@ -45,7 +44,6 @@
             overflow: hidden;
         }
         .entete-livret { text-align: center; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 6px; font-size: 0.85em; font-weight: bold; }
-        
         .table-container-flex { display: flex; gap: 4px; align-items: stretch; margin-bottom: 6px; }
         table.table-matieres { width: 100%; border-collapse: collapse; font-size: 0.92em; }
         table.table-matieres th, table.table-matieres td { border: 1px solid #333; padding: 7px 6px; text-align: center; }
@@ -78,9 +76,9 @@
         .signatures-grid { display: flex; justify-content: space-between; margin-top: 8px; text-align: center; font-size: 0.7em; font-weight: bold; }
         .signature-box-livret { width: 48%; border: 1px solid #333; min-height: 45px; padding-top: 3px; }
         
-        .couverture-box { text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 5px; }
-        .couverture-header { display: flex; justify-content: space-between; border: 1px solid #333; padding: 5px; font-weight: bold; font-size: 0.7em; background: #f1f1f1; }
-        .titre-bulletin-grand { border: 2px solid #333; border-radius: 8px; padding: 10px; background: #e9ecef; font-weight: bold; font-size: 1.1em; margin: 15px 0; letter-spacing: 1px; }
+        .couverture-box { text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 4px; }
+        .couverture-header { border: 1px solid #333; padding: 4px; font-weight: bold; font-size: 0.65em; background: #f1f1f1; line-height: 1.3; text-align: center; }
+        .titre-bulletin-grand { border: 2px solid #333; border-radius: 6px; padding: 8px; background: #e9ecef; font-weight: bold; font-size: 1em; margin: 8px 0; letter-spacing: 0.5px; }
 
         @media print {
             body { background: none; margin: 0; }
@@ -97,7 +95,7 @@
             <a href="compo.html" class="btn-classe btn-retour">Retour Gestion</a>
         </div>
     </div>
-    
+
     <div id="conteneurBulletins">
         <p style="text-align:center; padding: 40px;">Chargement des données...</p>
     </div>
@@ -106,6 +104,28 @@
         const urlParams = new URLSearchParams(window.location.search);
         const niveauActuel = (urlParams.get('niveau') || 'CP1').toUpperCase();
         const annee = urlParams.get('annee') || '2025';
+        
+        let configGlobale = { iepp: '........................................', ecole: '........................................' };
+
+        async function chargerConfigDirecteur() {
+            try {
+                const res = await fetch('/api/config-prof');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.iepp) configGlobale.iepp = data.iepp;
+                    if (data.ecole) configGlobale.ecole = data.ecole;
+                }
+            } catch (e) {
+                console.error("Erreur chargement config prof:", e);
+            }
+            try {
+                const resEco = await fetch('/api/nom-ecole');
+                if (resEco.ok) {
+                    const dataEco = await resEco.json();
+                    if (dataEco.nom) configGlobale.ecole = dataEco.nom;
+                }
+            } catch (e) {}
+        }
 
         const colonnesParNiveauCompo1 = {
             'CP1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
@@ -179,6 +199,8 @@
 
         async function chargerDonneesBulletins() {
             try {
+                await chargerConfigDirecteur();
+
                 const [f1, f2, f3, fPass] = await Promise.all([
                     fetchPeriodeSafe(`/api/eleves/${annee}?periode=COMPO1`),
                     fetchPeriodeSafe(`/api/eleves/${annee}?periode=COMPO2`),
@@ -199,7 +221,6 @@
                 const nombreTotalEleves = elevesNiveauF1.length > 0 ? elevesNiveauF1.length : (filtrerNiv(fPass).length || listeLocale.length || '-');
 
                 const mapEleves = {};
-                
                 const fusionnerListes = (list, propName) => {
                     list.forEach(e => {
                         if (e.niveau && e.niveau.toUpperCase() === niveauActuel) {
@@ -335,12 +356,14 @@
                                 <div class="info-ligne"><strong>Date de naissance :</strong> ${dateNaiss}</div>
                                 <div class="info-ligne"><strong>Lieu :</strong> ${lieu}</div>
                                 <div style="clear: both;"></div>
+
                                 <div class="box-titre" style="margin-top: 6px;">INFORMATION PARENTS</div>
                                 <div class="info-ligne">Père [ &nbsp; ] &nbsp; Mère [ &nbsp; ] &nbsp; Tuteur [ &nbsp; ]</div>
                                 <div class="info-ligne"><strong>Nom et Prénoms :</strong> ${el.pere || el.mere || '....................................................'}</div>
                                 <div class="info-ligne"><strong>Profession :</strong> ............................................................</div>
                                 <div class="info-ligne"><strong>Quartier :</strong> ${el.localite || '...............................................................'}</div>
                                 <div class="info-ligne"><strong>Contacts :</strong> ${el.contact || '...............................................................'}</div>
+
                                 <div class="box-titre" style="margin-top: 6px;">INFORMATION ENSEIGNANT(E)</div>
                                 <div class="info-ligne"><strong>Nom et Prénoms :</strong> ....................................................</div>
                                 <div class="info-ligne"><strong>Contacts :</strong> ................................................................</div>
@@ -405,23 +428,23 @@
                         <div class="quart-livret">
                             <div class="couverture-box">
                                 <div class="couverture-header">
-                                    <span>IA : ........................................</span>
-                                    <span>ANNEE : 20...... - 20......</span>
+                                    MINISTÈRE DE L'ÉDUCATION NATIONALE ET DE L’ALPHABETISATION<br>
+                                    <span style="font-weight: normal;">ANNEE : ${annee} - ${parseInt(annee)+1}</span>
                                 </div>
-                                <div style="text-align: center; font-size: 0.7em; margin-top: 4px;">
-                                    <strong>IEF : ........................................................................</strong>
+                                <div style="text-align: center; font-size: 0.7em; margin-top: 2px;">
+                                    <strong>IEPP : ${configGlobale.iepp}</strong>
                                 </div>
-                                <div style="text-align: center; font-weight: bold; margin-top: 8px; font-size: 0.8em; line-height: 1.4;">
-                                    ÉCOLE ÉLÉMENTAIRE DE<br><br>
+                                <div style="text-align: center; font-weight: bold; margin-top: 4px; font-size: 0.75em; line-height: 1.3;">
+                                    ${configGlobale.ecole}<br><br>
                                     CLASSE DE ${niveauActuel}
                                 </div>
-                                <div style="font-size: 0.7em; margin: 8px 0;">
+                                <div style="font-size: 0.65em; margin: 4px 0;">
                                     Tenue par : ..................................................................................
                                 </div>
                                 <div class="titre-bulletin-grand">
                                     BULLETIN DE NOTES
                                 </div>
-                                <div style="text-align: left; font-size: 0.75em; margin-top: 8px; line-height: 1.4;">
+                                <div style="text-align: left; font-size: 0.7em; margin-top: 4px; line-height: 1.3;">
                                     <strong>Prénoms :</strong> ${el.prenoms || '..................................................................'}<br>
                                     <strong>Nom :</strong> ${el.nom || '..........................................................................'}
                                 </div>
