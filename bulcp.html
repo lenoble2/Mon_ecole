@@ -3,17 +3,14 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=1200, initial-scale=1.0">
-    <title>Bulletins Scolaires - CP1 à CM2</title>
+    <meta charset="UTF-8">                                         <meta name="viewport" content="width=1200, initial-scale=1.0">                                                                <title>Bulletins Scolaires - CP1 à CM2</title>
     <style>
         body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
         .top-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         h2 { color: #333; margin: 0; }
         .btn-classe { padding: 8px 14px; cursor: pointer; border: 1px solid #6f42c1; background-color: #6f42c1; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; text-decoration: none; display: inline-flex; align-items: center; }
         .btn-retour { background-color: #6c757d; border-color: #6c757d; }
-        .btn-imprimer { background-color: #28a745; border-color: #28a745; }
-        .bulletin-page {
+        .btn-imprimer { background-color: #28a745; border-color: #28a745; }                                                           .bulletin-page {
             background: white;
             width: 210mm;
             min-height: 297mm;
@@ -32,11 +29,8 @@
             gap: 12px;
             height: 275mm;
         }
-        .quart-livret {
-            border: 1px solid #333;
-            padding: 8px;
-            box-sizing: border-box;
-            display: flex;
+        .quart-livret {                                                    border: 1px solid #333;
+            padding: 8px;                                                  box-sizing: border-box;                                        display: flex;
             flex-direction: column;
             justify-content: space-between;
             font-size: 0.75em;
@@ -50,7 +44,7 @@
         table.table-matieres th { background-color: #f1f1f1; font-size: 0.95em; }
         table.table-matieres td:nth-child(1) { text-align: left; }
         table.table-matieres td:nth-child(2) { font-size: 1.05em; font-weight: bold; }
-        
+
         .visas-colonne {
             width: 110px;
             border: 1px solid #333;
@@ -64,399 +58,226 @@
         }
         .visa-item { font-weight: bold; padding: 2px 0; border-bottom: 1px dotted #ccc; }
         .visa-item:last-child { border-bottom: none; }
-        
-        .resultats-synthese { font-weight: bold; font-size: 0.75em; background: #f8f9fa; padding: 4px 6px; border: 1px solid #333; margin-top: 4px; margin-bottom: 4px; }
-        .resultats-synthese div { display: flex; justify-content: space-between; margin: 2px 0; }
-        
-        .box-titre { font-weight: bold; text-align: center; border: 1px solid #333; background: #f1f1f1; padding: 4px; margin-bottom: 6px; font-size: 0.8em; }
-        .info-ligne { margin-bottom: 6px; font-size: 0.75em; letter-spacing: 0.2px; }
-        .photo-box { width: 65px; height: 80px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75em; float: right; margin-left: 6px; background: #f9f9f9; overflow: hidden; }
-        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .signatures-grid { display: flex; justify-content: space-between; margin-top: 8px; text-align: center; font-size: 0.7em; font-weight: bold; }
-        .signature-box-livret { width: 48%; border: 1px solid #333; min-height: 45px; padding-top: 3px; }
-        
-        .couverture-box { text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 4px; }
-        .couverture-header { border: 1px solid #333; padding: 4px; font-weight: bold; font-size: 0.65em; background: #f1f1f1; line-height: 1.3; text-align: center; }
-        .titre-bulletin-grand { border: 2px solid #333; border-radius: 6px; padding: 8px; background: #e9ecef; font-weight: bold; font-size: 1em; margin: 8px 0; letter-spacing: 0.5px; }
 
-        @media print {
-            body { background: none; margin: 0; }
-            .no-print { display: none !important; }
-            .bulletin-page { border: none; box-shadow: none; margin: 0; width: 100%; height: 100%; page-break-after: always; padding: 5mm; }
+        .resultats-synthese { font-weight: bold; font-size: 0.75em; background: #f8f9fa; padding: 4px 6px; border: 1px solid #333; margin-top: 4px; margin-bottom: 4px; }                            .resultats-synthese div { display: flex; justify-content: space-between; margin: 2px 0; }                                                                                                    .box-titre { font-weight: bold; text-align: center; border: 1px solid #333; background: #f1f1f1; padding: 4px; margin-bottom: 6px; font-size: 0.8em; }
+        .info-ligne { margin-bottom: 6px; font-size: 0.75em; letter-spacing: 0.2px; }
+        .photo-box { width: 65px; height: 80px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75em; float: right; margin-left: 6px; background: #f9f9f9; overflow: hidden; }                 .photo-box img { width: 100%; height: 100%; object-fit: cover; }                                                                                                                             .signatures-grid { display: flex; justify-content: space-between; margin-top: 8px; text-align: center; font-size: 0.7em; font-weight: bold; }                                                .signature-box-livret { width: 48%; border: 1px solid #333; min-height: 45px; padding-top: 3px; }
+
+        .couverture-box { text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 4px; position: relative; }
+        
+        /* Style pour le filigrane d'arrière-plan dans la zone rouge */
+        .couverture-bg-logo {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -25%);
+            width: 60%;
+            height: 60%;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.12;
+            z-index: 0;
+            pointer-events: none;
         }
-    </style>
-</head>
-<body>
-    <div class="top-container no-print">
-        <h2>Impression des Bulletins (CP1 - CM2)</h2>
+        .couverture-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .couverture-header { border: 1px solid #333; padding: 4px; background: #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.55em; text-align: left; }                                                                  .couverture-header-gauche { flex: 1; font-weight: bold; line-height: 1.2; }                                                   .couverture-header-droite { width: 110px; text-align: center; font-weight: bold; line-height: 1.1; }                          .couverture-header-droite img { width: 40px; height: auto; display: block; margin: 2px auto; }                                .titre-bulletin-grand { border: 2px solid #333; border-radius: 6px; padding: 8px; background: #e9ecef; font-weight: bold; font-size: 16px; font-family: 'Arial Black', Arial, sans-serif; margin: 8px 0; letter-spacing: 0.5px; }
+
+        @media print {                                                     body { background: none; margin: 0; }
+            .no-print { display: none !important; }                        .bulletin-page { border: none; box-shadow: none; margin: 0; width: 100%; height: 100%; page-break-after: always; padding: 5mm; }                                                         }                                                          </style>                                                   </head>
+<body>                                                             <div class="top-container no-print">                               <h2>Impression des Bulletins (CP1 - CM2)</h2>
         <div>
             <button class="btn-classe btn-imprimer" onclick="window.print()">🖨️ Imprimer les bulletins</button>
             <a href="compo.html" class="btn-classe btn-retour">Retour Gestion</a>
-        </div>
-    </div>
-
-    <div id="conteneurBulletins">
-        <p style="text-align:center; padding: 40px;">Chargement des données...</p>
-    </div>
-
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const niveauActuel = (urlParams.get('niveau') || 'CP1').toUpperCase();
-        const annee = urlParams.get('annee') || '2025';
-        
-        let configGlobale = { iepp: '........................................', ecole: '........................................' };
-
+        </div>                                                     </div>                                                     
+    <div id="conteneurBulletins">                                      <p style="text-align:center; padding: 40px;">Chargement des données...</p>                                                </div>
+                                                                   <script>
+        const urlParams = new URLSearchParams(window.location.search);                                                                const niveauActuel = (urlParams.get('niveau') || 'CP1').toUpperCase();                                                        const annee = urlParams.get('annee') || '2025';                                                                               let configGlobale = { iepp: '........................................', ecole: '........................................', logo_ecole: '' };                                                         
         async function chargerConfigDirecteur() {
             try {
                 const res = await fetch('/api/config-prof');
                 if (res.ok) {
-                    const data = await res.json();
-                    if (data.iepp) configGlobale.iepp = data.iepp;
+                    const data = await res.json();                                 
+                    if (data.iepp) configGlobale.iepp = data.iepp;                                                                                
                     if (data.ecole) configGlobale.ecole = data.ecole;
-                }
-            } catch (e) {
-                console.error("Erreur chargement config prof:", e);
-            }
+                    if (data.logo_ecole) configGlobale.logo_ecole = data.logo_ecole;
+                }                                                          } catch (e) {
+                console.error("Erreur chargement config prof:", e);                                                                       }
             try {
-                const resEco = await fetch('/api/nom-ecole');
-                if (resEco.ok) {
+                const resEco = await fetch('/api/nom-ecole');                  if (resEco.ok) {
                     const dataEco = await resEco.json();
                     if (dataEco.nom) configGlobale.ecole = dataEco.nom;
-                }
-            } catch (e) {}
+                }                                                          } catch (e) {}
         }
-
-        const colonnesParNiveauCompo1 = {
-            'CP1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
-            'CP2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-            'CE1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+                                                                       const colonnesParNiveauCompo1 = {                                  'CP1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
+            'CP2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],                          'CE1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
             'CE2': ['exp_texte', 'dictee', 'aem', 'math'],
             'CM1': ['exp_texte', 'dictee', 'aem', 'math'],
             'CM2': ['exp_texte', 'dictee', 'aem', 'math']
-        };
-
+        };                                                     
         const colonnesCp1Compo2Plus = ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'];
-
-        function getMatieres(niveau, numCompo) {
-            if (niveau === 'CP1' && (numCompo === '2' || numCompo === '3' || numCompo === 'PASSAGE')) {
-                return colonnesCp1Compo2Plus;
+                                                                       function getMatieres(niveau, numCompo) {                           if (niveau === 'CP1' && (numCompo === '2' || numCompo === '3' || numCompo === 'PASSAGE')) {                                       return colonnesCp1Compo2Plus;
             }
             return colonnesParNiveauCompo1[niveau] || ['exp_texte', 'dictee', 'aem', 'math'];
         }
 
-        function getBareme(niveau, matiere) {
-            let niv = niveau.toUpperCase();
+        function getBareme(niveau, matiere) {                              let niv = niveau.toUpperCase();
             let m = matiere.toLowerCase();
-            if (niv === 'CP1' || niv === 'CP2') return 10;
-            if (niv === 'CE1') {
-                if (m.includes('exp')) return 30;
-                if (m.includes('dictee')) return 20;
+            if (niv === 'CP1' || niv === 'CP2') return 10;                 if (niv === 'CE1') {                                               if (m.includes('exp')) return 30;                              if (m.includes('dictee')) return 20;
                 if (m.includes('aem')) return 30;
+                if (m.includes('math')) return 30;                             if (m.includes('lecture')) return 10;                      }                                                              if (niv === 'CE2') {                                               if (m.includes('exp')) return 30;
+                if (m.includes('dictee')) return 20;                           if (m.includes('aem')) return 30;
                 if (m.includes('math')) return 30;
-                if (m.includes('lecture')) return 10;
-            }
-            if (niv === 'CE2') {
-                if (m.includes('exp')) return 30;
-                if (m.includes('dictee')) return 20;
-                if (m.includes('aem')) return 30;
-                if (m.includes('math')) return 30;
-            }
-            if (niv === 'CM1' || niv === 'CM2') {
-                if (m.includes('exp')) return 50;
-                if (m.includes('dictee')) return 20;
-                if (m.includes('aem')) return 50;
-                if (m.includes('math')) return 50;
-            }
-            return 10;
-        }
+            }                                                              if (niv === 'CM1' || niv === 'CM2') {                              if (m.includes('exp')) return 50;
+                if (m.includes('dictee')) return 20;                           if (m.includes('aem')) return 50;                              if (m.includes('math')) return 50;                         }
+            return 10;                                                 }
 
         function getMaxTotal(niveau) {
-            let niv = niveau.toUpperCase();
-            if (niv === 'CP1' || niv === 'CP2') return 90;
+            let niv = niveau.toUpperCase();                                if (niv === 'CP1' || niv === 'CP2') return 90;
             if (niv === 'CE1') return 120;
-            if (niv === 'CE2') return 110;
-            if (niv === 'CM1' || niv === 'CM2') return 170;
+            if (niv === 'CE2') return 110;                                 if (niv === 'CM1' || niv === 'CM2') return 170;
             return 100;
         }
 
         function getMaxMoyen(niveau) {
             let niv = niveau.toUpperCase();
-            if (niv === 'CM1' || niv === 'CM2') return 20;
-            return 10;
-        }
-
-        async function fetchPeriodeSafe(url) {
+            if (niv === 'CM1' || niv === 'CM2') return 20;                 return 10;                                                 }                                                                                                                             async function fetchPeriodeSafe(url) {
             try {
-                const res = await fetch(url);
-                if (!res.ok) return [];
+                const res = await fetch(url);                                  if (!res.ok) return [];
                 const data = await res.json();
                 return Array.isArray(data) ? data : (data.eleves || data.data || []);
-            } catch (e) {
-                return [];
+            } catch (e) {                                                      return [];
             }
-        }
-
-        async function chargerDonneesBulletins() {
-            try {
-                await chargerConfigDirecteur();
-
+        }                                                      
+        async function chargerDonneesBulletins() {                         try {
+                await chargerConfigDirecteur();                
                 const [f1, f2, f3, fPass] = await Promise.all([
                     fetchPeriodeSafe(`/api/eleves/${annee}?periode=COMPO1`),
                     fetchPeriodeSafe(`/api/eleves/${annee}?periode=COMPO2`),
-                    fetchPeriodeSafe(`/api/eleves/${annee}?periode=COMPO3`),
-                    fetchPeriodeSafe(`/api/eleves/${annee}?periode=PASSAGE`)
-                ]);
-
-                let localData = localStorage.getItem('hva_eleves') || localStorage.getItem('hva_factures');
+                    fetchPeriodeSafe(`/api/eleves/${annee}?periode=COMPO3`),                                                                      fetchPeriodeSafe(`/api/eleves/${annee}?periode=PASSAGE`)                                                                  ]);
+                                                                               let localData = localStorage.getItem('hva_eleves') || localStorage.getItem('hva_factures');
                 let listeLocale = localData ? JSON.parse(localData) : [];
-
-                const filtrerNiv = list => list.filter(e => e.niveau && e.niveau.toUpperCase() === niveauActuel);
-
-                let elevesNiveauF1 = filtrerNiv(f1);
+                                                                               const filtrerNiv = list => list.filter(e => e.niveau && e.niveau.toUpperCase() === niveauActuel);                                                                                            let elevesNiveauF1 = filtrerNiv(f1);
                 if (elevesNiveauF1.length === 0 && listeLocale.length > 0) {
                     elevesNiveauF1 = filtrerNiv(listeLocale);
                 }
-
-                const nombreTotalEleves = elevesNiveauF1.length > 0 ? elevesNiveauF1.length : (filtrerNiv(fPass).length || listeLocale.length || '-');
-
+                                                                               const nombreTotalEleves = elevesNiveauF1.length > 0 ? elevesNiveauF1.length : (filtrerNiv(fPass).length || listeLocale.length || '-');                                       
                 const mapEleves = {};
                 const fusionnerListes = (list, propName) => {
-                    list.forEach(e => {
-                        if (e.niveau && e.niveau.toUpperCase() === niveauActuel) {
-                            let mat = e.matricule || e.id;
-                            if (!mapEleves[mat]) mapEleves[mat] = { ...e };
+                    list.forEach(e => {                                                if (e.niveau && e.niveau.toUpperCase() === niveauActuel) {                                                                        let mat = e.matricule || e.id;                                 if (!mapEleves[mat]) mapEleves[mat] = { ...e };
                             if (propName) mapEleves[mat][propName] = e;
-                        }
-                    });
-                };
-
-                fusionnerListes(f1, 'compo1');
-                fusionnerListes(f2, 'compo2');
-                fusionnerListes(f3, 'compo3');
-                fusionnerListes(fPass, 'passage');
-                fusionnerListes(listeLocale, 'compo1');
-
-                genererPagesBulletins(Object.values(mapEleves), nombreTotalEleves);
-            } catch (err) {
+                        }                                                          });                                                        };
+                                                                               fusionnerListes(f1, 'compo1');                                 fusionnerListes(f2, 'compo2');
+                fusionnerListes(f3, 'compo3');                                 fusionnerListes(fPass, 'passage');                             fusionnerListes(listeLocale, 'compo1');        
+                genererPagesBulletins(Object.values(mapEleves), nombreTotalEleves);                                                       } catch (err) {
                 console.error("Erreur chargement bulletins:", err);
-                document.getElementById('conteneurBulletins').innerHTML = `<p style="color:red; text-align:center;">Erreur lors du chargement des données.</p>`;
-            }
-        }
-
-        function genererTableauMatiere(compoObj, niveau, numCompo) {
-            let matieres = getMatieres(niveau, numCompo);
-            let notes = compoObj ? (compoObj.notes || compoObj) : {};
-            let html = `
-                <div class="entete-livret">
-                    Mois de ............................................................................<br>
-                    <strong>COMPOSITION N° ${numCompo}</strong>
-                </div>
-                <div class="table-container-flex">
-                    <table class="table-matieres">
-                        <tr>
-                            <th>MATIERES</th>
-                            <th>Note / Barème</th>
+                document.getElementById('conteneurBulletins').innerHTML = `<p style="color:red; text-align:center;">Erreur lors du chargement des données.</p>`;                                         }                                                          }                                                      
+        function genererTableauMatiere(compoObj, niveau, numCompo) {                                                                      let matieres = getMatieres(niveau, numCompo);                  let notes = compoObj ? (compoObj.notes || compoObj) : {};
+            let html = `                                                       <div class="entete-livret">                                        Mois de ............................................................................<br>                                      <strong>COMPOSITION N° ${numCompo}</strong>                </div>                                                         <div class="table-container-flex">
+                    <table class="table-matieres">                                     <tr>                                                               <th>MATIERES</th>                                              <th>Note / Barème</th>
                         </tr>`;
             matieres.forEach(m => {
-                let noteVal = notes[m] !== undefined && notes[m] !== null ? notes[m] : '';
-                let bareme = getBareme(niveau, m);
+                let noteVal = notes[m] !== undefined && notes[m] !== null ? notes[m] : '';                                                    let bareme = getBareme(niveau, m);
                 let displayNote = noteVal !== '' ? `${noteVal} / ${bareme}` : `... / ${bareme}`;
-                html += `
-                        <tr>
-                            <td>${m.charAt(0).toUpperCase() + m.slice(1)}</td>
-                            <td>${displayNote}</td>
+                html += `                                                              <tr>
+                            <td>${m.charAt(0).toUpperCase() + m.slice(1)}</td>                                                                            <td>${displayNote}</td>
                         </tr>`;
-            });
-            html += `
-                    </table>
-                    <div class="visas-colonne">
+            });                                                            html += `
+                    </table>                                                       <div class="visas-colonne">
                         <div class="visa-item">Visas du Maître</div>
                         <div class="visa-item">Visas du Directeur</div>
-                        <div class="visa-item">Visas des Parents</div>
-                    </div>
+                        <div class="visa-item">Visas des Parents</div>                                                                            </div>
                 </div>`;
-            return html;
-        }
-
-        function genererPagesBulletins(eleves, nombreTotalEleves) {
-            const conteneur = document.getElementById('conteneurBulletins');
+            return html;                                               }
+                                                                       function genererPagesBulletins(eleves, nombreTotalEleves) {                                                                       const conteneur = document.getElementById('conteneurBulletins');
             if (!eleves || eleves.length === 0) {
-                conteneur.innerHTML = `<p style="text-align:center; padding:40px; color:#666;">Aucun élève trouvé pour la classe ${niveauActuel}.</p>`;
-                return;
-            }
-
-            let maxTotal = getMaxTotal(niveauActuel);
+                conteneur.innerHTML = `<p style="text-align:center; padding:40px; color:#666;">Aucun élève trouvé pour la classe ${niveauActuel}.</p>`;                                                      return;
+            }                                                                                                                             let maxTotal = getMaxTotal(niveauActuel);
             let maxMoyen = getMaxMoyen(niveauActuel);
-            let htmlGlobal = '';
-
-            eleves.forEach((el) => {
-                let dateNaiss = el.date_naissance || '............................';
-                let lieu = el.lieu_naissance || el.lieu_etab || '............................';
-                let photoHtml = el.photo ? `<img src="${el.photo}" alt="Photo">` : 'PHOTO';
-
-                let c1 = el.compo1 || {};
-                let t1 = parseFloat(c1.total || 0).toFixed(2);
-                let m1 = parseFloat(c1.moyen || c1.moyenne || 0);
-                let r1 = c1.rang || '-';
-
-                let c2 = el.compo2 || {};
-                let t2 = parseFloat(c2.total || 0).toFixed(2);
-                let m2 = parseFloat(c2.moyen || c2.moyenne || 0);
-                let r2 = c2.rang || '-';
-
-                let c3 = el.compo3 || {};
-                let t3 = parseFloat(c3.total || 0).toFixed(2);
-                let m3 = parseFloat(c3.moyen || c3.moyenne || 0);
-                let r3 = c3.rang || '-';
-
-                let cPass = el.passage || {};
-                let tPass = parseFloat(cPass.total || 0).toFixed(2);
-                let mPass = parseFloat(cPass.moyen || cPass.moyenne || 0).toFixed(2);
-                let rPass = cPass.rang || '-';
-
-                let moyenneComposMoy = ((m1 + m2 + m3) / 3).toFixed(2);
+            let htmlGlobal = '';                               
+            eleves.forEach((el) => {                                           let dateNaiss = el.date_naissance || '............................';                                                          let lieu = el.lieu_naissance || el.lieu_etab || '............................';                                               let photoHtml = el.photo ? `<img src="${el.photo}" alt="Photo">` : 'PHOTO';
+                                                                               let c1 = el.compo1 || {};                                      let t1 = parseFloat(c1.total || 0).toFixed(2);                 let m1 = parseFloat(c1.moyen || c1.moyenne || 0);
+                let r1 = c1.rang || '-';                       
+                let c2 = el.compo2 || {};                                      let t2 = parseFloat(c2.total || 0).toFixed(2);                 let m2 = parseFloat(c2.moyen || c2.moyenne || 0);                                                                             let r2 = c2.rang || '-';                                                                                                      let c3 = el.compo3 || {};                                      let t3 = parseFloat(c3.total || 0).toFixed(2);
+                let m3 = parseFloat(c3.moyen || c3.moyenne || 0);                                                                             let r3 = c3.rang || '-';                       
+                let cPass = el.passage || {};                                  let tPass = parseFloat(cPass.total || 0).toFixed(2);                                                                          let mPass = parseFloat(cPass.moyen || cPass.moyenne || 0).toFixed(2);                                                         let rPass = cPass.rang || '-';
+                                                                               let moyenneComposMoy = ((m1 + m2 + m3) / 3).toFixed(2);
 
                 let m1Str = m1.toFixed(2);
-                let m2Str = m2.toFixed(2);
-                let m3Str = m3.toFixed(2);
-
+                let m2Str = m2.toFixed(2);                                     let m3Str = m3.toFixed(2);                     
                 let r1Display = r1 !== '-' ? `${r1}e / ${nombreTotalEleves}` : `-e / ${nombreTotalEleves}`;
-                let r2Display = r2 !== '-' ? `${r2}e / ${nombreTotalEleves}` : `-e / ${nombreTotalEleves}`;
-                let r3Display = r3 !== '-' ? `${r3}e / ${nombreTotalEleves}` : `-e / ${nombreTotalEleves}`;
-                let rPassDisplay = rPass !== '-' ? `${rPass}e / ${nombreTotalEleves}` : `-e / ${nombreTotalEleves}`;
+                let r2Display = r2 !== '-' ? `${r2}e / ${nombreTotalEleves}` : `-e / ${nombreTotalEleves}`;                                   let r3Display = r3 !== '-' ? `${r3}e / ${nombreTotalEleves}` : `-e / ${nombreTotalEleves}`;
+                let rPassDisplay = rPass !== '-' ? `${rPass}e / ${nombreTotalEleves}` : `-e / ${nombreTotalEleves}`;          
+                
+                let bgStyleLogo = configGlobale.logo_ecole ? `background-image: url('${configGlobale.logo_ecole}');` : '';
 
-                htmlGlobal += `
-                <div class="bulletin-page">
+                htmlGlobal += `                                                <div class="bulletin-page">
                     <div class="page-grid-2x2">
-                        <div class="quart-livret">
-                            <div>${genererTableauMatiere(c1, niveauActuel, '1')}</div>
+                        <div class="quart-livret">                                         <div>${genererTableauMatiere(c1, niveauActuel, '1')}</div>
                             <div class="resultats-synthese" style="font-size: 0.9em; padding: 6px 10px;">
-                                <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${t1} / ${maxTotal}</span></div>
-                                <div style="margin: 4px 0;"><span>MOYENNE :</span> <span>${m1Str} / ${maxMoyen}</span></div>
-                                <div style="margin: 4px 0;"><span>RANG :</span> <span>${r1Display}</span></div>
-                                <div style="margin: 4px 0;"><span>Appréciation du Maître :</span> <span>....................</span></div>
+                                <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${t1} / ${maxTotal}</span></div>                                       <div style="margin: 4px 0;"><span>MOYENNE :</span> <span>${m1Str} / ${maxMoyen}</span></div>                                  <div style="margin: 4px 0;"><span>RANG :</span> <span>${r1Display}</span></div>                                               <div style="margin: 4px 0;"><span>Appréciation du Maître :</span> <span>....................</span></div>
                             </div>
                         </div>
-                        <div class="quart-livret">
-                            <div>${genererTableauMatiere(c2, niveauActuel, '2')}</div>
+                        <div class="quart-livret">                                         <div>${genererTableauMatiere(c2, niveauActuel, '2')}</div>
                             <div class="resultats-synthese" style="font-size: 0.9em; padding: 6px 10px;">
-                                <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${t2} / ${maxTotal}</span></div>
-                                <div style="margin: 4px 0;"><span>MOYENNE :</span> <span>${m2Str} / ${maxMoyen}</span></div>
+                                <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${t2} / ${maxTotal}</span></div>                                       <div style="margin: 4px 0;"><span>MOYENNE :</span> <span>${m2Str} / ${maxMoyen}</span></div>
                                 <div style="margin: 4px 0;"><span>RANG :</span> <span>${r2Display}</span></div>
                                 <div style="margin: 4px 0;"><span>Appréciation du Maître :</span> <span>....................</span></div>
                             </div>
                         </div>
                         <div class="quart-livret">
-                            <div>
-                                <div class="box-titre">INFORMATION ELEVES</div>
-                                <div class="photo-box">${photoHtml}</div>
-                                <div class="info-ligne"><strong>Nom :</strong> ${el.nom || '...................................................'}</div>
-                                <div class="info-ligne"><strong>Prénoms :</strong> ${el.prenoms || '...............................................'}</div>
-                                <div class="info-ligne"><strong>Date de naissance :</strong> ${dateNaiss}</div>
-                                <div class="info-ligne"><strong>Lieu :</strong> ${lieu}</div>
-                                <div style="clear: both;"></div>
+                            <div>                                                              <div class="box-titre">INFORMATION ELEVES</div>
+                                <div class="photo-box">${photoHtml}</div>                                                                                     <div class="info-ligne"><strong>Nom :</strong> ${el.nom || '...................................................'}</div>
+                                <div class="info-ligne"><strong>Prénoms :</strong> ${el.prenoms || '...............................................'}</div>                                                                  <div class="info-ligne"><strong>Date de naissance :</strong> ${dateNaiss}</div>
+                                <div class="info-ligne"><strong>Lieu :</strong> ${lieu}</div>                                                                 <div style="clear: both;"></div>
+                                                                                               <div class="box-titre" style="margin-top: 6px;">INFORMATION PARENTS</div>
+                                <div class="info-ligne">Père [ &nbsp; ] &nbsp; Mère [ &nbsp; ] &nbsp; Tuteur [ &nbsp; ]</div>                                 <div class="info-ligne"><strong>Nom et Prénoms :</strong> ${el.pere || el.mere || '....................................................'}</div>
+                                <div class="info-ligne"><strong>Profession :</strong> ............................................................</div>                                                                     <div class="info-ligne"><strong>Quartier :</strong> ${el.localite || '...............................................................'}</div>                                                <div class="info-ligne"><strong>Contacts :</strong> ${el.contact || '...............................................................'}</div>
 
-                                <div class="box-titre" style="margin-top: 6px;">INFORMATION PARENTS</div>
-                                <div class="info-ligne">Père [ &nbsp; ] &nbsp; Mère [ &nbsp; ] &nbsp; Tuteur [ &nbsp; ]</div>
-                                <div class="info-ligne"><strong>Nom et Prénoms :</strong> ${el.pere || el.mere || '....................................................'}</div>
-                                <div class="info-ligne"><strong>Profession :</strong> ............................................................</div>
-                                <div class="info-ligne"><strong>Quartier :</strong> ${el.localite || '...............................................................'}</div>
-                                <div class="info-ligne"><strong>Contacts :</strong> ${el.contact || '...............................................................'}</div>
-
-                                <div class="box-titre" style="margin-top: 6px;">INFORMATION ENSEIGNANT(E)</div>
-                                <div class="info-ligne"><strong>Nom et Prénoms :</strong> ....................................................</div>
+                                <div class="box-titre" style="margin-top: 6px;">INFORMATION ENSEIGNANT(E)</div>                                               <div class="info-ligne"><strong>Nom et Prénoms :</strong> ....................................................</div>
                                 <div class="info-ligne"><strong>Contacts :</strong> ................................................................</div>
+                            </div>                                                     </div>
+                        <div class="quart-livret">                                         <div>                                                              <div class="box-titre">RESULTATS DE FIN D'ANNEE</div>
+                                <table class="table-matieres" style="margin-bottom: 6px;">                                                                        <tr><td>Moyenne de la composition de passage</td><td>${mPass} / ${maxMoyen}</td></tr>                                         <tr><td>Moyennes des compositions</td><td>${moyenneComposMoy} / ${maxMoyen}</td></tr>                                         <tr><td>Moyenne Annuelle</td><td>${mPass} / ${maxMoyen}</td></tr>                                                             <tr><td>Rang</td><td>${rPassDisplay}</td></tr>
+                                </table>                                                       <div class="box-titre">DECISION DU CONSEIL DES MAÎTRES</div>
+                                <table class="table-matieres" style="margin-bottom: 6px;">                                                                        <tr><td colspan="2"><strong>ADMIS (E) EN CLASSE SUPERIEURE</strong></td></tr>                                                 <tr><td>OUI [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td><td>NON [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td></tr>                                                                          </table>
+                                <div style="text-align: right; font-size: 0.7em; margin-top: 4px;">                                                               Fait à .................................... le ............ / ............ / 20......                                     </div>
                             </div>
-                        </div>
-                        <div class="quart-livret">
-                            <div>
-                                <div class="box-titre">RESULTATS DE FIN D'ANNEE</div>
-                                <table class="table-matieres" style="margin-bottom: 6px;">
-                                    <tr><td>Moyenne de la composition de passage</td><td>${mPass} / ${maxMoyen}</td></tr>
-                                    <tr><td>Moyennes des compositions</td><td>${moyenneComposMoy} / ${maxMoyen}</td></tr>
-                                    <tr><td>Moyenne Annuelle</td><td>${mPass} / ${maxMoyen}</td></tr>
-                                    <tr><td>Rang</td><td>${rPassDisplay}</td></tr>
-                                </table>
-                                <div class="box-titre">DECISION DU CONSEIL DES MAÎTRES</div>
-                                <table class="table-matieres" style="margin-bottom: 6px;">
-                                    <tr><td colspan="2"><strong>ADMIS (E) EN CLASSE SUPERIEURE</strong></td></tr>
-                                    <tr><td>OUI [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td><td>NON [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td></tr>
-                                </table>
-                                <div style="text-align: right; font-size: 0.7em; margin-top: 4px;">
-                                    Fait à .................................... le ............ / ............ / 20......
-                                </div>
-                            </div>
-                            <div class="signatures-grid">
-                                <div class="signature-box-livret">Le maître Chargé de cours</div>
-                                <div class="signature-box-livret">Le Directeur</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bulletin-page">
-                    <div class="page-grid-2x2">
-                        <div class="quart-livret">
-                            <div>${genererTableauMatiere(c3, niveauActuel, '3')}</div>
-                            <div class="resultats-synthese" style="font-size: 0.9em; padding: 6px 10px;">
-                                <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${t3} / ${maxTotal}</span></div>
+                            <div class="signatures-grid">                                      <div class="signature-box-livret">Le maître Chargé de cours</div>
+                                <div class="signature-box-livret">Le Directeur</div>                                                                      </div>                                                     </div>                                                     </div>                                                     </div>                                         
+                <div class="bulletin-page">                                        <div class="page-grid-2x2">                                        <div class="quart-livret">
+                            <div>${genererTableauMatiere(c3, niveauActuel, '3')}</div>                                                                    <div class="resultats-synthese" style="font-size: 0.9em; padding: 6px 10px;">                                                     <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${t3} / ${maxTotal}</span></div>
                                 <div style="margin: 4px 0;"><span>MOYENNE :</span> <span>${m3Str} / ${maxMoyen}</span></div>
-                                <div style="margin: 4px 0;"><span>RANG :</span> <span>${r3Display}</span></div>
-                                <div style="margin: 4px 0;"><span>Appréciation du Maître :</span> <span>....................</span></div>
-                            </div>
+                                <div style="margin: 4px 0;"><span>RANG :</span> <span>${r3Display}</span></div>                                               <div style="margin: 4px 0;"><span>Appréciation du Maître :</span> <span>....................</span></div>                                                                                </div>
                         </div>
-                        <div class="quart-livret">
-                            <div>${genererTableauMatiere(cPass, niveauActuel, 'PASSAGE')}</div>
-                            <div class="resultats-synthese" style="font-size: 0.9em; padding: 6px 10px;">
-                                <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${tPass} / ${maxTotal}</span></div>
-                                <div style="margin: 4px 0;"><span>MOYENNE :</span> <span>${mPass} / ${maxMoyen}</span></div>
-                                <div style="margin: 4px 0;"><span>RANG :</span> <span>${rPassDisplay}</span></div>
-                                <div style="margin: 4px 0;"><span>Appréciation du Maître :</span> <span>....................</span></div>
-                            </div>
-                        </div>
-                        <div class="quart-livret">
-                            <div>
-                                <div class="box-titre">OBSERVATIONS / OBSERVATIONS GENERALES</div>
-                                <div style="height: 140px; border: 1px dashed #ccc; padding: 6px; color: #777; font-size: 0.75em;">
-                                    Remarques générales du trimestre ou de l'année scolaire...<br><br>
-                                    ............................................................................................................<br>
-                                    ............................................................................................................
+                        <div class="quart-livret">                                         <div>${genererTableauMatiere(cPass, niveauActuel, 'PASSAGE')}</div>                                                           <div class="resultats-synthese" style="font-size: 0.9em; padding: 6px 10px;">                                                     <div style="margin: 4px 0;"><span>TOTAL :</span> <span>${tPass} / ${maxTotal}</span></div>                                    <div style="margin: 4px 0;"><span>MOYENNE :</span> <span>${mPass} / ${maxMoyen}</span></div>
+                                <div style="margin: 4px 0;"><span>RANG :</span> <span>${rPassDisplay}</span></div>                                            <div style="margin: 4px 0;"><span>Appréciation du Maître :</span> <span>....................</span></div>                                                                                </div>
+                        </div>                                                         <div class="quart-livret">
+                            <div>                                                              <div class="box-titre">OBSERVATIONS / OBSERVATIONS GENERALES</div>                                                            <div style="height: 140px; border: 1px dashed #ccc; padding: 6px; color: #777; font-size: 0.75em;">                                                                                              Remarques générales du trimestre ou de l'année scolaire...<br><br>                                                            ............................................................................................................<br>                                                                             ............................................................................................................
+                                </div>                                                     </div>                                                     </div>                                                         <div class="quart-livret">
+                            <div class="couverture-box">                                       
+                                <div class="couverture-bg-logo" style="${bgStyleLogo}"></div>
+                                <div class="couverture-content">
+                                    <div class="couverture-header">                                    <div class="couverture-header-gauche">
+                                        ANNÉE SCOLAIRE : 2025-2026<br><br>                                                                                            MINISTÈRE DE L'ÉDUCATION NATIONALE<br>                                                                                        ET DE L’ALPHABETISATION
+                                    </div>
+                                    <div class="couverture-header-droite">                                                                                            REPUBLIQUE DE COTE D'IVOIRE<br>
+                                        <img src="Armoiries.jpg" alt="Armoiries">                                                                                     <span style="font-size: 0.85em; font-weight: normal;">Union - Discipline - Travail</span>
+                                    </div>                                                     </div>                                                         <div style="text-align: center; font-size: 0.7em; margin-top: 2px;">
+                                    <strong>IEPP : ${configGlobale.iepp}</strong>                                                                             </div>                                                         <div style="text-align: center; font-weight: bold; margin-top: 4px; font-size: 16px; line-height: 1.3; color: green;">                                                                           ${configGlobale.ecole}<br><br>
+                                    CLASSE DE ${niveauActuel}                                  </div>                                                         <div style="font-size: 0.65em; margin: 4px 0;">
+                                    Tenue par : ..................................................................................                                                                                           </div>
+                                <div class="titre-bulletin-grand">                                                                                                BULLETIN DE NOTES                                          </div>                                                         <div style="text-align: left; font-size: 0.7em; margin-top: 4px; line-height: 1.3;">                                              <strong>Prénoms :</strong> ${el.prenoms || '..................................................................'}<br>                                                                         <strong>Nom :</strong> ${el.nom || '..........................................................................'}                                                                         </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="quart-livret">
-                            <div class="couverture-box">
-                                <div class="couverture-header">
-                                    MINISTÈRE DE L'ÉDUCATION NATIONALE ET DE L’ALPHABETISATION<br>
-                                    <span style="font-weight: normal;">ANNEE : ${annee} - ${parseInt(annee)+1}</span>
-                                </div>
-                                <div style="text-align: center; font-size: 0.7em; margin-top: 2px;">
-                                    <strong>IEPP : ${configGlobale.iepp}</strong>
-                                </div>
-                                <div style="text-align: center; font-weight: bold; margin-top: 4px; font-size: 0.75em; line-height: 1.3;">
-                                    ${configGlobale.ecole}<br><br>
-                                    CLASSE DE ${niveauActuel}
-                                </div>
-                                <div style="font-size: 0.65em; margin: 4px 0;">
-                                    Tenue par : ..................................................................................
-                                </div>
-                                <div class="titre-bulletin-grand">
-                                    BULLETIN DE NOTES
-                                </div>
-                                <div style="text-align: left; font-size: 0.7em; margin-top: 4px; line-height: 1.3;">
-                                    <strong>Prénoms :</strong> ${el.prenoms || '..................................................................'}<br>
-                                    <strong>Nom :</strong> ${el.nom || '..........................................................................'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            });
-            conteneur.innerHTML = htmlGlobal;
-        }
-
-        window.addEventListener('DOMContentLoaded', chargerDonneesBulletins);
-    </script>
-</body>
+                            </div>                                                     </div>                                                     </div>                                                     </div>`;                                                   });                                                            conteneur.innerHTML = htmlGlobal;
+        }                                                                                                                             window.addEventListener('DOMContentLoaded', chargerDonneesBulletins);
+    </script>                                                  </body>
 </html>
