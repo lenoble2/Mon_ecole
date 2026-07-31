@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,26 +8,26 @@
     <style>
         @page { size: A4 portrait; margin: 20px; }
         body { font-family: sans-serif; font-size: 12px; margin: 20px; }
-
         .header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header-left { font-weight: bold; line-height: 1.4; }
         .logo-display { display: flex; gap: 10px; align-items: center; }
         .logo-display img { height: 50px; max-width: 70px; object-fit: contain; }
-
         .filter-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         #annee-select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid black; padding: 6px; text-align: center; }
         th { background-color: #f0f0f0; }
         .col-nom { text-align: left !important; }
-        
         .blue-text { color: #0000CD; font-weight: bold; }
         .red-text { color: #DC143C; font-weight: bold; }
+        .btn-imprimer { padding: 6px 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .btn-imprimer:hover { background-color: #0056b3; }
+        @media print {
+            .filter-container button { display: none; }
+        }
     </style>
 </head>
 <body>
-
 <div class="header-info">
     <div class="header-left">
         <div id="drena-display">DRENA : </div>
@@ -43,18 +45,19 @@
 
 <div class="filter-container">
     <h2>LISTE DES ÉLÈVES SANS EXTRAIT</h2>
-    <select id="annee-select" onchange="chargerEleves()">
-
-	<option value="2028">2028-2029</option>
-         <option value="2027">2027-2028</option>
-         <option value="2026" selected>2026-2027</option>
-         <option value="2025">2025-2026</option>
-         <option value="2024">2024-2025</option>                                      <option value="2023">2023-2024</option>
-         <option value="2022">2022-2023</option>
-         <option value="2021">2021-2022</option>
-
-
-    </select>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <button type="button" class="btn-imprimer" onclick="window.print()">Imprimer</button>
+        <select id="annee-select" onchange="changerAnnee()">
+            <option value="2028">2028-2029</option>
+            <option value="2027">2027-2028</option>
+            <option value="2026" selected>2026-2027</option>
+            <option value="2025">2025-2026</option>
+            <option value="2024">2024-2025</option>
+            <option value="2023">2023-2024</option>
+            <option value="2022">2022-2023</option>
+            <option value="2021">2021-2022</option>
+        </select>
+    </div>
 </div>
 
 <table>
@@ -74,19 +77,15 @@
     // Fonction qui définit les conditions pour "Sans Extrait"
     function estSansExtrait(matricule) {
         const matStr = matricule ? matricule.toString().trim() : "";
-        
         // Condition 1 : La case est vide
         if (matStr === "") return true;
-        
         // Condition 2 : Commence par une lettre alphabétique
         const commenceParLettre = /^[a-zA-Z]/.test(matStr);
         if (commenceParLettre) return true;
-        
-        // Condition 3 : Ne contient aucune lettre (purement numérique)
-        // \d correspond à un chiffre, ^\d+$ signifie que la chaîne n'est composée que de chiffres
+        // Condition 3 : Purement numérique (selon votre logique initiale)
         const sansAucuneLettre = /^\d+$/.test(matStr);
         if (sansAucuneLettre) return true;
-        
+
         return false;
     }
 
@@ -110,9 +109,11 @@
         document.getElementById('annee-label').innerText = annee + "-" + (parseInt(annee) + 1);
 
         fetch(`/api/eleves/${annee}`).then(res => res.json()).then(data => {
-            // Filtrage : On garde uniquement les cas correspondant aux 3 conditions
-            const listeFiltree = data.filter(e => estSansExtrait(e.matricule));
+            const listeEleves = Array.isArray(data) ? data : (data.eleves || []);
+            const listeFiltree = listeEleves.filter(e => estSansExtrait(e.matricule));
             afficherTableau(listeFiltree);
+        }).catch(err => {
+            console.error("Erreur de chargement des élèves :", err);
         });
     }
 
@@ -123,7 +124,6 @@
     function afficherTableau(data) {
         const tbody = document.getElementById('tbody-liste');
         tbody.innerHTML = '';
-        
         // Tri alphabétique
         const tri = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
 
@@ -141,8 +141,8 @@
         });
     }
 
+    // Appel initial au chargement de la page
     chargerEleves();
 </script>
-
 </body>
 </html>

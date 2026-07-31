@@ -1,160 +1,152 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Gestion Élèves - Fichier Scolaire</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
-        h2 { color: #333; }
-        /* Style des boutons de filtre */
-        .filter-container { margin-bottom: 15px; }
-        .filter-btn { padding: 8px 15px; margin-right: 5px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; }
-        .filter-btn:hover { background-color: #e2e6ea; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f4f4f4; }
-        .checkbox { text-align: center; width: 30px; }
-        .btn { padding: 10px 20px; color: white; text-decoration: none; border-radius: 5px; display: inline-block; cursor: pointer; border: none; }
-
-        .nom-lien { text-decoration: none; color: #000; }
-        .nom-lien:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-
-    <h2 id="titre-annee">Fichier élèves</h2>
-
-    <div class="filter-container">
-        <button class="filter-btn" onclick="filtrer('Tous')">Tous</button>
-        <button class="filter-btn" onclick="filtrer('CP1')">CP1</button>
-        <button class="filter-btn" onclick="filtrer('CP2')">CP2</button>
-        <button class="filter-btn" onclick="filtrer('CE1')">CE1</button>
-        <button class="filter-btn" onclick="filtrer('CE2')">CE2</button>
-        <button class="filter-btn" onclick="filtrer('CM1')">CM1</button>
-        <button class="filter-btn" onclick="filtrer('CM2')">CM2</button>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th class="checkbox"><input type="checkbox" id="select-all"></th>
-                <th>Matricule</th><th>Nom</th><th>Prénoms</th><th>Sexe</th><th>date_naissance</th><th>Niveau</th><th>Nationalité</th>
-                 <th>Âge</th>
-            </tr>
-        </thead>
-        <tbody id="tableau-eleves"></tbody>
-    </table>
-
-    <div style="margin-top: 20px;">
-        <a href="ajout_eleve.html" class="btn" style="background-color: #28a745;">+ Ajouter un élève</a>
-        <button id="delete-btn" class="btn" style="background-color: #d32f2f;">Supprimer sélectionnés</button>
-        <a href="/exporter" class="btn" style="background-color: #007bff;">Télécharger liste (CSV)</a>
-        <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour vers Accueil</a>
-    </div>
-
-    <form action="/importer" method="POST" enctype="multipart/form-data" style="margin-top: 20px;">
-        <input type="hidden" name="annee_import" id="annee_import">
-        <input type="file" name="fichier_csv" accept=".csv">
-        <button type="submit" class="btn" style="background-color: #555;">Importer les élèves</button>
-    </form>
-
-    <form id="delete-form" action="/supprimer-eleves" method="POST" style="display:none;">
-        <input type="hidden" name="ids" id="hidden-ids">
-    </form>
-
-
-<script>
-    let listeEleves = [];
-
-    // 1. Récupérer l'année dans l'URL
-    const urlParams = new URLSearchParams(window.location.search);
+    <meta charset="UTF-8">                                         <title>Gestion Élèves - Fichier Scolaire</title>               <!-- Inclusion de SheetJS (xlsx) pour la génération et l'exportation de fichiers Excel complets -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>                                        <style>                                                            body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }                                       h2 { color: #333; }                                            .filter-container { margin-bottom: 15px; }                     .filter-btn { padding: 8px 15px; margin-right: 5px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; font-weight: bold; }                             .filter-btn:hover { background-color: #e2e6ea; }               .filter-btn.active { background-color: #007bff; color: white; border-color: #007bff; }                                
+        #conteneurTableau { overflow-x: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ddd; max-height: 550px; overflow-y: auto; }                                    table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.85em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap; }                                       th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }                                                       .checkbox { text-align: center; width: 30px; }
+        .btn { padding: 10px 15px; color: white; text-decoration: none; border-radius: 5px; display: inline-block; cursor: pointer; border: none; font-size: 0.9em; font-weight: bold; }             .nom-lien { text-decoration: none; color: #007bff; font-weight: bold; }
+        .nom-lien:hover { text-decoration: underline; }            </style>                                                   </head>                                                        <body>
+                                                                   <h2 id="titre-annee">Fichier élèves</h2>
+                                                                   <div class="filter-container">
+        <button class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>                                               <button class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
+        <button class="filter-btn" onclick="filtrer('CP2', this)">CP2</button>                                                        <button class="filter-btn" onclick="filtrer('CE1', this)">CE1</button>                                                        <button class="filter-btn" onclick="filtrer('CE2', this)">CE2</button>                                                        <button class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>                                                        <button class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>                                                    </div>                                                                                                                        <div id="conteneurTableau">
+        <table>                                                            <thead>
+                <tr>                                                               <th class="checkbox"><input type="checkbox" id="select-all"></th>
+                    <th>Matricule</th>
+                    <th>Nom</th>                                                   <th>Prénoms</th>                                               <th>Sexe</th>
+                    <th>Date Naiss.</th>
+                    <th>Niveau</th>
+                    <th>Nationalité</th>                                           <th>Pays</th>
+                    <th>Localité</th>
+                    <th>Mère</th>
+                    <th>Père</th>                                                  <th>Contact Parent</th>
+                    <th>N° Acte Naissance</th>                                     <th>Date Établissement</th>                                    <th>Lieu Établissement</th>                                    <th>École</th>                                                 <th>Âge</th>                                               </tr>
+            </thead>                                                       <tbody id="tableau-eleves"></tbody>                        </table>
+    </div>                                                                                                                        <div style="margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">                                   <a href="ajout_eleve.html" class="btn" style="background-color: #28a745;">+ Ajouter un élève</a>                              <button id="delete-btn" class="btn" style="background-color: #d32f2f;">Supprimer sélectionnés</button>                        <button type="button" class="btn" style="background-color: #007bff;" onclick="telechargerExcelEleves()">Télécharger Excel Élèves</button>
+                                                                       <!-- Input fichier caché pour l'import Excel / CSV -->
+        <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">                                                             <button type="button" class="btn" style="background-color: #6c757d;" onclick="document.getElementById('inputFichierExcel').click()">Ajouter fichier</button>                                 <span id="nomFichierAffiche" style="font-size: 0.85em; color: #555; font-style: italic; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Aucun fichier choisi">Aucun fichier</span>                                <button type="button" class="btn" style="background-color: #212529;" onclick="importerFichierEleves()">Importer les élèves</button>                                                                                                                         <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour vers Accueil</a>                             </div>                                                     
+    <form id="delete-form" action="/supprimer-eleves" method="POST" style="display:none;">                                            <input type="hidden" name="ids" id="hidden-ids">           </form>                                                                                                                   <script>                                                           let listeEleves = [];
+    let classeFiltreeActuelle = 'Tous';                                                                                           const urlParams = new URLSearchParams(window.location.search);
     const anneeSelectionnee = urlParams.get('annee') || '2025';
 
-    // Remplir le champ caché pour le formulaire d'import
-    document.getElementById('annee_import').value = anneeSelectionnee;
-
-    // Mise à jour dynamique du titre
-    const titreElement = document.getElementById('titre-annee');
-    const anneeSuivante = parseInt(anneeSelectionnee) + 1;
+    const titreElement = document.getElementById('titre-annee');                                                                  const anneeSuivante = parseInt(anneeSelectionnee) + 1;
     titreElement.textContent = `Fichier élèves ${anneeSelectionnee}-${anneeSuivante}`;
-
-    // Fonction corrigée : extrait uniquement l'année pour éviter les erreurs de format jour/mois
-    function calculerAge(dateNaissance) {
-        if (!dateNaissance) return '';
-        
-        // On prend les 4 derniers caractères de la chaîne pour récupérer l'année
-        // Cela fonctionne pour "15/05/2018" ou "2018-05-15"
-        const anneeStr = dateNaissance.toString().slice(-4);
-        const anneeNaiss = parseInt(anneeStr);
-        
-        if (isNaN(anneeNaiss)) return '';
-        return parseInt(anneeSelectionnee) - anneeNaiss;
-    }
-
-    // 2. Chargement des données
-    fetch(`/api/eleves/${anneeSelectionnee}`)
-      .then(res => res.json())
-      .then(eleves => {
-        listeEleves = eleves;
-        afficherTableau(listeEleves);
-      })
-      .catch(err => console.error("Erreur chargement :", err));
-
-    function afficherTableau(data) {
-        const tbody = document.getElementById('tableau-eleves');
-        tbody.innerHTML = '';
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Aucun élève trouvé.</td></tr>';
-            return;
-        }
-        data.forEach(e => {
+                                                                   function calculerAge(dateNaissance) {                              if (!dateNaissance) return '';
+        const anneeStr = dateNaissance.toString().slice(-4);           const anneeNaiss = parseInt(anneeStr);                         if (isNaN(anneeNaiss)) return '';
+        return parseInt(anneeSelectionnee) - anneeNaiss;           }                                                          
+    fetch(`/api/eleves/${anneeSelectionnee}`)                        .then(res => res.json())                                       .then(eleves => {                                                listeEleves = Array.isArray(eleves) ? eleves : (eleves.eleves || []);                                                         filtrer(classeFiltreeActuelle, null);                        })
+      .catch(err => {                                                    console.error("Erreur chargement :", err);                     document.getElementById('tableau-eleves').innerHTML = '<tr><td colspan="18" style="text-align:center; color:red;">Erreur de chargement des élèves.</td></tr>';                           });                                                      
+    function afficherTableau(data) {                                   const tbody = document.getElementById('tableau-eleves');                                                                      tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="18" style="text-align:center; color:#666; padding:15px;">Aucun élève trouvé.</td></tr>';                                                                 return;
+        }                                                              data.forEach(e => {
             tbody.innerHTML += `<tr>
-                <td class="checkbox"><input type="checkbox" class="row-checkbox" data-id="${e.matricule}"></td>
-                <td>${e.matricule || ''}</td>
-                <td><a href="details.html?id=${e.matricule}" class="nom-lien">${e.nom || ''}</a></td>
-                <td>${e.prenoms || ''}</td>
-                <td>${e.sexe || ''}</td>
-                <td>${e.date_naissance || ''}</td>
-                <td>${e.niveau || ''}</td>
-                <td>${e.nationalite || ''}</td>
-                <td>${calculerAge(e.date_naissance)}</td>
-            </tr>`;
-        });
-    }
+                <td class="checkbox"><input type="checkbox" class="row-checkbox" data-id="${e.matricule || ''}"></td>                         <td>${e.matricule || ''}</td>
+                <td><a href="details.html?id=${e.matricule || ''}" class="nom-lien">${e.nom || ''}</a></td>
+                <td>${e.prenoms || ''}</td>                                    <td>${e.sexe || ''}</td>                                       <td>${e.date_naissance || ''}</td>                             <td>${e.niveau || ''}</td>                                     <td>${e.nationalite || ''}</td>                                <td>${e.pays || ''}</td>
+                <td>${e.localite || ''}</td>                                   <td>${e.mere || ''}</td>
+                <td>${e.pere || ''}</td>                                       <td>${e.contact_parent || ''}</td>
+                <td>${e.n_acte_naissance || e.acte_naissance || ''}</td>                                                                      <td>${e.date_etablissement || ''}</td>                         <td>${e.lieu_etablissement || ''}</td>
+                <td>${e.ecole || ''}</td>                                      <td>${calculerAge(e.date_naissance)}</td>                  </tr>`;                                                    });                                                        }                                                                                                                             function filtrer(niveau, btnElement) {
+        classeFiltreeActuelle = niveau;
+        if(btnElement) {                                                   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));                                          btnElement.classList.add('active');
+        } else {                                                           document.querySelectorAll('.filter-btn').forEach(b => {                                                                           if(b.textContent.trim() === niveau) b.classList.add('active');
+                else b.classList.remove('active');
+            });                                                        }
 
-    function filtrer(niveau) {
-        if (niveau === 'Tous') {
-            afficherTableau(listeEleves);
-        } else {
-            const filtre = listeEleves.filter(e => e.niveau === niveau);
-            afficherTableau(filtre);
-        }
-    }
-
+        if (niveau === 'Tous') {                                           afficherTableau(listeEleves);
+        } else {                                                           afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()));                    }
+    }                                                          
     document.getElementById('select-all').addEventListener('change', (e) => {
         document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
     });
-
-    document.getElementById('delete-btn').addEventListener('click', () => {
-        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+                                                                   document.getElementById('delete-btn').addEventListener('click', () => {                                                           const checkboxes = document.querySelectorAll('.row-checkbox:checked');
         const ids = Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
-        if(ids.length > 0) {
-            if(confirm("Supprimer les " + ids.length + " élève(s) sélectionné(s) ?")) {
-                document.getElementById('hidden-ids').value = JSON.stringify(ids);
+        if(ids.length > 0) {                                               if(confirm("Supprimer les " + ids.length + " élève(s) sélectionné(s) ?")) {                                                       document.getElementById('hidden-ids').value = JSON.stringify(ids);
                 document.getElementById('delete-form').submit();
-            }
+            }                                                          } else {                                                           alert("Veuillez d'abord cocher les cases des élèves à supprimer.");
+        }                                                          });                                                        
+    function afficherNomFichier(input) {                               const spanNom = document.getElementById('nomFichierAffiche');
+        if (input.files && input.files[0]) {                               spanNom.textContent = input.files[0].name;                     spanNom.title = input.files[0].name;
         } else {
-            alert("Veuillez d'abord cocher les cases des élèves à supprimer.");
-        }
-    });
+            spanNom.textContent = "Aucun fichier";                         spanNom.title = "Aucun fichier choisi";                    }                                                          }                                                                                                                             function telechargerExcelEleves() {                                
+        let elevesExport = (classeFiltreeActuelle !== 'Tous')              
+            ? listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase())
+            : listeEleves;
 
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
-            window.location.reload();
+        // Génère le fichier même s'il n'y a pas d'élèves (avec les en-têtes seuls)
+        const lignesExcel = elevesExport.length > 0 ? elevesExport.map((e, idx) => ({
+            "N°": idx + 1,
+            "Matricule": e.matricule || '',
+            "Nom": e.nom || '',
+            "Prénoms": e.prenoms || '',                                    "Sexe": e.sexe || '',                                          "Date Naiss.": e.date_naissance || '',                         "Niveau": e.niveau || '',                                      "Nationalité": e.nationalite || '',                            "Pays": e.pays || '',                                          "Localité": e.localite || '',                                  "Mère": e.mere || '',                                          "Père": e.pere || '',                                          "Contact Parent": e.contact_parent || '',
+            "N° Acte Naissance": e.n_acte_naissance || e.acte_naissance || '',
+            "Date Établissement": e.date_etablissement || '',
+            "Lieu Établissement": e.lieu_etablissement || '',
+            "École": e.ecole || ''
+        })) : [{
+            "N°": "", "Matricule": "", "Nom": "", "Prénoms": "", "Sexe": "", "Date Naiss.": "", "Niveau": "", 
+            "Nationalité": "", "Pays": "", "Localité": "", "Mère": "", "Père": "", "Contact Parent": "", 
+            "N° Acte Naissance": "", "Date Établissement": "", "Lieu Établissement": "", "École": ""
+        }];                                                   
+        const wb = XLSX.utils.book_new();                              const ws = XLSX.utils.json_to_sheet(lignesExcel);              XLSX.utils.book_append_sheet(wb, ws, "Eleves");
+        XLSX.writeFile(wb, `Liste_Eleves_${classeFiltreeActuelle}_${anneeSelectionnee}.xlsx`);                                    }
+                                                                   async function importerFichierEleves() {
+        const inputFichier = document.getElementById('inputFichierExcel');                                                            if (!inputFichier.files || inputFichier.files.length === 0) {                                                                     alert("Veuillez d'abord cliquer sur 'Ajouter fichier' pour sélectionner un fichier Excel ou CSV.");
+            return;
         }
-    });
-</script>
+                                                                       const fichier = inputFichier.files[0];
+        const lecteur = new FileReader();                                                                                             lecteur.onload = async function(e) {                               try {                                                              const data = new Uint8Array(e.target.result);                  const workbook = XLSX.read(data, { type: 'array' });                                                                          const premiereFeuilleNom = workbook.SheetNames[0];
+                const feuille = workbook.Sheets[premiereFeuilleNom];                                                                          const donneesBrutes = XLSX.utils.sheet_to_json(feuille);
+                                                                               if (!donneesBrutes || donneesBrutes.length === 0) {                                                                               alert("Le fichier sélectionné est vide ou mal formaté.");                                                                     return;                                                    }
 
-</body>
-</html>
+                let elevesImportes = [];                                       donneesBrutes.forEach((row) => {                                   let rowNorm = {};                                              for (let [k, v] of Object.entries(row)) {                          let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_");
+                        rowNorm[clePropre] = v;                                    }                                                                                                                             const matriculeImport = (rowNorm['matricule'] || '').toString().trim();
+                    const nomImport = (rowNorm['nom'] || '').toString().trim().toUpperCase();
+
+                    // Anti-doublon : Vérifie si le même matricule ET le même nom existent déjà dans la liste actuelle
+                    const existeDeja = listeEleves.some(el => 
+                        (el.matricule || '').toString().trim() === matriculeImport && 
+                        (el.nom || '').toString().trim().toUpperCase() === nomImport
+                    );
+
+                    if (!existeDeja && matriculeImport !== "") {
+                        elevesImportes.push({
+                            matricule: matriculeImport,                         
+                            nom: rowNorm['nom'] || '',                                     
+                            prenoms: rowNorm['prenoms'] || rowNorm['prenom'] || '',                                                                       
+                            sexe: rowNorm['sexe'] || '',                                   
+                            date_naissance: rowNorm['date_naiss'] || rowNorm['date_naissance'] || '',
+                            niveau: rowNorm['niveau'] || classeFiltreeActuelle,
+                            nationalite: rowNorm['nationalite'] || '',                                                                                    
+                            pays: rowNorm['pays'] || '',                                   
+                            localite: rowNorm['localite'] || '',                           
+                            mere: rowNorm['mere'] || '',                                   
+                            pere: rowNorm['pere'] || '',                                   
+                            contact_parent: rowNorm['contact_parent'] || rowNorm['contact'] || '',
+                            n_acte_naissance: rowNorm['n_acte_naissance'] || rowNorm['acte_naissance'] || '',
+                            date_etablissement: rowNorm['date_etablissement'] || '',                                                      
+                            lieu_etablissement: rowNorm['lieu_etablissement'] || '',                                                                                      
+                            ecole: rowNorm['ecole'] || ''                              
+                        });
+                    }
+                });                                                              
+
+                if (elevesImportes.length === 0) {
+                    alert("⚠️ Aucun nouvel élève à importer (tous les élèves du fichier existent déjà ou les lignes sont vides).");
+                    return;
+                }
+
+                const res = await fetch('/api/importer-eleves', {                                                                                 method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },                                                                              body: JSON.stringify({ annee: anneeSelectionnee, eleves: elevesImportes })
+                });                                            
+                const contentType = res.headers.get("content-type");                                                                          if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Le serveur a renvoyé une page HTML au lieu du JSON attendu (route /api/importer-eleves manquante ou erreur serveur).");                                                 }                                                                                                                             const reponse = await res.json();                              if (reponse.success) {                                             alert("✅ Élèves importés avec succès !");
+                    inputFichier.value = "";                                       document.getElementById('nomFichierAffiche').textContent = "Aucun fichier";
+                    location.reload();                                         } else {                                                           alert("⚠️ Erreur serveur : " + (reponse.message || "Inconnue"));
+                }                                                          } catch (erreur) {                                                 console.error("Erreur lecture fichier:", erreur);
+                alert("❌ Impossible de lire ce fichier : " + erreur.message);                                                            }                                                          };                                                             lecteur.readAsArrayBuffer(fichier);                        }
+                                                                   window.addEventListener('pageshow', function(event) {              if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {                                   window.location.reload();                                  }                                                          });                                                        </script>
+</body>                                                        </html>

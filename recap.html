@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,17 +7,17 @@
     <style>
         @page { size: A3 landscape; margin: 20px; }
         body { font-family: sans-serif; font-size: 11px; margin: 20px; }
-
+        
         .header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px; }
         .header-left { font-weight: bold; line-height: 1.5; }
         .logo-display { display: flex; gap: 20px; align-items: center; justify-content: center; min-width: 200px; }
         .logo-display img { height: 60px; max-width: 90px; object-fit: contain; display: block; }
-
+        
         .filter-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .filter-btn { padding: 8px 15px; margin-right: 5px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; }
         .filter-btn:hover { background-color: #e2e6ea; }
         #annee-select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-
+        
         table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; margin-bottom: 10px; }
         th, td { border: 1px solid black; padding: 4px; text-align: center; height: 25px; overflow: hidden; white-space: nowrap; }
 
@@ -25,224 +26,227 @@
         .w-mat { width: 60px !important; }
         .w-date { width: 70px !important; }
         .col-nom { text-align: left !important; }
-        .separator-text { font-weight: bold; text-align: left !important; background: #ddd; }
-
+        .separator-text { font-weight: bold; text-align: left !important; background: #28a745; color: white; }
         .blue-text { color: #0000CD; font-weight: 500; }
         .red-text { color: #DC143C; font-weight: 500; }
-
+        .age-col { background-color: #40E0D0 !important; font-weight: bold; }
+        
         .btn-print { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
-
+        
         @media print {
             .filter-container, .filter-btn, #annee-select, .btn-print { display: none !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
 <body>
 
-<div class="header-info">
-    <div class="header-left">
-        <div id="drena-display">DRENA : </div>
-        <div id="iepp-display">IEPP : </div>
-        <div id="ecole-display">ÉCOLE : </div>
-        <div id="classe-display">CLASSE : ----------</div>
+    <div class="header-info">
+        <div class="header-left">
+            <div id="drena-display">DRENA : </div>
+            <div id="iepp-display">IEPP : </div>
+            <div id="ecole-display">ÉCOLE : </div>
+            <div id="classe-display">CLASSE : ----------</div>
+        </div>
+        <div class="logo-display">
+            <img id="img-iepp" src="" alt="IEPP" onerror="this.style.display='none';">
+            <img id="img-ecole" src="" alt="Ecole" onerror="this.style.display='none';">
+        </div>
+        <div class="header-right" style="font-weight: bold;">
+            <div>ANNÉE SCOLAIRE : <span id="annee-label">2025 / 2026</span></div>
+        </div>
     </div>
 
-    <div class="logo-display">
-        <img id="img-iepp" src="" alt="IEPP" onerror="this.style.display='none';">
-        <img id="img-ecole" src="" alt="Ecole" onerror="this.style.display='none';">
+    <h2 style="text-align:center;">TABLEAU RÉCAPITULATIF</h2>
+
+    <div class="filter-container">
+        <div>
+            <button class="filter-btn" onclick="filtrer('Tous')">Tous</button>
+            <button class="filter-btn" onclick="filtrer('CP1')">CP1</button>
+            <button class="filter-btn" onclick="filtrer('CP2')">CP2</button>
+            <button class="filter-btn" onclick="filtrer('CE1')">CE1</button>
+            <button class="filter-btn" onclick="filtrer('CE2')">CE2</button>
+            <button class="filter-btn" onclick="filtrer('CM1')">CM1</button>
+            <button class="filter-btn" onclick="filtrer('CM2')">CM2</button>
+        </div>
+        <select id="annee-select" onchange="changerAnnee()">
+             <option value="2028">2028-2029</option>
+             <option value="2027">2027-2028</option>
+             <option value="2026" selected>2026-2027</option>
+             <option value="2025">2025-2026</option>
+             <option value="2024">2024-2025</option>
+             <option value="2023">2023-2024</option>
+             <option value="2022">2022-2023</option>
+             <option value="2021">2021-2022</option>
+        </select>
     </div>
 
-    <div class="header-right" style="font-weight: bold;">
-        <div>ANNÉE SCOLAIRE : <span id="annee-label">2025 / 2026</span></div>
+    <table id="tableau-fusionne">
+        <thead>
+            <tr style="background: orange;">
+                <th class="w-n">N°</th>
+                <th class="col-nom">GARÇONS NOM & PRÉNOMS</th>
+                <th class="w-small age-col">Âge</th>
+                <th class="w-small">Scol</th>
+                <th class="w-small">Tot</th>
+                <th class="w-mat">Matr</th>
+                <th class="w-n">N°</th>
+                <th class="col-nom">Nom & Prénoms (Alphabétique)</th>
+                <th class="w-date">Date Naiss.</th>
+            </tr>
+        </thead>
+        <tbody id="tbody-recap"></tbody>
+    </table>
+
+    <table id="tableau-chants-poesies" style="width: 40%;">
+        <thead>
+            <tr style="background:#f0f0f0;"><th>CHANTS</th><th>POÉSIES</th></tr>
+        </thead>
+        <tbody>
+            <tr><td></td><td></td></tr>
+            <tr><td></td><td></td></tr>
+            <tr><td></td><td></td></tr>
+            <tr><td></td><td></td></tr>
+        </tbody>
+    </table>
+
+    <table id="tableau-statistiques">
+        <thead>
+            <tr style="background:#f0f0f0;">
+                <th colspan="2" style="width: 25%;">TABLEAU DES EFFECTIFS</th>
+                <th style="width: 8%;">NB</th>
+                <th style="width: 8%;">TOTAL</th>
+                <th style="width: 5%;"></th>
+                <th colspan="9" style="width: 54%;">TABLEAU DES AGES</th>
+            </tr>
+            <tr>
+                <th colspan="2">DESIGNATIONS</th><th></th><th></th><th></th>
+                <th>DESIGN</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th>
+            </tr>
+        </thead>
+        <tbody id="tbody-stats">
+            <tr><td rowspan="2">EFFECTIF</td><td>Garçons</td><td id="eff-g">0</td><td></td><td rowspan="6"></td><td>EFF - G</td><td id="age-g-6">0</td><td id="age-g-7">0</td><td id="age-g-8">0</td><td id="age-g-9">0</td><td id="age-g-10">0</td><td id="age-g-11">0</td><td id="age-g-12">0</td><td id="age-g-13">0</td><td id="age-g-14">0</td></tr>
+            <tr><td>Filles</td><td id="eff-f">0</td><td></td><td>EFF - F</td><td id="age-f-6">0</td><td id="age-f-7">0</td><td id="age-f-8">0</td><td id="age-f-9">0</td><td id="age-f-10">0</td><td id="age-f-11">0</td><td id="age-f-12">0</td><td id="age-f-13">0</td><td id="age-f-14">0</td></tr>
+            <tr><td rowspan="2">REDOUBLANTS(ES)</td><td>Garçons</td><td id="red-g">0</td><td></td><td>RED - G</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+            <tr><td>Filles</td><td id="red-f">0</td><td></td><td>RED - F</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+            <tr><td rowspan="2">NON REDOUBLANTS(ES)</td><td>Garçons</td><td id="nred-g">0</td><td></td><td>NON - G</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+            <tr><td>Filles</td><td id="nred-f">0</td><td></td><td>NON - F</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+        </tbody>
+    </table>
+
+    <div style="text-align: center;">
+        <button class="btn-print" onclick="window.print()">Imprimer le récapitulatif</button>
     </div>
-</div>
 
-<h2 style="text-align:center;">TABLEAU RÉCAPITULATIF</h2>
-
-<div class="filter-container">
-    <div>
-        <button class="filter-btn" onclick="filtrer('Tous')">Tous</button>
-        <button class="filter-btn" onclick="filtrer('CP1')">CP1</button>
-        <button class="filter-btn" onclick="filtrer('CP2')">CP2</button>
-        <button class="filter-btn" onclick="filtrer('CE1')">CE1</button>
-        <button class="filter-btn" onclick="filtrer('CE2')">CE2</button>
-        <button class="filter-btn" onclick="filtrer('CM1')">CM1</button>
-        <button class="filter-btn" onclick="filtrer('CM2')">CM2</button>
+    <div style="display: flex; justify-content: space-between; margin-top: 30px; font-weight: bold; padding: 0 50px;">
+        <span>L'INSTITUTEUR</span>
+        <span>LE DIRECTEUR</span>
+        <span>LE CHEF DE CIRCONSCRIPTION</span>
     </div>
-    <select id="annee-select" onchange="changerAnnee()">
-         <option value="2028">2028-2029</option>
-         <option value="2027">2027-2028</option>
-         <option value="2026" selected>2026-2027</option>
-         <option value="2025">2025-2026</option>
-         <option value="2024">2024-2025</option>
-         <option value="2023">2023-2024</option>
-         <option value="2022">2022-2023</option>
-         <option value="2021">2021-2022</option>
-    </select>
-</div>
 
-<table id="tableau-fusionne">
-    <thead>
-        <tr style="background:#f0f0f0;">
-            <th class="w-n">N°</th>
-            <th class="col-nom">GARÇONS NOM & PRÉNOMS</th>
-            <th class="w-small">Âge</th>
-            <th class="w-small">Scol</th>
-            <th class="w-small">Tot</th>
-            <th class="w-mat">Matr</th>
-            <th class="w-n">N°</th>
-            <th class="col-nom">Nom & Prénoms (Alphabétique)</th>
-            <th class="w-date">Date Naiss.</th>
-        </tr>
-    </thead>
-    <tbody id="tbody-recap"></tbody>
-</table>
+    <script>
+        let listeEleves = [];
 
-<table id="tableau-chants-poesies" style="width: 40%;">
-    <thead>
-        <tr style="background:#f0f0f0;"><th>CHANTS</th><th>POÉSIES</th></tr>
-    </thead>
-    <tbody>
-        <tr><td></td><td></td></tr><tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr><tr><td></td><td></td></tr>
-    </tbody>
-</table>
+        function calculerAge(dateNaissance, anneeScolaire) {
+            if (!dateNaissance) return '';
+            const anneeStr = dateNaissance.toString().slice(-4);
+            const anneeNaiss = parseInt(anneeStr);
+            if (isNaN(anneeNaiss)) return '';
+            return parseInt(anneeScolaire) - anneeNaiss;
+        }
 
-<table id="tableau-statistiques">
-    <thead>
-        <tr style="background:#f0f0f0;">
-            <th colspan="2" style="width: 25%;">TABLEAU DES EFFECTIFS</th>
-            <th style="width: 8%;">NB</th>
-            <th style="width: 8%;">TOTAL</th>
-            <th style="width: 5%;"></th>
-            <th colspan="9" style="width: 54%;">TABLEAU DES AGES</th>
-        </tr>
-        <tr>
-            <th colspan="2">DESIGNATIONS</th><th></th><th></th><th></th>
-            <th>DESIGN</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th>
-        </tr>
-    </thead>
-    <tbody id="tbody-stats">
-        <tr><td rowspan="2">EFFECTIF</td><td>Garçons</td><td id="eff-g">0</td><td></td><td rowspan="6"></td><td>EFF - G</td><td id="age-g-6">0</td><td id="age-g-7">0</td><td id="age-g-8">0</td><td id="age-g-9">0</td><td id="age-g-10">0</td><td id="age-g-11">0</td><td id="age-g-12">0</td><td id="age-g-13">0</td><td id="age-g-14">0</td></tr>
-        <tr><td>Filles</td><td id="eff-f">0</td><td></td><td>EFF - F</td><td id="age-f-6">0</td><td id="age-f-7">0</td><td id="age-f-8">0</td><td id="age-f-9">0</td><td id="age-f-10">0</td><td id="age-f-11">0</td><td id="age-f-12">0</td><td id="age-f-13">0</td><td id="age-f-14">0</td></tr>
-        <tr><td rowspan="2">REDOUBLANTS(ES)</td><td>Garçons</td><td id="red-g">0</td><td></td><td>RED - G</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>Filles</td><td id="red-f">0</td><td></td><td>RED - F</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td rowspan="2">NON REDOUBLANTS(ES)</td><td>Garçons</td><td id="nred-g">0</td><td></td><td>NON - G</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>Filles</td><td id="nred-f">0</td><td></td><td>NON - F</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-    </tbody>
-</table>
-
-<div style="text-align: center;">
-    <button class="btn-print" onclick="window.print()">Imprimer le récapitulatif</button>
-</div>
-
-<div style="display: flex; justify-content: space-between; margin-top: 30px; font-weight: bold; padding: 0 50px;">
-    <span>L'INSTITUTEUR</span><span>LE DIRECTEUR</span><span>LE CHEF DE CIRCONSCRIPTION</span>
-</div>
-
-<script>
-    let listeEleves = [];
-
-    function calculerAge(dateNaissance, anneeScolaire) {
-        if (!dateNaissance) return null;
-        const anneeStr = dateNaissance.toString().slice(-4);
-        const anneeNaiss = parseInt(anneeStr);
-        if (isNaN(anneeNaiss)) return null;
-        return parseInt(anneeScolaire) - anneeNaiss;
-    }
-
-    fetch('/api/config-prof').then(res => res.json()).then(data => {
-        if(data.drena) document.getElementById('drena-display').innerText = "DRENA : " + data.drena;
-        if(data.iepp) document.getElementById('iepp-display').innerText = "IEPP : " + data.iepp;
-        const imgIepp = document.getElementById('img-iepp');
-        if(data.logo_iepp) { imgIepp.src = data.logo_iepp; imgIepp.style.display = 'block'; }
-        const imgEcole = document.getElementById('img-ecole');
-        if(data.logo_ecole) { imgEcole.src = data.logo_ecole; imgEcole.style.display = 'block'; }
-    });
-
-    fetch('/api/nom-ecole').then(res => res.json()).then(data => {
-        if(data.nom) document.getElementById('ecole-display').innerText = "ÉCOLE : " + data.nom;
-    });
-
-    function chargerEleves() {
-        const annee = document.getElementById('annee-select').value;
-        document.getElementById('annee-label').innerText = annee + " / " + (parseInt(annee) + 1);
-        fetch(`/api/eleves/${annee}`).then(res => res.json()).then(data => {
-            listeEleves = data;
-            filtrer('Tous');
+        fetch('/api/config-prof').then(res => res.json()).then(data => {
+            if(data.drena) document.getElementById('drena-display').innerText = "DRENA : " + data.drena;
+            if(data.iepp) document.getElementById('iepp-display').innerText = "IEPP : " + data.iepp;
+            const imgIepp = document.getElementById('img-iepp');
+            if(data.logo_iepp) { imgIepp.src = data.logo_iepp; imgIepp.style.display = 'block'; }
+            const imgEcole = document.getElementById('img-ecole');
+            if(data.logo_ecole) { imgEcole.src = data.logo_ecole; imgEcole.style.display = 'block'; }
         });
-    }
 
-    function changerAnnee() { chargerEleves(); }
+        fetch('/api/nom-ecole').then(res => res.json()).then(data => {
+            if(data.nom) document.getElementById('ecole-display').innerText = "ÉCOLE : " + data.nom;
+        });
 
-    function filtrer(niveau) {
-        document.getElementById('classe-display').innerText = (niveau === 'Tous') ? "CLASSE : ----------" : "CLASSE : " + niveau;
-        const data = (niveau === 'Tous') ? listeEleves : listeEleves.filter(e => e.niveau === niveau);
-        afficherRecap(data);
-    }
-
-    function afficherRecap(data) {
-        const tbody = document.getElementById('tbody-recap');
-        tbody.innerHTML = '';
-        const anneeCourante = document.getElementById('annee-select').value;
-        
-        const g = data.filter(e => e.sexe === 'M');
-        const f = data.filter(e => e.sexe === 'F');
-        const redG = g.filter(e => e.statut === 'Redoublant');
-        const redF = f.filter(e => e.statut === 'Redoublant');
-        
-        document.getElementById('eff-g').innerText = g.length;
-        document.getElementById('eff-f').innerText = f.length;
-        document.getElementById('red-g').innerText = redG.length;
-        document.getElementById('red-f').innerText = redF.length;
-        document.getElementById('nred-g').innerText = g.length - redG.length;
-        document.getElementById('nred-f').innerText = f.length - redF.length;
-
-        for(let age=6; age<=14; age++) {
-            document.getElementById(`age-g-${age}`).innerText = g.filter(e => calculerAge(e.date_naissance, anneeCourante) === age).length;
-            document.getElementById(`age-f-${age}`).innerText = f.filter(e => calculerAge(e.date_naissance, anneeCourante) === age).length;
+        function chargerEleves() {
+            const annee = document.getElementById('annee-select').value;
+            document.getElementById('annee-label').innerText = annee + " / " + (parseInt(annee) + 1);
+            fetch(`/api/eleves/${annee}`).then(res => res.json()).then(data => {
+                listeEleves = data;
+                filtrer('Tous');
+            }).catch(err => {
+                console.error("Erreur de chargement des élèves :", err);
+            });
         }
 
-        const triAlpha = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
-        
-        // Côté gauche : Garçons + Ligne séparation + Filles
-        const totalLignes = Math.max(g.length + 1 + f.length, triAlpha.length);
-        const getColorClass = (sexe) => sexe === 'M' ? 'blue-text' : 'red-text';
+        function changerAnnee() { chargerEleves(); }
 
-        for (let i = 0; i < totalLignes; i++) {
-            let row = document.createElement('tr');
-            
-            // Logique côté gauche
-            let eL = null;
-            let isSeparator = false;
-            if (i < g.length) {
-                eL = g[i];
-            } else if (i === g.length) {
-                isSeparator = true;
-            } else if (i <= g.length + f.length) {
-                eL = f[i - g.length - 1];
-            }
-
-            // Logique côté droit
-            let eA = triAlpha[i] || null;
-            
-            if (isSeparator) {
-                row.innerHTML = `<td colspan="6" class="separator-text">FILLES NOM & PRÉNOMS</td><td class="w-n">1</td><td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? eA.nom + ' ' + eA.prenoms : ''}</td><td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
-            } else {
-                row.innerHTML = `
-                    <td class="w-n">${eL ? (i < g.length ? i + 1 : i - g.length) : ''}</td>
-                    <td class="col-nom ${eL ? getColorClass(eL.sexe) : ''}">${eL ? eL.nom + ' ' + eL.prenoms : ''}</td>
-                    <td>${eL ? calculerAge(eL.date_naissance, anneeCourante) : ''}</td>
-                    <td></td><td></td>
-                    <td class="w-mat">${eL ? eL.matricule || '' : ''}</td>
-                    <td class="w-n">${eA ? i + 1 : ''}</td>
-                    <td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? eA.nom + ' ' + eA.prenoms : ''}</td>
-                    <td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
-            }
-            tbody.appendChild(row);
+        function filtrer(niveau) {
+            document.getElementById('classe-display').innerText = (niveau === 'Tous') ? "CLASSE : ----------" : "CLASSE : " + niveau;
+            const data = (niveau === 'Tous') ? listeEleves : listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase());
+            afficherRecap(data);
         }
-    }
-    chargerEleves();
-</script>
+
+        function afficherRecap(data) {
+            const tbody = document.getElementById('tbody-recap');
+            tbody.innerHTML = '';
+            const anneeCourante = document.getElementById('annee-select').value;
+
+            const g = data.filter(e => e.sexe === 'M');
+            const f = data.filter(e => e.sexe === 'F');
+            const redG = g.filter(e => e.statut === 'Redoublant');
+            const redF = f.filter(e => e.statut === 'Redoublant');
+
+            document.getElementById('eff-g').innerText = g.length;
+            document.getElementById('eff-f').innerText = f.length;
+            document.getElementById('red-g').innerText = redG.length;
+            document.getElementById('red-f').innerText = redF.length;
+            document.getElementById('nred-g').innerText = g.length - redG.length;
+            document.getElementById('nred-f').innerText = f.length - redF.length;
+
+            for(let age=6; age<=14; age++) {
+                document.getElementById(`age-g-${age}`).innerText = g.filter(e => calculerAge(e.date_naissance, anneeCourante) === age).length;
+                document.getElementById(`age-f-${age}`).innerText = f.filter(e => calculerAge(e.date_naissance, anneeCourante) === age).length;
+            }
+
+            const triAlpha = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
+            const totalLignes = Math.max(g.length + 1 + f.length, triAlpha.length);
+            const getColorClass = (sexe) => sexe === 'M' ? 'blue-text' : 'red-text';
+
+            for (let i = 0; i < totalLignes; i++) {
+                let row = document.createElement('tr');
+                let eL = null;
+                let isSeparator = false;
+
+                if (i < g.length) {
+                    eL = g[i];
+                } else if (i === g.length) {
+                    isSeparator = true;
+                } else if (i <= g.length + f.length) {
+                    eL = f[i - g.length - 1];
+                }
+
+                let eA = triAlpha[i] || null;
+
+                if (isSeparator) {
+                    row.innerHTML = `<td colspan="6" class="separator-text">FILLES NOM & PRÉNOMS</td><td class="w-n">${eA ? 1 : ''}</td><td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? (eA.nom || '') + ' ' + (eA.prenoms || '') : ''}</td><td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
+                } else {
+                    let ageVal = eL ? calculerAge(eL.date_naissance, anneeCourante) : '';
+                    row.innerHTML = `
+                        <td class="w-n">${eL ? (i < g.length ? i + 1 : i - g.length) : ''}</td>
+                        <td class="col-nom ${eL ? getColorClass(eL.sexe) : ''}">${eL ? (eL.nom || '') + ' ' + (eL.prenoms || '') : ''}</td>
+                        <td class="age-col">${ageVal}</td>
+                        <td></td><td></td>
+                        <td class="w-mat">${eL ? eL.matricule || '' : ''}</td>
+                        <td class="w-n">${eA ? i + 1 : ''}</td>
+                        <td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? (eA.nom || '') + ' ' + (eA.prenoms || '') : ''}</td>
+                        <td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
+                }
+                tbody.appendChild(row);
+            }
+        }
+
+        chargerEleves();
+    </script>
 </body>
 </html>

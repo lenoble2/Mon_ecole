@@ -279,6 +279,62 @@ app.get('/api/eleves/:annee', async (req, res) => {
 });
 
 
+app.post('/api/importer-eleves', async (req, res) => {
+    const nomEcole = req.session.nomEcole;
+    const { annee, eleves } = req.body;
+    
+    if (!eleves || !Array.isArray(eleves)) {
+        return res.status(400).json({ success: false, message: "Aucune donnée d'élève valide fournie." });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const sql = `INSERT INTO eleves (
+            annee, matricule, nom, prenoms, sexe, date_naissance, pays,
+            localite, mere, pere, contact, nationalite, num_acte,
+            date_etab, lieu_etab, ecole, niveau, nom_ecole
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        ON CONFLICT DO NOTHING`;
+
+        for (const e of eleves) {
+            await client.query(sql, [
+                annee || '2025',
+                e.matricule || '',
+                e.nom || '',
+                e.prenoms || '',
+                e.sexe || '',
+                e.date_naissance || '',
+                e.pays || '',
+                e.localite || '',
+                e.mere || '',
+                e.pere || '',
+                e.contact_parent || e.contact || '',
+                e.nationalite || '',
+                e.n_acte_naissance || e.acte_naissance || '',
+                e.date_etab || '',
+                e.lieu_etab || '',
+                e.ecole || '',
+                e.niveau || '',
+                nomEcole
+            ]);
+        }
+
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error("❌ Erreur lors de l'importation JSON des élèves :", err);
+        res.status(500).json({ success: false, message: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+
+
+
+
 app.post('/importer', upload.single('fichier_csv'), (req, res) => {
     const anneeImport = req.body.annee_import || '2025';
     const nomEcole = req.session.nomEcole;
