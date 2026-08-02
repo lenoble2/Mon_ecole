@@ -849,30 +849,79 @@ app.get('/api/config-prof', async (req, res) => {
     }
 });
 
-app.get('/api/eleves/details/:id', async (req, res) => {
-    const matricule = req.params.id;
-    const nomEcole = req.session.nomEcole;
-    try {
-        const result = await pool.query(
-            "SELECT * FROM eleves WHERE matricule = $1 AND nom_ecole = $2 ORDER BY annee DESC",
-            [matricule, nomEcole]
-        );
-        if (result.rows.length > 0) {
-            const historique = result.rows.map(row => ({
-                annee: row.annee,
-                niveau: row.niveau,
-                moyenne: row.moyenne || 'N/A',
-                rang: row.rang || 'N/A'
-            }));
-            res.json({ ...result.rows[0], historique });
-        } else {
-            res.status(404).json({ error: "Élève non trouvé" });
-        }
-    } catch (err) {
-        console.error("❌ Erreur détails élève :", err);
-        res.status(500).json({ error: err.message });
-    }
+app.get('/api/eleves/details/:id', async (req, res) => {    
+    const matricule = req.params.id.trim();                        
+    const nomEcole = req.session.nomEcole;                  
+    try {                                                       
+        const result = await pool.query(                            
+            "SELECT * FROM eleves WHERE TRIM(matricule) = $1 AND nom_ecole = $2 ORDER BY annee DESC",                             
+            [matricule, nomEcole]                               
+        );                                                      
+        
+        if (result.rows.length > 0) {                               
+            const historique = [];
+            
+            for (const row of result.rows) {
+                // Récupérer les notes de la période FIN_ANNEE et des trois compo + passage pour chaque année de l'historique
+                const queryFinAnnee = `
+                    SELECT rc.*,
+                           rc1.moyen AS moyen_compo1,
+                           rc2.moyen AS moyen_compo2,
+                           rc3.moyen AS moyen_compo3,
+                           rc_pass.moyen AS moyen_passage_brut
+                    FROM resultats_compositions rc
+                    LEFT JOIN resultats_compositions rc1 ON TRIM(rc.matricule) = TRIM(rc1.matricule) AND rc.annee = rc1.annee AND rc.nom_ecole = rc1.nom_ecole AND rc1.periode = 'COMPO1'
+                    LEFT JOIN resultats_compositions rc2 ON TRIM(rc.matricule) = TRIM(rc2.matricule) AND rc.annee = rc2.annee AND rc.nom_ecole = rc2.nom_ecole AND rc2.periode = 'COMPO2'
+                    LEFT JOIN resultats_compositions rc3 ON TRIM(rc.matricule) = TRIM(rc3.matricule) AND rc.annee = rc3.annee AND rc.nom_ecole = rc3.nom_ecole AND rc3.periode = 'COMPO3'
+                    LEFT JOIN resultats_compositions rc_pass ON TRIM(rc.matricule) = TRIM(rc_pass.matricule) AND rc.annee = rc_pass.annee AND rc.nom_ecole = rc_pass.nom_ecole AND rc_pass.periode = 'PASSAGE'
+                    WHERE TRIM(rc.matricule) = $1 AND rc.annee = $2 AND rc.nom_ecole = $3 AND rc.periode = 'FIN_ANNEE'
+                    LIMIT 1
+                `;
+                const resComp = await pool.query(queryFinAnnee, [matricule, row.annee, nomEcole]);
+                
+                let mTotalFinal = row.moyenne || 0;
+                let rangFinal = row.rang || '';
+                let decisionFinal = '';
+
+                if (resComp.rows.length > 0) {
+                    const rc = resComp.rows[0];
+                    let m1 = parseFloat(rc.moyen_compo1) || 0;
+                    let m2 = parseFloat(rc.moyen_compo2) || 0;
+                    let m3 = parseFloat(rc.moyen_compo3) || 0;
+                    let mPassBrut = parseFloat(rc.moyen_passage_brut) || 0;
+
+                    let moyenCompoN = (m1 > 0 || m2 > 0 || m3 > 0) ? ((m1 + m2 + m3) / 3) : 0;
+                    let moyenPassage = mPassBrut * 2;
+                    let moyenTotal = (moyenCompoN > 0 || moyenPassage > 0) ? ((moyenCompoN + moyenPassage) / 3) : 0;
+
+                    if (moyenTotal > 0) {
+                        mTotalFinal = moyenTotal.toFixed(2);
+                    } else if (rc.moyen) {
+                        mTotalFinal = rc.moyen;
+                    }
+                    if (rc.rang) rangFinal = rc.rang;
+                    if (rc.decision) decisionFinal = rc.decision;
+                }
+
+                historique.push({
+                    annee: row.annee,
+                    niveau: row.niveau,
+                    moyen_total: mTotalFinal,
+                    rang: rangFinal,
+                    observation: decisionFinal
+                });
+            }
+
+            res.json({ ...result.rows[0], historique });        
+        } else {                                                    
+            res.status(404).json({ error: "Élève non trouvé" });                                                        
+        }                                                   
+    } catch (err) {                                             
+        console.error("❌ Erreur détails élève :", err);        
+        res.status(500).json({ error: err.message });       
+    }                                                   
 });
+
 
 app.get('/api/admin/utilisateurs', async (req, res) => {
     try {
