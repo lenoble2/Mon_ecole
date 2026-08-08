@@ -1,83 +1,26 @@
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
+<!DOCTYPE html>                                                <html lang="fr">
+<head>                                                             <meta charset="UTF-8">
     <meta name="viewport" content="width=1200, initial-scale=1.0">
-    <title>Gestion des Notes et Compositions</title>
-    <!-- Inclusion de SheetJS (xlsx) pour la génération et l'exportation de fichiers Excel multi-onglets -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; min-width: 1150px; }
-        h2 { color: #333; }
-        .top-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .compo-nav-container { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
-        .compo-nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .compo-btn { padding: 9px 16px; cursor: pointer; border: 1px solid #00acc1; background-color: #00bcd4; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .compo-btn.active { background-color: #007bff; border-color: #007bff; }
-        .btn-bulletin { background-color: #6f42c1; border-color: #6f42c1; }
-        .btn-bulletin:hover { background-color: #5a32a3; }
-        
-        /* Styles pour les menus déroulants (bandes déroulantes) */
-        .dropdown-nav { position: relative; display: inline-block; }
-        .dropdown-select { padding: 9px 16px; cursor: pointer; border: 1px solid #00acc1; background-color: #00bcd4; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; appearance: none; -webkit-appearance: none; -moz-appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px; }
-        .dropdown-select.btn-bulletin-select { background-color: #6f42c1; border-color: #6f42c1; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e"); }
-        .dropdown-select option { background-color: #fff; color: #333; font-weight: normal; padding: 8px; }
-
-        .label-voir-bulletins { font-weight: bold; color: #6f42c1; font-size: 0.9em; margin-left: 5px; margin-right: 2px; display: none; }
-        .btn-classe-bul { padding: 5px 10px; font-size: 0.75em; background-color: #6f42c1; border: 1px solid #6f42c1; color: white; border-radius: 3px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; display: none; }
-        .btn-classe-bul:hover { background-color: #5a32a3; }
-        .filter-container { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; font-weight: bold; }
+    <title>Gestion des Notes et Compositions</title>               <!-- Inclusion de SheetJS (xlsx) pour la génération et l'exportation de fichiers Excel multi-onglets -->                      <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>                                        <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; min-width: 1150px; }                    h2 { color: #333; }                                            .top-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }                   .compo-nav-container { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }                                                   .compo-nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }                                           .compo-btn { padding: 9px 16px; cursor: pointer; border: 1px solid #00acc1; background-color: #00bcd4; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }                                                 .compo-btn.active { background-color: #007bff; border-color: #007bff; }                                                       .btn-bulletin { background-color: #6f42c1; border-color: #6f42c1; }                                                           .btn-bulletin:hover { background-color: #5a32a3; }             /* Styles pour les menus déroulants */                         .dropdown-nav { position: relative; display: inline-block; }                                                                  .dropdown-select { padding: 9px 16px; cursor: pointer; border: 1px solid #00acc1; background-color: #00bcd4; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; appearance: none; -webkit-appearance: none; -moz-appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px; }                             .dropdown-select.btn-bulletin-select { background-color: #6f42c1; border-color: #6f42c1; }
+        .dropdown-select option { background-color: #fff; color: #333; font-weight: normal; padding: 8px; }                           .filter-container { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }                                          .filter-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; font-weight: bold; }
         .filter-btn.active { background-color: #007bff; color: white; border-color: #007bff; }
         .btn-group { display: flex; gap: 8px; margin-top: 15px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
         .btn-group-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .btn { padding: 10px 15px; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; border: none; font-size: 0.9em; font-weight: bold; }
-        .btn-effacer-rond {
-            width: 42px;
-            height: 42px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: background-color 0.2s;
-        }
-        .btn-effacer-rond:hover { background-color: #bd2130; }
-        #conteneurTableau { overflow-x: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ddd; max-height: 550px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.75em; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; white-space: nowrap; }
-        th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }
-        td:nth-child(3), td:nth-child(4) { text-align: left; }
-        input[type="number"] { width: 65px; padding: 4px; text-align: center; }
-        select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
-    </style>
-</head>
-<body>
-    <div class="top-container">
-        <h2 id="titre-annee">Gestion des Notes et Compositions</h2>
-        <select id="annee-select" onchange="changerAnnee()">
-            <option value="2028">2028-2029</option>
-            <option value="2027">2027-2028</option>
-            <option value="2026">2026-2027</option>
-            <option value="2025" selected>2025-2026</option>
-            <option value="2024">2024-2025</option>
-            <option value="2023">2023-2024</option>
-            <option value="2022">2022-2023</option>
-            <option value="2021">2021-2022</option>
-        </select>
-    </div>
+        .btn { padding: 10px 15px; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; border: none; font-size: 0.9em; font-weight: bold; }                                    .btn-effacer-rond {
+            width: 42px; height: 42px; background-color: #dc3545; color: white; border: none; border-radius: 50%;                         cursor: pointer; font-size: 1.1em; font-weight: bold; display: flex; align-items: center; justify-content: center;            box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: background-color 0.2s;                                                 }                                                              .btn-effacer-rond:hover { background-color: #bd2130; }         #conteneurTableau { overflow-x: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ddd; max-height: 550px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.75em; }                                         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; white-space: nowrap; }                                     th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }                                                       td:nth-child(3), td:nth-child(4) { text-align: left; }
+        input[type="number"] { width: 65px; padding: 4px; text-align: center; }                                                       select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+    </style>                                                   </head>
+<body>                                                             <div class="top-container">                                        <h2 id="titre-annee">Gestion des Notes et Compositions</h2>
+        <select id="annee-select" onchange="changerAnnee()">               <option value="2028">2028-2029</option>                        <option value="2027">2027-2028</option>                        <option value="2026">2026-2027</option>                        <option value="2025" selected>2025-2026</option>               <option value="2024">2024-2025</option>                        <option value="2023">2023-2024</option>
+            <option value="2022">2022-2023</option>                        <option value="2021">2021-2022</option>
+        </select>                                                  </div>
 
-    <!-- Boutons de sélection des Compositions / Périodes sous forme de bandes déroulantes -->
+    <!-- Menus déroulants de sélection -->
     <div class="compo-nav-container">
         <div class="compo-nav-group">
-            <!-- Bande déroulante Compositions -->
             <div class="dropdown-nav">
                 <select id="select-compositions" class="dropdown-select compo-btn" onchange="gererSelectionCompo(this)">
                     <option value="" disabled selected>Compositions</option>
@@ -88,8 +31,6 @@
                     <option value="FIN_ANNEE">Résultats Fin année</option>
                 </select>
             </div>
-
-            <!-- Bande déroulante Bulletins -->
             <div class="dropdown-nav">
                 <select id="select-bulletins" class="dropdown-select btn-bulletin-select" onchange="gererSelectionBulletin(this)">
                     <option value="" disabled selected>Bulletins</option>
@@ -101,755 +42,268 @@
                     <option value="CM2">CM2</option>
                 </select>
             </div>
-
-            <!-- Éléments originaux conservés cachés/compatibles si besoin -->
-            <button type="button" class="compo-btn active" onclick="changerPeriode('COMPO1', this)" style="display:none;">COMPO1</button>
-            <button type="button" class="compo-btn" onclick="changerPeriode('COMPO2', this)" style="display:none;">COMPO2</button>
-            <button type="button" class="compo-btn" onclick="changerPeriode('COMPO3', this)" style="display:none;">COMPO3</button>
-            <button type="button" class="compo-btn" onclick="changerPeriode('PASSAGE', this)" style="display:none;">COMPO DE PASSAGE</button>
-            <button type="button" class="compo-btn" onclick="changerPeriode('FIN_ANNEE', this)" style="display:none;">RESULTATS FIN ANNEE</button>
-            <span class="label-voir-bulletins">Voir bulletins :</span>
-            <a href="bulcp.html?niveau=CP1" class="btn-classe-bul">CP1</a>
-            <a href="bulcp.html?niveau=CP2" class="btn-classe-bul">CP2</a>
-            <a href="bulcp.html?niveau=CE1" class="btn-classe-bul">CE1</a>
-            <a href="bulcp.html?niveau=CE2" class="btn-classe-bul">CE2</a>
-            <a href="bulcp.html?niveau=CM1" class="btn-classe-bul">CM1</a>
-            <a href="bul.html?niveau=CM2" class="btn-classe-bul">CM2</a>
         </div>
     </div>
 
-    <!-- Boutons de filtres des classes -->
+    <!-- Filtres des classes -->
     <div class="filter-container">
-        <button type="button" class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>
-        <button type="button" class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
+        <button type="button" class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>                                 <button type="button" class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
         <button type="button" class="filter-btn" onclick="filtrer('CP2', this)">CP2</button>
         <button type="button" class="filter-btn" onclick="filtrer('CE1', this)">CE1</button>
-        <button type="button" class="filter-btn" onclick="filtrer('CE2', this)">CE2</button>
-        <button type="button" class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CE2', this)">CE2</button>                                          <button type="button" class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>
         <button type="button" class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>
-    </div>
-    <div id="conteneurTableau">
+    </div>                                                                                                                        <div id="conteneurTableau">
         <p style="text-align:center; padding: 20px; color: #666;">Chargement des élèves...</p>
-    </div>
-
-    <!-- Input fichier caché pour l'import Excel -->
-    <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">
-
-    <div class="btn-group">
-        <div class="btn-group-left">
-            <button type="button" id="btnActiverModif" class="btn" style="background-color: #ffc107; color: #212529;" onclick="basculerModeEdition()">Modifier</button>
-            <button type="button" class="btn" style="background-color: #28a745;" onclick="enregistrerModifsBase()">Enregistrer</button>
-            <button type="button" class="btn" style="background-color: #6c757d;" onclick="declencherAjoutFichier()">Ajouter fichier</button>
-            <span id="nomFichierAffiche" style="font-size: 0.85em; color: #555; font-style: italic; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Aucun fichier choisi">Aucun fichier</span>
-            <button type="button" class="btn" style="background-color: #212529;" onclick="importerFichier()">Importer fichier</button>
-            <button type="button" id="btnTelechargerExcel" class="btn" style="background-color: #007bff;" onclick="telechargerExcelActuel()">Télécharger Excel</button>
-            <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour</a>
-        </div>
-        <div>
-            <button type="button" class="btn-effacer-rond" onclick="effacerNotesTableau()" title="Effacer toutes les notes affichées">🗑️</button>
-        </div>
-    </div>
-
-    <script>
-        let listeEleves = [];
-        let modeEditionActif = false;
-        let classeFiltreeActuelle = 'Tous';
-        let periodeActuelle = 'COMPO1';
-        let cachePeriodes = {};
-
-        // Configuration rigoureuse des matières par niveau et par période
-        const colonnesParNiveau = {
-            'CP1': {
-                'COMPO1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
+    </div>                                                                                                                        <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">
+                                                                   <div class="btn-group">
+        <div class="btn-group-left">                                       <button type="button" id="btnActiverModif" class="btn" style="background-color: #ffc107; color: #212529;" onclick="basculerModeEdition()">Modifier</button>
+            <button type="button" class="btn" style="background-color: #28a745;" onclick="enregistrerModifsBase()">Enregistrer</button>                                                                  <button type="button" class="btn" style="background-color: #6c757d;" onclick="declencherAjoutFichier()">Ajouter fichier</button>                                                             <span id="nomFichierAffiche" style="font-size: 0.85em; color: #555; font-style: italic; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Aucun fichier choisi">Aucun fichier</span>                                <button type="button" class="btn" style="background-color: #212529;" onclick="importerFichier()">Importer fichier</button>                                                                   <button type="button" id="btnTelechargerExcel" class="btn" style="background-color: #007bff;" onclick="telechargerExcelActuel()">Télécharger Excel</button>                                  <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour</a>                                          </div>                                                         <div>
+            <button type="button" class="btn-effacer-rond" onclick="effacerNotesTableau()" title="Effacer toutes les notes">🗑️</button>                                                               </div>                                                     </div>                                                                                                                        <script>                                                           let listeEleves = [];                                          let modeEditionActif = false;                                  let classeFiltreeActuelle = 'Tous';                            let periodeActuelle = 'COMPO1';                                let cachePeriodes = {};
+        const colonnesParNiveau = {                                        'CP1': {                                                           'COMPO1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
                 'COMPO2': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-                'COMPO3': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-                'PASSAGE': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-                'FIN_ANNEE': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'lecture', 'dessin']
-            },
-            'CP2': {
-                'COMPO1': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-                'COMPO2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-                'COMPO3': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
-                'PASSAGE': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie']
-            },
-            'CE1': {
-                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
-                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
-                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
-                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math', 'lecture']
-            },
-            'CE2': {
-                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],                       'PASSAGE': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],                      'FIN_ANNEE': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'lecture', 'dessin']                                          },                                                             'CP2': {
+                'COMPO1': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],                       'COMPO2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],                       'COMPO3': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],                       'PASSAGE': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie']                   },                                                             'CE1': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],                                                                  'COMPO2': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],                                                                  'COMPO3': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],                                                                  'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math', 'lecture']                                                              },                                                             'CE2': {                                                           'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
                 'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
-                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
-                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
-            },
-            'CM1': {
-                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],                                                                             'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']                                                                         },                                                             'CM1': {                                                           'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
                 'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
-                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
-                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
-            },
-            'CM2': {
-                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
-                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
-                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
-                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
-            }
-        };
-
-        function getMatieresNiveau(niveau, periode) {
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],                                                                             'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']                                                                         },                                                             'CM2': {                                                           'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],                                                                             'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],                                                                             'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],                                                                             'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
+            }                                                          };
+                                                                       function getMatieresNiveau(niveau, periode) {
             if (!niveau || niveau === 'Tous') return [];
             const nivUpper = niveau.toUpperCase();
-            if (colonnesParNiveau[nivUpper]) {
-                if (colonnesParNiveau[nivUpper][periode]) {
-                    return colonnesParNiveau[nivUpper][periode];
-                }
-                return colonnesParNiveau[nivUpper]['COMPO1'] || [];
-            }
-            return [];
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
+            if (colonnesParNiveau[nivUpper]) {                                 if (colonnesParNiveau[nivUpper][periode]) {
+                    return colonnesParNiveau[nivUpper][periode];                                                                              }                                                              return colonnesParNiveau[nivUpper]['COMPO1'] || [];
+            }                                                              return [];                                                 }                                                                                                                             const urlParams = new URLSearchParams(window.location.search);
         const annee = urlParams.get('annee') || '2025';
-        document.getElementById('annee-select').value = annee;
-
-        function changerAnnee() {
-            const valAnnee = document.getElementById('annee-select').value;
-            const pageActuelle = window.location.pathname.split('/').pop() || 'compo.html';
-            window.location.href = `${pageActuelle}?annee=${valAnnee}&periode=${periodeActuelle}`;
-        }
-
-        function gererSelectionCompo(selectElement) {
-            const val = selectElement.value;
-            if (val) {
-                // Réinitialiser l'autre menu déroulant à son état par défaut
-                document.getElementById('select-bulletins').selectedIndex = 0;
-                changerPeriode(val, null);
-            }
-        }
-
-        function gererSelectionBulletin(selectElement) {
-            const val = selectElement.value;
-            if (val) {
-                // Réinitialiser l'autre menu déroulant à son état par défaut
-                document.getElementById('select-compositions').selectedIndex = 0;
-                const niveau = val;
-                const pageCible = (niveau === 'CM2') ? 'bul.html' : 'bulcp.html';
-                window.location.href = `${pageCible}?niveau=${niveau}&annee=${annee}`;
-            }
-        }
-
-        function changerPeriode(periode, btnElement) {
+        document.getElementById('annee-select').value = annee; 
+        function changerAnnee() {                                          const valAnnee = document.getElementById('annee-select').value;
+            const pageActuelle = window.location.pathname.split('/').pop() || 'compo.html';                                               window.location.href = `${pageActuelle}?annee=${valAnnee}&periode=${periodeActuelle}`;                                    }                                                      
+        function gererSelectionCompo(selectElement) {                      const val = selectElement.value;                               if (val) {                                                         document.getElementById('select-bulletins').selectedIndex = 0;                                                                changerPeriode(val, null);                                 }                                                          }                                                      
+        function gererSelectionBulletin(selectElement) {                   const val = selectElement.value;                               if (val) {                                                         document.getElementById('select-compositions').selectedIndex = 0;                                                             const niveau = val;                                            const pageCible = (niveau === 'CM2') ? 'bul.html' : 'bulcp.html';                                                             window.location.href = `${pageCible}?niveau=${niveau}&annee=${annee}`;                                                    }                                                          }
+                                                                       function changerPeriode(periode) {
             periodeActuelle = periode;
-            document.querySelectorAll('.compo-btn').forEach(b => {
-                if (!b.classList.contains('btn-bulletin')) b.classList.remove('active');
-            });
-            if(btnElement) {
-                btnElement.classList.add('active');
-            } else {
-                document.querySelectorAll('.compo-btn').forEach(b => {
-                    if(!b.classList.contains('btn-bulletin') && b.textContent.includes(periode)) b.classList.add('active');
-                });
-            }
-            chargerDonnees();
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlPeriode = urlParams.get('periode');
-            if(urlPeriode) {
-                periodeActuelle = urlPeriode;
-                const selectCompo = document.getElementById('select-compositions');
-                if(selectCompo) {
-                    selectCompo.value = urlPeriode;
-                }
-                document.querySelectorAll('.compo-btn').forEach(b => {
-                    if(!b.classList.contains('btn-bulletin')) {
-                        b.classList.remove('active');
-                        if(b.textContent.includes(urlPeriode) || (urlPeriode === 'PASSAGE' && b.textContent.includes('PASSAGE'))) {
-                            b.classList.add('active');
-                        }
-                    }
-                });
-            }
-            chargerDonnees();
-        });
-
-        function chargerDonnees() {
-            document.getElementById('conteneurTableau').innerHTML = `<p style="text-align:center; padding: 20px; color: #666;">Chargement des élèves...</p>`;
-            fetch(`/api/eleves/${annee}?periode=${periodeActuelle}`)
-            .then(res => res.json())
-            .then(data => {
-                listeEleves = Array.isArray(data) ? data : (data.eleves || []);
-                cachePeriodes[periodeActuelle] = listeEleves;
-                filtrer(classeFiltreeActuelle);
-            })
-            .catch(err => {
-                console.error("Erreur chargement:", err);
-                document.getElementById('conteneurTableau').innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement des données.</p>`;
-            });
+            const selectCompo = document.getElementById('select-compositions');
+            if (selectCompo) {                                                 selectCompo.value = periode;
+            }                                                              chargerDonnees();                                          }
+                                                                       window.addEventListener('DOMContentLoaded', () => {                const urlPeriode = urlParams.get('periode');                   if (urlPeriode) {
+                periodeActuelle = urlPeriode;                                  const selectCompo = document.getElementById('select-compositions');                                                           if (selectCompo) {                                                 selectCompo.value = urlPeriode;                            }                                                          }
+            chargerDonnees();                                          });                                                                                                                           function chargerDonnees() {
+            document.getElementById('conteneurTableau').innerHTML = `<p style="text-align:center; padding: 20px; color: #666;">Chargement des élèves...</p>`;                                            fetch(`/api/eleves/${annee}?periode=${periodeActuelle}`)
+                .then(res => res.json())                                       .then(data => {                                                    listeEleves = Array.isArray(data) ? data : (data.eleves || []);                                                               cachePeriodes[periodeActuelle] = listeEleves;
+                    filtrer(classeFiltreeActuelle);                            })                                                             .catch(err => {                                                    console.error("Erreur chargement:", err);                      document.getElementById('conteneurTableau').innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement des données.</p>`;                                                });                                                    }                                                      
+        function getCoefficientDiviseur(niveau, periode) {
+            let nivUpper = niveau ? niveau.toUpperCase() : '';
+            let coeff = 8.5;                                               if (nivUpper === 'CP1' && periode === 'COMPO1') {
+                coeff = 6;                                                 } else if (nivUpper === 'CP1' || nivUpper === 'CP2') {                                                                            coeff = 9;                                                 } else if (nivUpper === 'CE2') {                                   coeff = 11;                                                } else if (nivUpper === 'CE1') {                                   coeff = 12;                                                }                                                              return coeff;
         }
 
         function afficherTableau(data, niveauFiltre) {
             const conteneur = document.getElementById('conteneurTableau');
-            if (!data || data.length === 0) {
-                conteneur.innerHTML = `<p style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</p>`;
-                return;
-            }
+            if (!data || data.length === 0) {                                  conteneur.innerHTML = `<p style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</p>`;                      return;                                                    }
 
-            // Vue globale / Spécifique FIN_ANNEE
-            if (periodeActuelle === 'FIN_ANNEE') {
-                let html = "<table id='tableauDonnees'>";
-                html += `<tr>
-                    <th>N°</th>
-                    <th>Matricule</th>
-                    <th style="text-align: left;">Nom</th>
-                    <th style="text-align: left;">Prénoms</th>
+            if (periodeActuelle === 'FIN_ANNEE') {                             let html = "<table id='tableauDonnees'>";
+                html += `<tr>                                                      <th>N°</th>
+                    <th>Matricule</th>                                             <th style="text-align: left;">Nom</th>                         <th style="text-align: left;">Prénoms</th>
                     <th>Niveau</th>
                     <th>Date Naiss.</th>
-                    <th>Sexe</th>
-                    <th>MOYEN COMPO1</th>
-                    <th>MOYEN COMPO2</th>
-                    <th>MOYEN COMPO3</th>
-                    <th>moyen_compoN</th>
-                    <th>moyen_passage</th>
+                    <th>Sexe</th>                                                  <th>MOYEN COMPO1</th>                                          <th>MOYEN COMPO2</th>                                          <th>MOYEN COMPO3</th>
+                    <th>moyen_compoN</th>                                          <th>moyen_passage</th>
                     <th>moyen_total</th>
-                    <th>Decision</th>
-                </tr>`;
-                data.forEach((e, index) => {
-                    let m1 = (parseFloat(e.moyen_compo1 ?? e.m1) || 0).toFixed(2);
-                    let m2 = (parseFloat(e.moyen_compo2 ?? e.m2) || 0).toFixed(2);
-                    let m3 = (parseFloat(e.moyen_compo3 ?? e.m3) || 0).toFixed(2);
-                    let mPassage = (parseFloat(e.moyen_compo_de_passage) || 0).toFixed(2);
-                    let mN = (parseFloat(e.moyen_compoN) || 0).toFixed(2);
-                    let mTotal = (parseFloat(e.moyen_total ?? e.moyen) || 0).toFixed(2);
-                    let decisionVal = e.decision ?? '';
-                    html += `<tr data-id="${e.matricule || ''}" data-niveau="${e.niveau || ''}">
-                        <td>${index + 1}</td>
-                        <td>${e.matricule || ''}</td>
-                        <td style="text-align: left;">${e.nom || ''}</td>
-                        <td style="text-align: left;">${e.prenoms || ''}</td>
-                        <td>${e.niveau || ''}</td>
-                        <td>${e.date_naissance || ''}</td>
+                    <th>Decision</th>                                          </tr>`;
+                data.forEach((e, index) => {                                       let m1 = parseFloat(e.moyen_compo1 ?? e.m1 ?? 0);                                                                             let m2 = parseFloat(e.moyen_compo2 ?? e.m2 ?? 0);
+                    let m3 = parseFloat(e.moyen_compo3 ?? e.m3 ?? 0);
+                    let mPassage = parseFloat(e.moyen_compo_de_passage ?? 0);
+                    let mN = parseFloat(e.moyen_compoN ?? 0);                      let mTotal = parseFloat(e.moyen_total ?? 0);                                                                                  let decisionVal = e.decision ?? '';                                                                                           html += `<tr data-id="${e.matricule || ''}" data-niveau="${e.niveau || ''}">                                                      <td>${index + 1}</td>
+                        <td>${e.matricule || ''}</td>                                  <td style="text-align: left;">${e.nom || ''}</td>                                                                             <td style="text-align: left;">${e.prenoms || ''}</td>                                                                         <td>${e.niveau || ''}</td>                                     <td>${e.date_naissance || ''}</td>
                         <td>${e.sexe || ''}</td>
-                        <td><input type="number" step="0.01" class="edit-m1" value="${m1}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                        <td><input type="number" step="0.01" class="edit-m2" value="${m2}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                        <td><input type="number" step="0.01" class="edit-m3" value="${m3}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                        <td><input type="number" step="0.01" class="edit-mcompon" value="${mN}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                        <td><input type="number" step="0.01" class="edit-mpassage" value="${mPassage}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                        <td><input type="number" step="0.01" class="edit-mtotal" value="${mTotal}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                        <td>
-                            <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>
+                        <td><input type="number" step="0.01" class="edit-m1" value="${m1.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                        <td><input type="number" step="0.01" class="edit-m2" value="${m2.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>                                                                   <td><input type="number" step="0.01" class="edit-m3" value="${m3.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>                                                                   <td><input type="number" step="0.01" class="edit-mcompon" value="${mN.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>                                                              <td><input type="number" step="0.01" class="edit-mpassage" value="${mPassage.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>                                                       <td><input type="number" step="0.01" class="edit-mtotal" value="${mTotal.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>                                                           <td>                                                               <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>
                                 <option value="" ${!decisionVal ? 'selected' : ''}>--</option>
-                                <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>
-                                <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
+                                <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>                                                         <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
                             </select>
                         </td>
                     </tr>`;
-                });
-                html += "</table>";
-                conteneur.innerHTML = html;
-                return;
-            }
+                });                                                            html += "</table>";                                            conteneur.innerHTML = html;
+                return;                                                    }                                                                                                                             if (niveauFiltre === 'Tous') {                                     conteneur.innerHTML = `<p style="padding:20px; color:#666; text-align:center;">Veuillez sélectionner une classe spécifique (CP1, CP2, CE1, CE2, CM1, CM2) pour afficher les matières et les tableaux de calcul adaptés.</p>`;                               return;                                                    }
 
-            // Si "Tous" est sélectionné, on avertit l'utilisateur de choisir une classe
-            if (niveauFiltre === 'Tous') {
-                conteneur.innerHTML = `<p style="padding:20px; color:#666; text-align:center;">Veuillez sélectionner une classe spécifique (CP1, CP2, CE1, CE2, CM1, CM2) pour afficher les matières et les tableaux de calcul adaptés.</p>`;
-                return;
-            }
-
-            let matieres = getMatieresNiveau(niveauFiltre, periodeActuelle);
-            let html = "<table id='tableauDonnees'>";
-            html += `<tr>
+            let matieres = getMatieresNiveau(niveauFiltre, periodeActuelle);                                                              let libelleMoyen = `MOYEN ${periodeActuelle}`;                                                                                let html = "<table id='tableauDonnees'>";                      html += `<tr>
                 <th>N°</th>
-                <th>Matricule</th>
-                <th style="text-align: left;">Nom</th>
+                <th>Matricule</th>                                             <th style="text-align: left;">Nom</th>
                 <th style="text-align: left;">Prénoms</th>
-                <th>Niveau</th>
-                <th>Date Naiss.</th>
-                <th>Sexe</th>`;
+                <th>Niveau</th>                                                <th>Date Naiss.</th>                                           <th>Sexe</th>`;
             matieres.forEach(m => {
-                html += `<th>${m.toUpperCase()}</th>`;
-            });
-            html += `<th>Total</th>
-                <th>Moyen</th>
-                <th>Rang</th>
+                html += `<th>${m.toUpperCase()}</th>`;                     });
+            html += `<th>Total</th>                                            <th>${libelleMoyen}</th>                                       <th>Rang</th>
                 <th>Decision</th>
-            </tr>`;
-
-            data.forEach((e, index) => {
-                let decisionVal = e.decision ?? '';
-                html += `<tr data-id="${e.matricule || ''}" data-niveau="${e.niveau || ''}">
-                    <td>${index + 1}</td>
-                    <td>${e.matricule || ''}</td>
-                    <td style="text-align: left;">${e.nom || ''}</td>
-                    <td style="text-align: left;">${e.prenoms || ''}</td>
-                    <td>${e.niveau || ''}</td>
+            </tr>`;                                            
+            data.forEach((e, index) => {                                       let decisionVal = e.decision ?? '';                            html += `<tr data-id="${e.matricule || ''}" data-niveau="${e.niveau || ''}">                                                      <td>${index + 1}</td>                                          <td>${e.matricule || ''}</td>                                  <td style="text-align: left;">${e.nom || ''}</td>
+                    <td style="text-align: left;">${e.prenoms || ''}</td>                                                                         <td>${e.niveau || ''}</td>
                     <td>${e.date_naissance || ''}</td>
                     <td>${e.sexe || ''}</td>`;
-                matieres.forEach(m => {
-                    let valeurNote = '';
-                    if (e.notes && e.notes[m] !== undefined && e.notes[m] !== null) {
-                        valeurNote = e.notes[m];
-                    } else if (e[m] !== undefined && e[m] !== null) {
-                        valeurNote = e[m];
-                    }
-                    html += `<td><input type="number" step="0.5" class="edit-note" data-matiere="${m}" value="${valeurNote}" ${!modeEditionActif ? 'disabled' : ''}></td>`;
-                });
-                let valeurMoyen = (parseFloat(e.moyen ?? e.moyenne ?? e.mg) || 0).toFixed(2);
-                let valeurTotal = (parseFloat(e.total) || 0).toFixed(2);
-                let valeurRang = e.rang ?? (index + 1);
-                html += `<td><input type="number" step="0.01" class="edit-total" value="${valeurTotal}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                    <td><input type="number" step="0.01" class="edit-mg edit-moyen" value="${valeurMoyen}" ${!modeEditionActif ? 'disabled' : ''}></td>
-                    <td><input type="number" class="edit-rang" value="${valeurRang}" ${!modeEditionActif ? 'disabled' : ''}></td>
+
+                let sommeNotesCalcul = 0;                                      matieres.forEach(m => {                                            let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});                                 let valeurNote = notesObj[m] !== undefined ? notesObj[m] : (e[m] !== undefined ? e[m] : '');                                  if (valeurNote !== '') {                                           let nNum = parseFloat(valeurNote);                             if (!isNaN(nNum)) sommeNotesCalcul += nNum;                                                                               }                                                              html += `<td><input type="number" step="0.5" class="edit-note" data-matiere="${m}" value="${valeurNote}" ${!modeEditionActif ? 'disabled' : ''}></td>`;                                  });                                                                                                                           let specificMoyen = 0;                                         if (periodeActuelle === 'COMPO1') specificMoyen = e.moyen_compo1;                                                             else if (periodeActuelle === 'COMPO2') specificMoyen = e.moyen_compo2;                                                        else if (periodeActuelle === 'COMPO3') specificMoyen = e.moyen_compo3;                                                        else if (periodeActuelle === 'PASSAGE') specificMoyen = e.moyen_compo_de_passage;                             
+                let valeurMoyen = 0;                                           if (specificMoyen !== undefined && specificMoyen !== null && specificMoyen !== '') {                                              valeurMoyen = parseFloat(specificMoyen);                   } else if (e.moyen !== undefined && e.moyen !== null && e.moyen !== '') {                                                         valeurMoyen = parseFloat(e.moyen);                         } else if (sommeNotesCalcul > 0) {
+                    let diviseur = getCoefficientDiviseur(e.niveau || niveauFiltre, periodeActuelle);                                             valeurMoyen = sommeNotesCalcul / diviseur;                 }                                                              valeurMoyen = isNaN(valeurMoyen) ? 0 : valeurMoyen;                                                           
+                let valeurTotal = (e.total !== undefined && e.total !== null && e.total !== '') ? parseFloat(e.total) : sommeNotesCalcul;                                                                    valeurTotal = isNaN(valeurTotal) ? 0 : valeurTotal;                                                                           let valeurRang = e.rang ?? (index + 1);        
+                html += `<td><input type="number" step="0.01" class="edit-total" value="${valeurTotal.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>
+                    <td><input type="number" step="0.01" class="edit-mg edit-moyen" value="${valeurMoyen.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>                                               <td><input type="number" class="edit-rang" value="${valeurRang}" ${!modeEditionActif ? 'disabled' : ''}></td>
                     <td>
-                        <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>
-                            <option value="" ${!decisionVal ? 'selected' : ''}>--</option>
-                            <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>
-                            <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
+                        <select class="dfa-select" ${!modeEditionActif ? 'disabled' : ''}>                                                                <option value="" ${!decisionVal ? 'selected' : ''}>--</option>                                                                <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>                                                         <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
                         </select>
                     </td>
                 </tr>`;
-            });
-            html += "</table>";
-            conteneur.innerHTML = html;
-        }
-
-        function filtrer(niveau, btnElement) {
-            classeFiltreeActuelle = niveau;
-            if(btnElement) {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btnElement.classList.add('active');
-            } else {
-                document.querySelectorAll('.filter-btn').forEach(b => {
-                    if(b.textContent.trim() === niveau) b.classList.add('active');
-                    else b.classList.remove('active');
-                });
-            }
-            const btnDL = document.getElementById('btnTelechargerExcel');
+            });                                                            html += "</table>";                                            conteneur.innerHTML = html;                                }
+                                                                       function filtrer(niveau, btnElement) {
+            classeFiltreeActuelle = niveau;                                if (btnElement) {                                                  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));                                          btnElement.classList.add('active');                        } else {
+                document.querySelectorAll('.filter-btn').forEach(b => {                                                                           if (b.textContent.trim() === niveau) b.classList.add('active');
+                    else b.classList.remove('active');                         });
+            }                                                              const btnDL = document.getElementById('btnTelechargerExcel');
             if (niveau !== 'Tous') {
-                btnDL.textContent = `Télécharger ${niveau}`;
-            } else {
-                btnDL.textContent = "Télécharger Excel Global";
-            }
-            if (niveau === 'Tous') {
-                afficherTableau(listeEleves, 'Tous');
-            } else {
-                afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()), niveau);
-            }
-        }
-
+                btnDL.textContent = `Télécharger ${niveau}`;               } else {                                                           btnDL.textContent = "Télécharger Excel Global";            }
+            if (niveau === 'Tous') {                                           afficherTableau(listeEleves, 'Tous');                      } else {                                                           afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()), niveau);            }
+        }                                                      
         function basculerModeEdition() {
-            modeEditionActif = !modeEditionActif;
-            const btn = document.getElementById('btnActiverModif');
+            modeEditionActif = !modeEditionActif;                          const btn = document.getElementById('btnActiverModif');
             btn.innerText = modeEditionActif ? "Verrouiller" : "Modifier";
-            filtrer(classeFiltreeActuelle);
-        }
-
-        function enregistrerModifsBase() {
-            const lignes = document.querySelectorAll('#tableauDonnees tr[data-id]');
-            if (lignes.length === 0) {
-                alert("Aucune donnée à enregistrer.");
-                return;
-            }
-
-            const updates = [];
-            lignes.forEach(tr => {
-                if (periodeActuelle === 'FIN_ANNEE') {
-                    updates.push({
-                        matricule: tr.getAttribute('data-id'),
-                        moyen_compo1: tr.querySelector('.edit-m1')?.value || 0,
-                        moyen_compo2: tr.querySelector('.edit-m2')?.value || 0,
-                        moyen_compo3: tr.querySelector('.edit-m3')?.value || 0,
-                        moyen_compoN: tr.querySelector('.edit-mcompon')?.value || 0,
-                        moyen_compo_de_passage: tr.querySelector('.edit-mpassage')?.value || 0,
-                        moyen_total: tr.querySelector('.edit-mtotal')?.value || 0,
-                        moyen: tr.querySelector('.edit-mtotal')?.value || 0,
-                        decision: tr.querySelector('.dfa-select').value
-                    });
+            filtrer(classeFiltreeActuelle);                            }                                                                                                                             function enregistrerModifsBase() {                                 const lignes = document.querySelectorAll('#tableauDonnees tr[data-id]');                                                      if (lignes.length === 0) {
+                alert("Aucune donnée à enregistrer.");                         return;                                                    }                                                              const updates = [];                                            lignes.forEach(tr => {                                             if (periodeActuelle === 'FIN_ANNEE') {
+                    updates.push({                                                     matricule: tr.getAttribute('data-id'),                         moyen_compo1: tr.querySelector('.edit-m1')?.value || 0,                                                                       moyen_compo2: tr.querySelector('.edit-m2')?.value || 0,                                                                       moyen_compo3: tr.querySelector('.edit-m3')?.value || 0,
+                        moyen_compoN: tr.querySelector('.edit-mcompon')?.value || 0,                                                                  moyen_compo_de_passage: tr.querySelector('.edit-mpassage')?.value || 0,                                                       moyen_total: tr.querySelector('.edit-mtotal')?.value || 0,                                                                    moyen: tr.querySelector('.edit-mtotal')?.value || 0,                                                                          decision: tr.querySelector('.dfa-select').value                                                                           });
                 } else {
                     let notesObj = {};
-                    tr.querySelectorAll('.edit-note').forEach(input => {
-                        notesObj[input.getAttribute('data-matiere')] = input.value;
-                    });
-                    updates.push({
-                        matricule: tr.getAttribute('data-id'),
-                        notes: notesObj,
-                        total: tr.querySelector('.edit-total').value,
-                        moyen: tr.querySelector('.edit-mg').value,
-                        rang: tr.querySelector('.edit-rang').value,
-                        decision: tr.querySelector('.dfa-select').value
-                    });
-                }
-            });
-
-            fetch('/api/update-notes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ updates: updates, annee: annee, periode: periodeActuelle })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    alert("✅ Enregistrement effectué avec succès !");
-                } else {
-                    alert("⚠️ Erreur lors de l'enregistrement.");
-                }
-            })
-            .catch(err => {
-                console.error("Erreur réseau:", err);
-                alert("❌ Erreur réseau.");
-            });
-        }
-
-        function effacerNotesTableau() {
-            if (!modeEditionActif) {
-                alert("⚠️ Veuillez d'abord cliquer sur le bouton 'Modifier' pour activer le mode édition avant d'effacer les notes.");
-                return;
+                    tr.querySelectorAll('.edit-note').forEach(input => {                                                                              notesObj[input.getAttribute('data-matiere')] = input.value;                                                               });                                                            let dataPayload = {                                                matricule: tr.getAttribute('data-id'),
+                        notes: notesObj,                                               total: tr.querySelector('.edit-total').value,                                                                                 moyen: tr.querySelector('.edit-mg').value,                                                                                    rang: tr.querySelector('.edit-rang').value,                                                                                   decision: tr.querySelector('.dfa-select').value                                                                           };                                                             if (periodeActuelle === 'COMPO1') dataPayload.moyen_compo1 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'COMPO2') dataPayload.moyen_compo2 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'COMPO3') dataPayload.moyen_compo3 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'PASSAGE') dataPayload.moyen_compo_de_passage = tr.querySelector('.edit-mg').value;                                                              
+                    updates.push(dataPayload);                                 }                                                          });                                                                                                                           fetch('/api/update-notes', {                                       method: 'POST',                                                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ updates: updates, annee: annee, periode: periodeActuelle })                                        })
+            .then(res => res.json())                                       .then(data => {                                                    if (data.success) {
+                    alert("✅ Enregistrement effectué avec succès !");                                                                        } else {                                                           alert("⚠️ Erreur lors de l'enregistrement.");                                                                              }
+            })                                                             .catch(err => {                                                    console.error("Erreur réseau:", err);                          alert("❌ Erreur réseau.");                                });                                                        }                                                                                                                             function effacerNotesTableau() {                                   if (!modeEditionActif) {                                           alert("⚠️ Veuillez d'abord cliquer sur le bouton 'Modifier' pour activer le mode édition.");                                   return;
             }
-            if (confirm("Voulez-vous vraiment effacer toutes les notes et totaux du tableau affiché ?")) {
-                document.querySelectorAll('.edit-note').forEach(input => input.value = '');
-                document.querySelectorAll('.edit-total').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.edit-mg').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.edit-m1').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.edit-m2').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.edit-m3').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.edit-mcompon').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.edit-mpassage').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.edit-mtotal').forEach(input => input.value = '0.00');
-                document.querySelectorAll('.dfa-select').forEach(select => select.value = '');
-                alert("🗑️ Notes effacées. Pensez à cliquer sur 'Enregistrer' pour sauvegarder le vide dans la base de données.");
-            }
-        }
-
-        function declencherAjoutFichier() {
-            document.getElementById('inputFichierExcel').click();
-        }
-
-        function afficherNomFichier(input) {
+            if (confirm("Voulez-vous vraiment effacer toutes les notes et totaux du tableau affiché ?")) {                                    document.querySelectorAll('.edit-note').forEach(input => input.value = '');
+                document.querySelectorAll('.edit-total').forEach(input => input.value = '0.00');                                              document.querySelectorAll('.edit-mg').forEach(input => input.value = '0.00');                                                 document.querySelectorAll('.dfa-select').forEach(select => select.value = '');                                                alert("🗑️ Notes effacées.");                                }                                                          }                                                                                                                             function declencherAjoutFichier() {                                document.getElementById('inputFichierExcel').click();                                                                     }                                                                                                                             function afficherNomFichier(input) {
             const spanNom = document.getElementById('nomFichierAffiche');
-            if (input.files && input.files[0]) {
-                spanNom.textContent = input.files[0].name;
-                spanNom.title = input.files[0].name;
-            } else {
-                spanNom.textContent = "Aucun fichier";
-                spanNom.title = "Aucun fichier choisi";
+            if (input.files && input.files[0]) {                               spanNom.textContent = input.files[0].name;
+                spanNom.title = input.files[0].name;                       } else {                                                           spanNom.textContent = "Aucun fichier";
             }
         }
 
         async function importerFichier() {
             const inputFichier = document.getElementById('inputFichierExcel');
-            if (!inputFichier.files || inputFichier.files.length === 0) {
-                alert("Veuillez d'abord cliquer sur 'Ajouter fichier' pour sélectionner un fichier Excel.");
-                return;
-            }
-            const fichier = inputFichier.files[0];
+            if (!inputFichier.files || inputFichier.files.length === 0) {                                                                     alert("Veuillez sélectionner un fichier Excel.");                                                                             return;
+            }                                                              const fichier = inputFichier.files[0];
             const lecteur = new FileReader();
-            lecteur.onload = async function(e) {
-                try {
+
+            lecteur.onload = async function(e) {                               try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const premiereFeuilleNom = workbook.SheetNames[0];
-                    const feuille = workbook.Sheets[premiereFeuilleNom];
+                    const feuille = workbook.Sheets[workbook.SheetNames[0]];
                     const donneesBrutes = XLSX.utils.sheet_to_json(feuille);
+                                                                                   if (!donneesBrutes || donneesBrutes.length === 0) {                                                                               alert("Le fichier Excel est vide ou mal formaté.");                                                                           return;
+                    }                                          
+                    const updates = [];                                                                                                           donneesBrutes.forEach(row => {                                     // Normalisation des clés pour s'affranchir de la casse (majuscules/minuscules) et des espaces
+                        let normalizedRow = {};
+                        Object.keys(row).forEach(k => {
+                            normalizedRow[k.trim().toLowerCase()] = row[k];
+                        });
 
-                    if (!donneesBrutes || donneesBrutes.length === 0) {
-                        alert("Le fichier sélectionné est vide ou mal formaté.");
-                        return;
-                    }
-                    let updatesPourServeur = [];
-                    donneesBrutes.forEach((row) => {
-                        let rowNormalise = {};
-                        for (let [k, v] of Object.entries(row)) {
-                            let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                            rowNormalise[clePropre] = v;
-                        }
-                        let cleMatricule = Object.keys(rowNormalise).find(k => k === 'matricule' || k.includes('mat'));
-                        let matriculeExtrait = '';
-                        if (cleMatricule && rowNormalise[cleMatricule]) {
-                            matriculeExtrait = String(rowNormalise[cleMatricule]).trim();
-                        } else {
-                            let nomVal = rowNormalise['nom'] ? String(rowNormalise['nom']).trim() : '';
-                            let prenomVal = rowNormalise['prenoms'] || rowNormalise['prenom'] ? String(rowNormalise['prenoms'] || rowNormalise['prenom']).trim() : '';
-                            if (nomVal || prenomVal) {
-                                let eleveTrouve = listeEleves.find(el => 
-                                    (el.nom && el.nom.trim().toLowerCase() === nomVal.toLowerCase()) && 
-                                    (el.prenoms && el.prenoms.trim().toLowerCase() === prenomVal.toLowerCase())
-                                );
-                                if (eleveTrouve) {
-                                    matriculeExtrait = eleveTrouve.matricule;
+                        let matricule = normalizedRow['matricule'];
+                        let niveau = normalizedRow['niveau'] || classeFiltreeActuelle;
+                                                                                       if (matricule) {
+                            let notesObj = {};
+                            let matieres = getMatieresNiveau(niveau, periodeActuelle);
+                                                                                           // Recherche robuste de chaque matière (minuscule, majuscule ou espaces remplacés par underscores)
+                            matieres.forEach(m => {
+                                let mLower = m.toLowerCase();
+                                let matchKey = Object.keys(normalizedRow).find(k => k === mLower || k === mLower.replace(/_/g, ' ') || k === mLower.replace(/ /g, '_'));
+                                if (matchKey && normalizedRow[matchKey] !== undefined && normalizedRow[matchKey] !== '') {
+                                    let val = parseFloat(normalizedRow[matchKey]);
+                                    notesObj[m] = !isNaN(val) ? val : normalizedRow[matchKey];
                                 }
-                            }
-                        }
-
-                        if (matriculeExtrait) {
-                            if (periodeActuelle === 'FIN_ANNEE') {
-                                updatesPourServeur.push({
-                                    matricule: matriculeExtrait,
-                                    moyen_compo1: rowNormalise['moyen_compo1'] || rowNormalise['m1'] || 0,
-                                    moyen_compo2: rowNormalise['moyen_compo2'] || rowNormalise['m2'] || 0,
-                                    moyen_compo3: rowNormalise['moyen_compo3'] || rowNormalise['m3'] || 0,
-                                    moyen_compoN: rowNormalise['moyen_compon'] || 0,
-                                    moyen_compo_de_passage: rowNormalise['moyen_compo_de_passage'] || 0,
-                                    moyen_total: rowNormalise['moyen_total'] || 0,
-                                    moyen: rowNormalise['moyen_total'] || 0,
-                                    decision: rowNormalise['decision_a/r'] || rowNormalise['decision'] || ''
-                                });
-                            } else {
-                                let notesObj = {};
-                                let niveauEleve = listeEleves.find(el => el.matricule === matriculeExtrait)?.niveau || classeFiltreeActuelle;
-                                let matieresCibles = getMatieresNiveau(niveauEleve, periodeActuelle);
-                                matieresCibles.forEach(mat => {
-                                    let valeurTrouvee = undefined;
-                                    for (let [cleExcel, valExcel] of Object.entries(rowNormalise)) {
-                                        if (cleExcel === mat || cleExcel.includes(mat)) {
-                                            valeurTrouvee = valExcel;
-                                            break;
-                                        }
-                                    }
-                                    if (valeurTrouvee !== undefined && valeurTrouvee !== null && valeurTrouvee !== '') {
-                                        notesObj[mat] = String(valeurTrouvee);
-                                    }
-                                });
-
-                                let totalExtrait = rowNormalise['total'] !== undefined ? String(rowNormalise['total']) : '';
-                                let moyenExtrait = rowNormalise['moyen'] ?? rowNormalise['moyenne'] ?? rowNormalise['mg'] ?? '';
-                                let rangExtrait = rowNormalise['rang'] !== undefined ? String(rowNormalise['rang']) : '';
-                                let cleDecision = Object.keys(rowNormalise).find(k => k.includes('decision') || k.includes('dfa') || k.includes('dec'));
-                                let decisionExtrait = cleDecision !== undefined ? String(rowNormalise[cleDecision]) : '';
-                                updatesPourServeur.push({
-                                    matricule: matriculeExtrait,
-                                    notes: notesObj,
-                                    total: totalExtrait,
-                                    moyen: moyenExtrait,
-                                    rang: rangExtrait,
-                                    decision: decisionExtrait
-                                });
-                            }
-                        }
-                    });
-
-                    if (updatesPourServeur.length === 0) {
-                        alert("⚠️ Aucun élève correspondant n'a pu être identifié.");
-                        return;
+                            });                                                                                                                           // Récupération sécurisée du Total, de la Moyenne, du Rang et de la Décision
+                            let total = parseFloat(normalizedRow['total']) || 0;
+                            let moyenKey = Object.keys(normalizedRow).find(k => k.includes('moyen') || k.includes('moy'));
+                            let moyen = moyenKey ? parseFloat(normalizedRow[moyenKey]) : 0;
+                            let rang = normalizedRow['rang'] || 1;
+                            let decision = normalizedRow['decision'] || '';                                               
+                            let dataPayload = {                                                matricule: String(matricule).trim(),
+                                notes: notesObj,
+                                total: isNaN(total) ? 0 : total.toFixed(2),
+                                moyen: isNaN(moyen) ? 0 : moyen.toFixed(2),
+                                rang: rang,                                                    decision: decision
+                            };
+                                                                                           if (periodeActuelle === 'COMPO1') dataPayload.moyen_compo1 = isNaN(moyen) ? 0 : moyen.toFixed(2);                             if (periodeActuelle === 'COMPO2') dataPayload.moyen_compo2 = isNaN(moyen) ? 0 : moyen.toFixed(2);                             if (periodeActuelle === 'COMPO3') dataPayload.moyen_compo3 = isNaN(moyen) ? 0 : moyen.toFixed(2);
+                            if (periodeActuelle === 'PASSAGE') dataPayload.moyen_compo_de_passage = isNaN(moyen) ? 0 : moyen.toFixed(2);                                                     
+                            updates.push(dataPayload);
+                        }                                                          });                                                                                                                           if (updates.length === 0) {                                        alert("Aucun élève valide (avec un matricule) n'a été trouvé dans le fichier.");                                              return;
                     }
-
-                    const res = await fetch('/api/update-notes', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ annee: annee, periode: periodeActuelle, updates: updatesPourServeur })
-                    });
-                    const reponse = await res.json();
-                    if (reponse.success) {
-                        alert("✅ Notes importées avec succès !");
-                        inputFichier.value = "";
-                        document.getElementById('nomFichierAffiche').textContent = "Aucun fichier";
-                        chargerDonnees();
-                    } else {
-                        alert("⚠️ Erreur serveur : " + (reponse.message || "Inconnue"));
-                    }
-                } catch (erreur) {
-                    console.error("Erreur lecture fichier:", erreur);
-                    alert("❌ Impossible de lire ce fichier Excel : " + erreur.message);
-                }
-            };
-            lecteur.readAsArrayBuffer(fichier);
+                                                                                   const response = await fetch('/api/update-notes', {                                                                               method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },                                                                              body: JSON.stringify({ updates: updates, annee: annee, periode: periodeActuelle })                                        });
+                                                                                   const resData = await response.json();
+                    if (resData.success) {                                             alert(`✅ Importation réussie ! ${updates.length} lignes importées avec leurs valeurs d'origine.`);
+                        chargerDonnees();                                          } else {                                                           alert("⚠️ Erreur lors de l'enregistrement des données importées.");                                                        }                                          
+                } catch (erreur) {                                                 console.error("Erreur lecture:", erreur);
+                    alert("Erreur lors de la lecture ou de l'analyse du fichier Excel.");
+                }                                                          };
+            lecteur.readAsArrayBuffer(fichier);                        }
+                                                                       function colToLetter(colIndex) {                                   let letter = '';
+            let temp = colIndex + 1;
+            while (temp > 0) {                                                 let remainder = (temp - 1) % 26;                               letter = String.fromCharCode(65 + remainder) + letter;
+                temp = Math.floor((temp - 1) / 26);                        }
+            return letter;
         }
-
-        async function telechargerExcelActuel() {
-            let dataPeriode = cachePeriodes[periodeActuelle];
-            if (!dataPeriode || dataPeriode.length === 0) {
-                try {
-                    const res = await fetch(`/api/eleves/${annee}?periode=${periodeActuelle}`);
-                    dataPeriode = await res.json();
-                    cachePeriodes[periodeActuelle] = dataPeriode;
-                } catch (e) {
-                    dataPeriode = [];
-                }
-            }
-            if (!dataPeriode || dataPeriode.length === 0) {
-                alert("Aucune donnée disponible pour l'export.");
+                                                                       async function telechargerExcelActuel() {
+            let dataEleves = classeFiltreeActuelle === 'Tous' ? listeEleves : listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase());                       if (!dataEleves || dataEleves.length === 0) {                      alert("Aucune donnée à télécharger pour cette sélection.");
                 return;
-            }
-            let elevesExport = (classeFiltreeActuelle !== 'Tous') ? dataPeriode.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase()) : dataPeriode;
-            if (elevesExport.length === 0) {
-                alert(`Aucun élève trouvé pour ${classeFiltreeActuelle}.`);
-                return;
-            }
+            }                                                  
+            try {                                                              let wb = XLSX.utils.book_new();                                                                                               if (periodeActuelle === 'FIN_ANNEE') {
+                    let headers = ['N°', 'Matricule', 'Nom', 'Prénoms', 'Niveau', 'Date Naiss.', 'Sexe', 'MOYEN COMPO1', 'MOYEN COMPO2', 'MOYEN COMPO3', 'moyen_compoN', 'moyen_passage', 'moyen_total', 'Decision'];
+                    let aoa = [headers];                       
+                    dataEleves.forEach((e, index) => {                                 let R = index + 2;                                             let m1 = parseFloat(e.moyen_compo1 ?? e.m1 ?? 0);
+                        let m2 = parseFloat(e.moyen_compo2 ?? e.m2 ?? 0);                                                                             let m3 = parseFloat(e.moyen_compo3 ?? e.m3 ?? 0);                                                                             let mPassage = parseFloat(e.moyen_compo_de_passage ?? 0);
+                        let decisionVal = e.decision ?? '';
+                                                                                       aoa.push([
+                            index + 1,
+                            e.matricule || '',
+                            e.nom || '',                                                   e.prenoms || '',                                               e.niveau || '',                                                e.date_naissance || '',                                        e.sexe || '',
+                            m1,                                                            m2,                                                            m3,
+                            { f: `(H${R}+I${R}+J${R})/3`, v: (m1 + m2 + m3) / 3 },                                                                        mPassage,
+                            { f: `(K${R}+L${R})/2`, v: 0 },
+                            decisionVal                                                ]);                                                        });                                                                                                                           let ws = XLSX.utils.aoa_to_sheet(aoa);
+                    XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
+                } else {                                                           let niveauUtilise = classeFiltreeActuelle === 'Tous' ? (dataEleves[0]?.niveau || 'CP1') : classeFiltreeActuelle;                                                                             let matieres = getMatieresNiveau(niveauUtilise, periodeActuelle);                                                                                                                            let headers = ['N°', 'Matricule', 'Nom', 'Prénoms', 'Niveau', 'Date Naiss.', 'Sexe', ...matieres.map(m => m.toUpperCase()), 'Total', `MOYEN ${periodeActuelle}`, 'Rang', 'Decision'];
+                    let aoa = [headers];
 
-            const lignesExcel = elevesExport.map((e, idx) => {
-                let ligne = {
-                    "N°": idx + 1,
-                    "Matricule": e.matricule || '',
-                    "Nom": e.nom || '',
-                    "Prénoms": e.prenoms || '',
-                    "Niveau": e.niveau || '',
-                    "Date Naiss.": e.date_naissance || '',
-                    "Sexe": e.sexe || ''
-                };
+                    dataEleves.forEach((e, index) => {
+                        let R = index + 2;
+                        let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});                                 let rowData = [                                                    index + 1,                                                     e.matricule || '',                                             e.nom || '',                                                   e.prenoms || '',
+                            e.niveau || '',                                                e.date_naissance || '',
+                            e.sexe || ''                                               ];
 
-                let rowNum = idx + 2;
-                let nivCible = (e.niveau || classeFiltreeActuelle).toUpperCase();
+                        matieres.forEach(m => {
+                            let val = notesObj[m] !== undefined ? notesObj[m] : (e[m] !== undefined ? e[m] : '');                                         rowData.push(val !== '' ? parseFloat(val) : '');                                                                          });                                                                                                                           let startColLetter = colToLetter(7);
+                        let endColLetter = colToLetter(7 + matieres.length - 1);                                                                      let totalColLetter = colToLetter(7 + matieres.length);                                                                        let diviseur = getCoefficientDiviseur(e.niveau || niveauUtilise, periodeActuelle);
 
-                if (periodeActuelle === 'FIN_ANNEE') {
-                    ligne["MOYEN COMPO1"] = parseFloat(e.moyen_compo1 ?? e.m1 ?? 0).toFixed(2);
-                    ligne["MOYEN COMPO2"] = parseFloat(e.moyen_compo2 ?? e.m2 ?? 0).toFixed(2);
-                    ligne["MOYEN COMPO3"] = parseFloat(e.moyen_compo3 ?? e.m3 ?? 0).toFixed(2);
-                    ligne["moyen_compoN"] = { t: 'n', f: `AVERAGE(H${rowNum}:J${rowNum})`, v: parseFloat(e.moyen_compoN || 0).toFixed(2) };
-                    ligne["moyen_passage"] = parseFloat(e.moyen_compo_de_passage || 0).toFixed(2);
-                    ligne["moyen_total"] = { t: 'n', f: `AVERAGE(K${rowNum},L${rowNum})`, v: parseFloat(e.moyen_total || 0).toFixed(2) };
-
-                    let formuleDecisionFin = (['CE2', 'CM1', 'CM2'].includes(nivCible))
-                        ? `IF(M${rowNum}<10; "R"; "A")`
-                        : `IF(M${rowNum}<5; "R"; "A")`;
-                    ligne["Decision"] = { t: 's', f: formuleDecisionFin, v: e.decision || '' };
-                } else {
-                    let matieresCibles = getMatieresNiveau(e.niveau || classeFiltreeActuelle, periodeActuelle);
-                    matieresCibles.forEach(m => {
-                        let val = (e.notes && e.notes[m] !== undefined) ? e.notes[m] : (e[m] !== undefined ? e[m] : '');
-                        ligne[m.toUpperCase()] = val;
+                        rowData.push({ f: `SUM(${startColLetter}${R}:${endColLetter}${R})`, v: 0 });                                                  rowData.push({ f: `${totalColLetter}${R}/${diviseur}`, v: 0 });                                                               rowData.push(e.rang ?? (index + 1));                           rowData.push(e.decision ?? '');        
+                        aoa.push(rowData);
                     });
-
-                    let premiereLettreCol = 'H';
-                    let derniereLettreCol = String.fromCharCode(72 + matieresCibles.length - 1);
-
-                    ligne["Total"] = { t: 'n', f: `SUM(${premiereLettreCol}${rowNum}:${derniereLettreCol}${rowNum})`, v: parseFloat(e.total || 0).toFixed(2) };
-
-                    let diviseur = 8.5;
-                    if (nivCible === 'CP1' && periodeActuelle === 'COMPO1') {
-                        diviseur = 6;
-                    } else if (nivCible === 'CP1' || nivCible === 'CP2') {
-                        diviseur = 9;
-                    } else if (nivCible === 'CE2') {
-                        diviseur = 11;
-                    } else if (nivCible === 'CE1') {
-                        diviseur = 12;
-                    }
-
-                    let colTotalLettre = String.fromCharCode(72 + matieresCibles.length);
-                    ligne["Moyen"] = { t: 'n', f: `${colTotalLettre}${rowNum}/${diviseur}`, v: parseFloat(e.moyen || 0).toFixed(2) };
-
-                    let derniereLigne = elevesExport.length + 1;
-                    let colMoyenLettre = String.fromCharCode(73 + matieresCibles.length);
-                    ligne["Rang"] = { t: 'n', f: `RANK(${colMoyenLettre}${rowNum};$${colMoyenLettre}$2:$${colMoyenLettre}$${derniereLigne})`, v: e.rang || idx + 1 };
-                    let formuleDecisionCompo = (['CE2', 'CM1', 'CM2'].includes(nivCible))
-                        ? `IF(${colMoyenLettre}${rowNum}<10; "R"; "A")`
-                        : `IF(${colMoyenLettre}${rowNum}<5; "R"; "A")`;
-                    ligne["Decision"] = { t: 's', f: formuleDecisionCompo, v: e.decision || '' };
-                }
-                return ligne;
-            });
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(lignesExcel, { cellDates: true });
-            XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
-            XLSX.writeFile(wb, `Notes_${classeFiltreeActuelle}_${periodeActuelle}_${annee}.xlsx`);
-        }
-
-        // ==========================================
-        // LOGIQUE DE CALCUL AUTOMATIQUE INTERACTIVE
-        // ==========================================
-        function recalculerLigne(tr, niveauClasse) {
-            let nivUpper = niveauClasse ? niveauClasse.toUpperCase() : '';
-
-            if (periodeActuelle === 'FIN_ANNEE') {
-                let m1 = parseFloat(tr.querySelector('.edit-m1')?.value) || 0;
-                let m2 = parseFloat(tr.querySelector('.edit-m2')?.value) || 0;
+                                                                                   let ws = XLSX.utils.aoa_to_sheet(aoa);                         XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
+                }                                                                                                                             let nomFichier = `Notes_${periodeActuelle}_${classeFiltreeActuelle}_${annee}.xlsx`;                                           XLSX.writeFile(wb, nomFichier);                            } catch (e) {
+                console.error("Erreur export Excel:", e);
+                alert("Erreur lors du téléchargement du fichier Excel.");
+            }                                                          }                                                                                                                             function recalculerLigne(tr, niveauClasse) {
+            let nivUpper = niveauClasse ? niveauClasse.toUpperCase() : '';                                                                if (periodeActuelle === 'FIN_ANNEE') {                             let m1 = parseFloat(tr.querySelector('.edit-m1')?.value) || 0;                                                                let m2 = parseFloat(tr.querySelector('.edit-m2')?.value) || 0;
                 let m3 = parseFloat(tr.querySelector('.edit-m3')?.value) || 0;
                 let moyenCompoN = (m1 + m2 + m3) / 3;
-                let inputCompon = tr.querySelector('.edit-mcompon');
-                if (inputCompon) inputCompon.value = moyenCompoN.toFixed(2);
-
-                let mPassage = parseFloat(tr.querySelector('.edit-mpassage')?.value) || 0;
-                let moyenTotal = (moyenCompoN + mPassage) / 2;
-                let inputTotal = tr.querySelector('.edit-mtotal');
-                if (inputTotal) inputTotal.value = moyenTotal.toFixed(2);
-                let selectDecision = tr.querySelector('.dfa-select');
-                if (selectDecision) {
-                    if (['CE2', 'CM1', 'CM2'].includes(nivUpper)) {
-                        selectDecision.value = (moyenTotal < 10) ? 'R' : 'A';
-                    } else {
-                        selectDecision.value = (moyenTotal < 5) ? 'R' : 'A';
-                    }
-                }
+                tr.querySelector('.edit-mcompon').value = moyenCompoN.toFixed(2);                                                             let mPassage = parseFloat(tr.querySelector('.edit-mpassage')?.value) || 0;
+                let moyenTotal = (moyenCompoN + mPassage) / 2;                 tr.querySelector('.edit-mtotal').value = moyenTotal.toFixed(2);
                 return;
-            }
-
+            }                                                  
             let inputsNotes = tr.querySelectorAll('.edit-note');
-            let sommeTotal = 0;
-            inputsNotes.forEach(input => {
-                let val = parseFloat(input.value);
-                if (!isNaN(val)) {
-                    sommeTotal += val;
-                }
-            });
+            let sommeTotal = 0;                                            inputsNotes.forEach(input => {                                     let val = parseFloat(input.value);                             if (!isNaN(val)) sommeTotal += val;
+            });                                                
+            tr.querySelector('.edit-total').value = sommeTotal.toFixed(2);                                                                let diviseur = getCoefficientDiviseur(nivUpper, periodeActuelle);                                                             let moyenne = sommeTotal / diviseur;
+            tr.querySelector('.edit-mg').value = moyenne.toFixed(2);                                                                  }                                                                                                                             document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('edit-note') || e.target.classList.contains('edit-m1') || e.target.classList.contains('edit-m2') || e.target.classList.contains('edit-m3') || e.target.classList.contains('edit-mpassage')) {                                   let tr = e.target.closest('tr');                               if (tr) {                                                          let niv = tr.querySelectorAll('td')[4]?.textContent.trim() || classeFiltreeActuelle;                                          recalculerLigne(tr, niv);
+                }                                                          }                                                          });                                                        </script>                                                  </body>                                                        </html>
 
-            let inputTotal = tr.querySelector('.edit-total');
-            if (inputTotal) {
-                inputTotal.value = sommeTotal.toFixed(2);
-            }
-            let coefficientDiviseur = 8.5;
-            if (nivUpper === 'CP1' && periodeActuelle === 'COMPO1') {
-                coefficientDiviseur = 6;
-            } else if (nivUpper === 'CP1' || nivUpper === 'CP2') {
-                coefficientDiviseur = 9;
-            } else if (nivUpper === 'CE2') {
-                coefficientDiviseur = 11;
-            } else if (nivUpper === 'CE1') {
-                coefficientDiviseur = 12;
-            } else if (nivUpper === 'CM1' || nivUpper === 'CM2') {
-                coefficientDiviseur = 8.5;
-            }
-
-            let moyenne = sommeTotal / coefficientDiviseur;
-            let inputMoyen = tr.querySelector('.edit-mg');
-            if (inputMoyen) {
-                inputMoyen.value = moyenne.toFixed(2);
-            }
-
-            let selectDecision = tr.querySelector('.dfa-select');
-            if (selectDecision) {
-                if (['CE2', 'CM1', 'CM2'].includes(nivUpper)) {
-                    selectDecision.value = (moyenne < 10) ? 'R' : 'A';
-                } else {
-                    selectDecision.value = (moyenne < 5) ? 'R' : 'A';
-                }
-            }
-        }
-
-        function actualiserCalculsGlobaux() {
-            let lignes = document.querySelectorAll('#tableauDonnees tr[data-id]');
-            let elevesData = [];
-            lignes.forEach(tr => {
-                let tdNiveau = tr.querySelectorAll('td')[4];
-                let niveauEleve = tdNiveau ? tdNiveau.textContent.trim() : (tr.getAttribute('data-niveau') || classeFiltreeActuelle);
-                recalculerLigne(tr, niveauEleve);
-
-                let inputMoyen = tr.querySelector('.edit-mg') || tr.querySelector('.edit-mtotal');
-                let moyenneVal = inputMoyen ? parseFloat(inputMoyen.value) || 0 : 0;
-                elevesData.push({ tr: tr, moyenne: moyenneVal });
-            });
-            if (periodeActuelle !== 'FIN_ANNEE') {
-                elevesData.sort((a, b) => b.moyenne - a.moyenne);
-                elevesData.forEach((item, index) => {
-                    let inputRang = item.tr.querySelector('.edit-rang');
-                    if (inputRang) {
-                        inputRang.value = index + 1;
-                    }
-                });
-            }
-        }
-
-        document.addEventListener('input', function(e) {
-            if (e.target.classList.contains('edit-note') || e.target.classList.contains('edit-m1') || e.target.classList.contains('edit-m2') || e.target.classList.contains('edit-m3') || e.target.classList.contains('edit-mpassage')) {
-                let tr = e.target.closest('tr');
-                if (tr) {
-                    let tdNiveau = tr.querySelectorAll('td')[4];
-                    let niveauEleve = tdNiveau ? tdNiveau.textContent.trim() : (tr.getAttribute('data-niveau') || classeFiltreeActuelle);
-                    recalculerLigne(tr, niveauEleve);
-                    actualiserCalculsGlobaux();
-                }
-            }
-        });
-    </script>
-</body>
-</html>

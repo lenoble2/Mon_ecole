@@ -9,67 +9,75 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 15px; background-color: #f4f6f9; color: #333; }
         h2 { color: #2c3e50; margin-bottom: 10px; }
+        h3 { color: #1e293b; margin-top: 0; margin-bottom: 15px; font-size: 1.1em; }
         .filter-container { margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .filter-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 4px; font-weight: 600; color: #475569; transition: all 0.2s; }
         .filter-btn:hover { background-color: #f1f5f9; }
         .filter-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
-        
         .select-annee { padding: 8px 12px; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 4px; font-weight: 600; color: #1e293b; cursor: pointer; }
-        
         #conteneurTableau { overflow: auto; background: white; padding: 0; border-radius: 6px; border: 1px solid #cbd5e1; max-height: 650px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         table { border-collapse: collapse; width: max-content; font-size: 0.82em; }
-        
         th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: center; white-space: nowrap; }
-        
         /* En-têtes fixes multi-niveaux */
         th { background-color: #f8fafc; color: #1e293b; font-weight: 700; position: sticky; z-index: 10; }
-        
         /* Ligne 1 des th */
         thead tr:nth-child(1) th { top: 0; background-color: #f1f5f9; }
         /* Ligne 2 des th */
         thead tr:nth-child(2) th { top: 29px; background-color: #e2e8f0; }
         /* Ligne 3 des th */
         thead tr:nth-child(3) th { top: 58px; background-color: #f8fafc; }
+        /* Ligne 4 des th */
+        thead tr:nth-child(4) th { top: 87px; background-color: #f8fafc; }
 
         /* Colonnes fixes à gauche (Matricule et Nom) */
         th.sticky-col-0, td.sticky-col-0 { position: sticky; left: 0; z-index: 20; background-color: #ffffff; }
         th.sticky-col-1, td.sticky-col-1 { position: sticky; left: 75px; z-index: 20; background-color: #ffffff; font-weight: bold; text-align: left; }
         th.sticky-col-2, td.sticky-col-2 { position: sticky; left: 195px; z-index: 20; background-color: #ffffff; text-align: left; border-right: 2px solid #cbd5e1; }
-
+        
         /* Ajustement z-index pour les en-têtes fixés à la fois en haut et à gauche */
-        thead tr:nth-child(1) th.sticky-col-0, 
-        thead tr:nth-child(1) th.sticky-col-1, 
+        thead tr:nth-child(1) th.sticky-col-0,
+        thead tr:nth-child(1) th.sticky-col-1,
         thead tr:nth-child(1) th.sticky-col-2,
-        thead tr:nth-child(2) th.sticky-col-0, 
-        thead tr:nth-child(2) th.sticky-col-1, 
+        thead tr:nth-child(2) th.sticky-col-0,
+        thead tr:nth-child(2) th.sticky-col-1,
         thead tr:nth-child(2) th.sticky-col-2,
-        thead tr:nth-child(3) th.sticky-col-0, 
-        thead tr:nth-child(3) th.sticky-col-1, 
-        thead tr:nth-child(3) th.sticky-col-2 { z-index: 30; background-color: #e2e8f0; }
+        thead tr:nth-child(3) th.sticky-col-0,
+        thead tr:nth-child(3) th.sticky-col-1,
+        thead tr:nth-child(3) th.sticky-col-2,
+        thead tr:nth-child(4) th.sticky-col-0,
+        thead tr:nth-child(4) th.sticky-col-1,
+        thead tr:nth-child(4) th.sticky-col-2 { z-index: 30; background-color: #e2e8f0; }
 
         .checkbox-cell { width: 30px; text-align: center; }
         .btn { padding: 10px 16px; color: white; text-decoration: none; border-radius: 4px; display: inline-block; cursor: pointer; border: none; font-size: 0.9em; font-weight: 600; transition: background-color 0.2s; }
         .btn:hover { opacity: 0.9; }
-        
+
         /* Cellule interactive personnalisée pour les absences (états 0, 1, 2) */
         .absence-cell { width: 28px; height: 28px; text-align: center; vertical-align: middle; cursor: pointer; user-select: none; position: relative; padding: 0; }
         .absence-cell .trait-h { display: none; position: absolute; top: 50%; left: 2px; right: 2px; height: 3px; background-color: #dc2626; transform: translateY(-50%); }
         .absence-cell .trait-v { display: none; position: absolute; top: 2px; bottom: 2px; left: 50%; width: 3px; background-color: #dc2626; transform: translateX(-50%); }
-        
+
         .absence-cell.etat-1 .trait-h { display: block; }
         .absence-cell.etat-2 .trait-h { display: block; }
         .absence-cell.etat-2 .trait-v { display: block; }
 
         .actions-bar { margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
+        /* Style pour le tableau de taux de fréquentation mensuel */
+        .taux-container { margin-top: 25px; background: white; padding: 20px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .table-taux { width: 100%; border-collapse: collapse; font-size: 0.9em; margin-top: 10px; }
+        .table-taux th { background-color: #f8fafc; color: #1e293b; padding: 10px; border: 1px solid #cbd5e1; text-align: center; position: static; }
+        .table-taux td { padding: 8px 10px; border: 1px solid #cbd5e1; text-align: center; }
+        .input-jours { width: 60px; padding: 6px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: 600; }
+
         /* Configuration spécifique pour l'impression afin de forcer l'affichage des couleurs et en-têtes */
         @media print {
             body { background-color: #ffffff; margin: 0; padding: 0; }
             .filter-container, .actions-bar, .select-annee, .filter-btn { display: none !important; }
             #conteneurTableau { max-height: none !important; overflow: visible !important; border: none !important; box-shadow: none !important; }
-            table { width: 100% !important; font-size: 0.7em !important; }
+            .taux-container { border: none !important; box-shadow: none !important; padding: 0 !important; margin-top: 20px !important; }
+            table, .table-taux { width: 100% !important; font-size: 0.7em !important; }
             th, td { border: 1px solid #94a3b8 !important; }
-            
             /* Forcer les navigateurs à imprimer les couleurs de fond et graphismes */
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -80,7 +88,7 @@
 </head>
 <body>
 
-    <h2 id="titre-registre">Registre d'Appel - Absences</h2>
+    <h2 id="titre-registre">Registre d'Appel & Absences</h2>
     
     <div class="filter-container">
         <span style="font-weight: bold; margin-right: 5px; color: #475569;">Année :</span>
@@ -117,6 +125,27 @@
         </table>
     </div>
 
+    <!-- Tableau de calcul de taux de fréquentation mensuel -->
+    <div class="taux-container">
+        <h3>📊 Tableau de Calcul du Taux de Fréquentation Mensuel</h3>
+        <table class="table-taux">
+            <thead>
+                <tr>
+                    <th>Mois</th>
+                    <th>Effectif Élèves</th>
+                    <th>Jours Ouvrables</th>
+                    <th>Présences Potentielles</th>
+                    <th>Total Absences</th>
+                    <th>Total Présences</th>
+                    <th>Taux de Fréquentation (%)</th>
+                </tr>
+            </thead>
+            <tbody id="corps-tableau-taux">
+                <!-- Généré dynamiquement par JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
     <div class="actions-bar">
         <button type="button" class="btn" style="background-color: #2563eb;" onclick="sauvegarderAbsences()">💾 Enregistrer les absences</button>
         <button type="button" class="btn" style="background-color: #0284c7;" onclick="imprimerRegistre()">🖨️ Imprimer Registre</button>
@@ -143,74 +172,104 @@
 
         // Définition des mois scolaires avec attribution d'une couleur spécifique pour chaque mois
         const moisAnnee = [
-            { nom: "Septembre", bg: "#e0f2fe", color: "#0369a1", border: "#bae6fd" }, // Bleu clair
-            { nom: "Octobre", bg: "#fce7f3", color: "#be185d", border: "#fbcfe8" },   // Rose
-            { nom: "Novembre", bg: "#fef3c7", color: "#b45309", border: "#fde68a" },  // Jaune / Ambre
-            { nom: "Décembre", bg: "#d1fae5", color: "#047857", border: "#a7f3d0" },  // Vert émeraude
-            { nom: "Janvier", bg: "#ede9fe", color: "#6d28d9", border: "#ddd6fe" },   // Violet
-            { nom: "Février", bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" },   // Orange
-            { nom: "Mars", bg: "#ccfbf1", color: "#0f766e", border: "#99f6e4" },      // Cyan / Turquoise
-            { nom: "Avril", bg: "#fae8ff", color: "#a21caf", border: "#f5d0fe" },     // Fuchsia
-            { nom: "Mai", bg: "#fee2e2", color: "#b91c1c", border: "#fecaca" }        // Rouge clair
+            { nom: "Septembre", bg: "#e0f2fe", color: "#0369a1", border: "#bae6fd" },
+            { nom: "Octobre", bg: "#fce7f3", color: "#be185d", border: "#fbcfe8" },
+            { nom: "Novembre", bg: "#fef3c7", color: "#b45309", border: "#fde68a" },
+            { nom: "Décembre", bg: "#d1fae5", color: "#047857", border: "#a7f3d0" },
+            { nom: "Janvier", bg: "#ede9fe", color: "#6d28d9", border: "#ddd6fe" },
+            { nom: "Février", bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" },
+            { nom: "Mars", bg: "#ccfbf1", color: "#0f766e", border: "#99f6e4" },
+            { nom: "Avril", bg: "#fae8ff", color: "#a21caf", border: "#f5d0fe" },
+            { nom: "Mai", bg: "#fee2e2", color: "#b91c1c", border: "#fecaca" }
         ];
 
-        // Fonction pour changer l'année via le menu déroulant
+        // Attribution des couleurs tertiaires uniques pour chaque jour de la semaine
+        const joursCouleurs = {
+            'L': { bg: '#e0e7ff', color: '#3730a3', border: '#c7d2fe' },
+            'Ma': { bg: '#fae8ff', color: '#86198f', border: '#f5d0fe' },
+            'Me': { bg: '#ccfbf1', color: '#115e59', border: '#99f6e4' },
+            'J': { bg: '#fef3c7', color: '#92400e', border: '#fde68a' },
+            'V': { bg: '#fee2e2', color: '#991b1b', border: '#fecaca' }
+        };
+
+        function getDatesSemaineTexte(anneeBase, moisIndex, semaineNum) {
+            let year = parseInt(anneeBase);
+            let realMonth = moisIndex + 8;
+            let jsMonth = realMonth % 12;
+            let jsYear = year + Math.floor(realMonth / 12);
+
+            let targetDayNum = 1 + (semaineNum - 1) * 7;
+            let tempDate = new Date(jsYear, jsMonth, targetDayNum);
+            let dow = tempDate.getDay();
+            let mondayOffset = dow === 0 ? -6 : 1 - dow;
+            let monday = new Date(jsYear, jsMonth, targetDayNum + mondayOffset);
+            let friday = new Date(jsYear, jsMonth, targetDayNum + mondayOffset + 4);
+
+            let pad = (n) => String(n).padStart(2, '0');
+            return `${pad(monday.getDate())} au ${pad(friday.getDate())}`;
+        }
+
         function changerAnnee(nouvelleAnnee) {
             window.location.href = `?annee=${nouvelleAnnee}`;
         }
 
-        // Construction dynamique de l'en-tête du tableau sur 3 lignes
         function construireEntete() {
             const thead = document.getElementById('entete-tableau');
-            
-            // Ligne 1 : Mois (avec couleurs personnalisées par mois)
+
             let tr1 = `<tr>
-                <th rowspan="3" class="checkbox-cell sticky-col-0"><input type="checkbox" id="select-all"></th>
-                <th rowspan="3" class="sticky-col-1">Matricule</th>
-                <th rowspan="3" class="sticky-col-2">Nom & Prénoms</th>`;
-            
+                <th rowspan="4" class="checkbox-cell sticky-col-0"><input type="checkbox" id="select-all"></th>
+                <th rowspan="4" class="sticky-col-1">Matricule</th>
+                <th rowspan="4" class="sticky-col-2">Nom & Prénoms</th>`;
             moisAnnee.forEach(m => {
                 tr1 += `<th colspan="20" style="background-color: ${m.bg}; color: ${m.color}; border-left: 2px solid ${m.border};">${m.nom}</th>`;
             });
             tr1 += `</tr>`;
 
-            // Ligne 2 : Semaines (4 par mois)
             let tr2 = `<tr>`;
             moisAnnee.forEach(m => {
                 for (let s = 1; s <= 4; s++) {
-                    tr2 += `<th colspan="5" style="background-color: ${m.bg}; opacity: 0.95; color: ${m.color}; border-left: ${s === 1 ? `2px solid ${m.border}` : '1px solid #e2e8f0'};">Semaine ${s}</th>`;
+                    let borderStyle = s === 1 ? `2px solid ${m.border}` : `2px solid #cbd5e1`;
+                    tr2 += `<th colspan="5" style="background-color: ${m.bg}; opacity: 0.95; color: ${m.color}; border-left: ${borderStyle}; font-weight: 600;">Semaine ${s}</th>`;
                 }
             });
             tr2 += `</tr>`;
 
-            // Ligne 3 : Jours de cours (5 par semaine)
             let tr3 = `<tr>`;
-            const joursNoms = ['L', 'Ma', 'Me', 'J', 'V'];
             moisAnnee.forEach((m, mIdx) => {
                 for (let s = 1; s <= 4; s++) {
-                    joursNoms.forEach((j, jIdx) => {
-                        let borderLeftStyle = (s === 1 && jIdx === 0) ? `border-left: 2px solid ${m.border};` : '';
-                        tr3 += `<th style="${borderLeftStyle} background-color: ${m.bg}; opacity: 0.9; color: ${m.color};" title="${m.nom} - Semaine ${s} - Jour ${j}">${j}</th>`;
-                    });
+                    let borderStyle = s === 1 ? `2px solid ${m.border}` : `2px solid #cbd5e1`;
+                    let datesTexte = getDatesSemaineTexte(anneeSelectionnee, mIdx, s);
+                    tr3 += `<th colspan="5" style="background-color: ${m.bg}; opacity: 0.9; color: ${m.color}; border-left: ${borderStyle}; font-size: 0.78em; font-weight: normal;" title="Dates de la semaine">du ${datesTexte}</th>`;
                 }
             });
             tr3 += `</tr>`;
 
-            thead.innerHTML = tr1 + tr2 + tr3;
+            let tr4 = `<tr>`;
+            const joursNoms = ['L', 'Ma', 'Me', 'J', 'V'];
+            moisAnnee.forEach((m, mIdx) => {
+                for (let s = 1; s <= 4; s++) {
+                    joursNoms.forEach((j, jIdx) => {
+                        let jColor = joursCouleurs[j];
+                        let borderLeftStyle = (jIdx === 0) ? (s === 1 ? `border-left: 2px solid ${m.border};` : `border-left: 2px solid #cbd5e1;`) : 'border-left: 1px solid #e2e8f0;';
+                        tr4 += `<th style="${borderLeftStyle} background-color: ${jColor.bg}; color: ${jColor.color};" title="${m.nom} - Semaine ${s} - Jour ${j}">${j}</th>`;
+                    });
+                }
+            });
+            tr4 += `</tr>`;
+
+            thead.innerHTML = tr1 + tr2 + tr3 + tr4;
         }
 
-        // Chargement initial combiné des élèves et des absences enregistrées depuis le backend
         function chargerDonnees() {
             construireEntete();
-            
-            // Charger les absences sauvegardées puis charger les élèves
+            initialiserTableauTauxMensuel();
+
             fetch(`/api/absences/${anneeSelectionnee}`)
                 .then(res => res.json())
                 .then(data => {
                     donneesAbsencesRecuperees = Array.isArray(data) ? data : (data.absences || []);
                 })
                 .catch(() => {
-                    // Fallback stockage local si l'API backend n'est pas disponible
                     try {
                         const localData = localStorage.getItem(`absences_${anneeSelectionnee}`);
                         donneesAbsencesRecuperees = localData ? JSON.parse(localData) : [];
@@ -234,17 +293,16 @@
 
         chargerDonnees();
 
-        // Affichage du tableau selon les élèves filtrés et restauration des états d'absence
         function afficherTableau(data) {
             const tbody = document.getElementById('corps-tableau');
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="183" style="text-align:center; color:#666; padding:20px;">Aucun élève trouvé pour cette classe.</td></tr>';
+                mettreAJourTableauTaux();
                 return;
             }
 
-            // Indexer les absences récupérées pour un accès rapide par matricule, mois, semaine et jour
             const mapAbsences = {};
             donneesAbsencesRecuperees.forEach(ab => {
                 const cle = `${ab.matricule}_${ab.mois}_${ab.semaine}_${ab.jour}`;
@@ -258,47 +316,98 @@
                     <td class="sticky-col-1">${matriculeEleve}</td>
                     <td class="sticky-col-2">${e.nom || ''} ${e.prenoms || ''}</td>`;
 
-                // Génération des cellules interactives d'absence
+                const joursNoms = ['L', 'Ma', 'Me', 'J', 'V'];
                 moisAnnee.forEach((m, mIdx) => {
                     for (let s = 1; s <= 4; s++) {
                         for (let d = 1; d <= 5; d++) {
+                            let jourNom = joursNoms[d - 1];
+                            let jColor = joursCouleurs[jourNom];
                             let cellId = `abs_${matriculeEleve}_m${mIdx}_s${s}_d${d}`;
                             let cleMap = `${matriculeEleve}_${m.nom}_${s}_${d}`;
                             let etatInitial = mapAbsences[cleMap] || 0;
-                            
+
                             let classeEtat = '';
                             if (etatInitial === 1) classeEtat = 'etat-1';
                             if (etatInitial === 2) classeEtat = 'etat-2';
 
-                            tr += `<td class="absence-cell ${classeEtat}" id="${cellId}" data-etat="${etatInitial}" data-matricule="${matriculeEleve}" data-mois="${m.nom}" data-semaine="${s}" data-jour="${d}" onclick="gererClicCellule(this)">
+                            tr += `<td class="absence-cell ${classeEtat}" id="${cellId}" data-etat="${etatInitial}" data-matricule="${matriculeEleve}" data-mois="${m.nom}" data-semaine="${s}" data-jour="${d}" style="background-color: ${jColor.bg};" onclick="gererClicCellule(this)">
                                 <div class="trait-h"></div>
                                 <div class="trait-v"></div>
                             </td>`;
                         }
                     }
                 });
-
                 tr += `</tr>`;
                 tbody.innerHTML += tr;
             });
+
+            mettreAJourTableauTaux();
         }
 
-        // Gestion des clics successifs sur une cellule (0 -> 1 trait -> Croix -> 0)
         function gererClicCellule(cellule) {
             let etatActuel = parseInt(cellule.getAttribute('data-etat')) || 0;
             let nouvelEtat = (etatActuel + 1) % 3;
-
             cellule.setAttribute('data-etat', nouvelEtat);
             cellule.classList.remove('etat-1', 'etat-2');
-
             if (nouvelEtat === 1) {
                 cellule.classList.add('etat-1');
             } else if (nouvelEtat === 2) {
                 cellule.classList.add('etat-2');
             }
+            mettreAJourTableauTaux();
         }
 
-        // Fonction de filtrage par niveau
+        function initialiserTableauTauxMensuel() {
+            const corpsTaux = document.getElementById('corps-tableau-taux');
+            corpsTaux.innerHTML = '';
+
+            moisAnnee.forEach((m, idx) => {
+                let tr = `<tr id="ligne-taux-${idx}">
+                    <td style="font-weight: bold; background-color: ${m.bg}; color: ${m.color};">${m.nom}</td>
+                    <td id="eff-${idx}">0</td>
+                    <td><input type="number" class="input-jours" id="jours-${idx}" value="20" min="0" max="31" oninput="mettreAJourTableauTaux()"></td>
+                    <td id="pot-${idx}">0</td>
+                    <td id="abs-${idx}">0</td>
+                    <td id="pres-${idx}">0</td>
+                    <td id="taux-${idx}" style="font-weight: bold; color: #2563eb;">0.00%</td>
+                </tr>`;
+                corpsTaux.innerHTML += tr;
+            });
+        }
+
+        function mettreAJourTableauTaux() {
+            const elevesActifs = classeFiltreeActuelle === 'Tous' 
+                ? listeEleves 
+                : listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase());
+            
+            const effectif = elevesActifs.length;
+            const matriculesActifsSet = new Set(elevesActifs.map(e => e.matricule));
+
+            moisAnnee.forEach((m, idx) => {
+                const inputJours = document.getElementById(`jours-${idx}`);
+                const joursOuvrables = inputJours ? (parseInt(inputJours.value) || 0) : 20;
+                const presPotentielles = effectif * joursOuvrables;
+
+                // Somme des absences pour ce mois pour les élèves de la classe filtrée
+                let totalAbsences = 0;
+                document.querySelectorAll(`.absence-cell[data-mois="${m.nom}"]`).forEach(cell => {
+                    const mat = cell.dataset.matricule;
+                    if (matriculesActifsSet.has(mat)) {
+                        totalAbsences += parseInt(cell.dataset.etat) || 0;
+                    }
+                });
+
+                const totalPresences = Math.max(0, presPotentielles - totalAbsences);
+                const taux = presPotentielles > 0 ? ((totalPresences / presPotentielles) * 100).toFixed(2) : "0.00";
+
+                document.getElementById(`eff-${idx}`).textContent = effectif;
+                document.getElementById(`pot-${idx}`).textContent = presPotentielles;
+                document.getElementById(`abs-${idx}`).textContent = totalAbsences;
+                document.getElementById(`pres-${idx}`).textContent = totalPresences;
+                document.getElementById(`taux-${idx}`).textContent = taux + '%';
+            });
+        }
+
         function filtrer(niveau, btnElement) {
             classeFiltreeActuelle = niveau;
             if (btnElement) {
@@ -318,14 +427,12 @@
             }
         }
 
-        // Gestion de la sélection globale des lignes
         document.addEventListener('change', function(e) {
             if (e.target && e.target.id === 'select-all') {
                 document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
             }
         });
 
-        // Enregistrement des absences (prend en compte les cellules ayant un état > 0)
         function sauvegarderAbsences() {
             const absences = [];
             document.querySelectorAll('.absence-cell').forEach(cellule => {
@@ -341,7 +448,6 @@
                 }
             });
 
-            // Mettre à jour le cache local immédiatement pour éviter la perte au rafraîchissement en cas de mode hors ligne/simulation
             donneesAbsencesRecuperees = absences;
             try {
                 localStorage.setItem(`absences_${anneeSelectionnee}`, JSON.stringify(absences));
@@ -368,7 +474,6 @@
             });
         }
 
-        // Fonction d'impression du registre d'appel
         function imprimerRegistre() {
             window.print();
         }

@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -43,20 +42,62 @@
         }
         .exam-title-box h3 { margin: 0; font-size: 13px; text-transform: uppercase; }
         .exam-title-box h4 { margin: 3px 0 0 0; font-size: 14px; text-transform: uppercase; }
+        
+        .candidate-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
         .candidate-info {
             font-size: 12.5px;
-            margin-bottom: 14px;
             line-height: 1.6;
+            width: 78%;
         }
+        .photo-upload-box {
+            width: 30mm;
+            height: 35mm;
+            border: 2px dashed #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 9px;
+            cursor: pointer;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .photo-upload-box input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .photo-upload-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
         .info-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 4px;
         }
-        .info-left { width: 65%; }
-        .info-right { width: 35%; text-align: right; }
         .candidate-info input { border: none; background: transparent; font-family: inherit; font-size: 12.5px; }
         .candidate-info input.with-line { border-bottom: 1px solid #aaa; }
+        
         .notes-table {
             width: 100%;
             border-collapse: collapse;
@@ -78,15 +119,6 @@
         }
         .text-left { text-align: left !important; padding-left: 12px !important; }
         .notes-table input { width: 95%; border: none; text-align: center; font-family: inherit; font-size: 12px; background: transparent; }
-        .tgp-box {
-            border: 2.5px solid #000;
-            padding: 5px 12px;
-            font-weight: bold;
-            display: inline-block;
-            font-size: 13px;
-            background: #fff;
-            margin-top: 3px;
-        }
         .footer-meta {
             display: flex;
             justify-content: space-between;
@@ -143,10 +175,10 @@
     <div style="display: flex; gap: 15px; align-items: center;">
         <label for="periode-select"><b>Période / Composition :</b></label>
         <select id="periode-select" onchange="chargerDonnees()" style="padding:6px; border-radius:4px; font-size:1em;">
-            <option value="COMPO1">COMPO 1</option>
-            <option value="COMPO2">COMPO 2</option>
-            <option value="COMPO3">COMPO 3</option>
-            <option value="PASSAGE">COMPO DE PASSAGE</option>
+            <option value="COMPO1">ÉVALUATION N°1</option>
+            <option value="COMPO2">ÉVALUATION N°2</option>
+            <option value="COMPO3">EXAMEN BLANC N°1</option>
+            <option value="PASSAGE">EXAMEN BLANC N°2</option>
             <option value="FIN_ANNEE" selected>RÉSULTATS FIN D'ANNÉE</option>
         </select>
     </div>
@@ -166,32 +198,71 @@
     let configProfData = {};
 
     function calculerReleve(pageDiv) {
-        const exp = parseFloat(pageDiv.querySelector('.exp_texte').value) || 0;
-        const aem = parseFloat(pageDiv.querySelector('.aem').value) || 0;
-        const orth = parseFloat(pageDiv.querySelector('.orthographe').value) || 0;
-        const math = parseFloat(pageDiv.querySelector('.mathematiques').value) || 0;
+        const expInput = pageDiv.querySelector('.exp_texte');
+        const aemInput = pageDiv.querySelector('.aem');
+        const orthInput = pageDiv.querySelector('.orthographe');
+        const mathInput = pageDiv.querySelector('.mathematiques');
+
+        if (!expInput.value || !aemInput.value || !orthInput.value || !mathInput.value || 
+            isNaN(expInput.value) || isNaN(aemInput.value) || isNaN(orthInput.value) || isNaN(mathInput.value)) {
+            pageDiv.querySelector('.total_t1').innerText = ".....";
+            const mgaValElem = pageDiv.querySelector('.mga_val');
+            if (mgaValElem) mgaValElem.innerText = ".....";
+            const tgpValElem = pageDiv.querySelector('.tgp_val');
+            if (tgpValElem) tgpValElem.innerText = ".....";
+            const decisionElem = pageDiv.querySelector('.decision');
+            if (decisionElem) {
+                decisionElem.innerText = ".....";
+                decisionElem.style.color = "#000";
+            }
+            return;
+        }
+
+        const exp = parseFloat(expInput.value) || 0;
+        const aem = parseFloat(aemInput.value) || 0;
+        const orth = parseFloat(orthInput.value) || 0;
+        const math = parseFloat(mathInput.value) || 0;
 
         const totalT1 = exp + aem + orth + math;
         pageDiv.querySelector('.total_t1').innerText = totalT1;
 
-        const mgaInput = pageDiv.querySelector('.mga');
-        let mgaVal = parseFloat(mgaInput.value);
-        let mga = isNaN(mgaVal) ? 10 : mgaVal;
-        
-        mgaInput.value = mga.toFixed(2);
+        const mga = totalT1 / 8.5;
+        const mgaValElem = pageDiv.querySelector('.mga_val');
+        if (mgaValElem) {
+            mgaValElem.innerText = mga.toFixed(2);
+        }
 
-        const totalT2 = (mga * 8.5).toFixed(2);
-        pageDiv.querySelector('.total_t2').innerText = totalT2;
-        const tgp = ((6 * totalT1 + 4 * parseFloat(totalT2)) / 10).toFixed(2);
-        pageDiv.querySelector('.tgp_val').innerText = tgp;
+        const totalT2 = mga * 8.5;
+        const tgp = ((6 * totalT1 + 4 * totalT2) / 10).toFixed(2);
+
+        const tgpValElem = pageDiv.querySelector('.tgp_val');
+        if (tgpValElem) tgpValElem.innerText = tgp;
 
         const decisionElem = pageDiv.querySelector('.decision');
-        if (parseFloat(tgp) < 85) {
-            decisionElem.innerText = "REFUS";
-            decisionElem.style.color = "#d9534f";
-        } else {
-            decisionElem.innerText = "ADMIS";
-            decisionElem.style.color = "green";
+        if (decisionElem) {
+            if (parseFloat(tgp) < 85) {
+                decisionElem.innerText = "REFUS";
+                decisionElem.style.color = "#d9534f";
+            } else {
+                decisionElem.innerText = "ADMIS";
+                decisionElem.style.color = "green";
+            }
+        }
+    }
+
+    function gererImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const box = input.closest('.photo-upload-box');
+                let img = box.querySelector('img');
+                if (!img) {
+                    img = document.createElement('img');
+                    box.appendChild(img);
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
         }
     }
 
@@ -253,26 +324,41 @@
             const conteneur = document.getElementById('conteneur-pages');
             conteneur.innerHTML = "";
 
+            let texteEvaluation = "EVALUATION FINALE<br>60%";
+            if (periodeActuelle === 'COMPO1') {
+                texteEvaluation = "ÉVALUATION N°1";
+            } else if (periodeActuelle === 'COMPO2') {
+                texteEvaluation = "ÉVALUATION N°2";
+            } else if (periodeActuelle === 'COMPO3') {
+                texteEvaluation = "EXAMEN BLANC N°1";
+            } else if (periodeActuelle === 'PASSAGE') {
+                texteEvaluation = "EXAMEN BLANC N°2";
+            }
+
             listeElevesFiltres.forEach((data, index) => {
                 const notes = data.notes || {};
-                const exp = notes.exp_texte ?? notes.exp_ecrite ?? data.exp_texte ?? data.exp_ecrite ?? 23;
-                const aem = notes.aem ?? data.aem ?? 30;
-                const orth = notes.dictee ?? notes.orthographe ?? data.dictee ?? data.orthographe ?? 16;
-                const math = notes.math ?? notes.mathematiques ?? data.math ?? data.mathematiques ?? 18;
                 
-                let mgaBrute = data.moyenne ?? data.moyen ?? data.mg ?? data.Moyenne ?? data.Moyen ?? 10;
-                const mga = parseFloat(mgaBrute).toFixed(2);
+                const hasNotes = (notes.exp_texte !== undefined || notes.exp_ecrite !== undefined || data.exp_texte !== undefined || data.exp_ecrite !== undefined) ||
+                                 (notes.aem !== undefined || data.aem !== undefined) ||
+                                 (notes.dictee !== undefined || notes.orthographe !== undefined || data.dictee !== undefined || data.orthographe !== undefined) ||
+                                 (notes.math !== undefined || notes.mathematiques !== undefined || data.math !== undefined || data.mathematiques !== undefined);
+
+                const exp = hasNotes ? (notes.exp_texte ?? notes.exp_ecrite ?? data.exp_texte ?? data.exp_ecrite ?? "") : ".....";
+                const aem = hasNotes ? (notes.aem ?? data.aem ?? "") : ".....";
+                const orth = hasNotes ? (notes.dictee ?? notes.orthographe ?? data.dictee ?? data.orthographe ?? "") : ".....";
+                const math = hasNotes ? (notes.math ?? notes.mathematiques ?? data.math ?? data.mathematiques ?? "") : ".....";
 
                 const lieuNaissance = data.lieu_etab || data.lieu_naissance || data.localite || 'SEITIFLA';
                 const ecoleOrigine = data.ecole_origine || data.ecole || configProfData.ecole || 'EPP SEITIFLA';
                 const centreExamen = ecoleOrigine;
-                const ieppVal = data.iepp || data.iep || configProfData.iepp || '';
-                const drenVal = data.dren || data.drena || configProfData.drena || '';
+                const ieppVal = data.iepp || data.iep || "ADIAKÉ";
+                const drenVal = data.dren || data.drena || "ABOISSO";
                 const nomDirecteur = configProfData.nom_directeur || "N'GUESSAN KOUAME";
 
                 const nomPrenoms = `${(data.nom || '').toUpperCase()} ${(data.prenoms || '').toUpperCase()}`.trim();
                 const matriculeEleve = data.matricule || '';
                 const qrUniqueId = `qr-code-${index}`;
+                const photoSrc = data.photo || '';
 
                 const page = document.createElement('div');
                 page.className = 'page-a4';
@@ -282,27 +368,35 @@
                             DIRECTION DES EXAMEN ET CONCOURS<br>
                             Tél : 20 32 83 04/ 20 32 00 74/ fax : 20 32 66 49 | Site : www.men-deco.org - Email : Deco2006@gmail.com
                         </div>
-
                         <div class="exam-title-box">
                             <h3>EXAMEN DU CEPE - SESSION ${annee}</h3>
                             <h4>RELEVE DE NOTES CANDIDAT OFFICIEL</h4>
                         </div>
 
-                        <div class="candidate-info">
-                            <div class="info-row">
-                                <div class="info-left"><b>M/Mr</b> &nbsp; <b><input type="text" class="with-line" value="${nomPrenoms}" style="width:70%;"></b></div>
-                                <div class="info-right"><b>N° de Table :</b> 000${2811 + index}836</div>
+                        <div class="candidate-container">
+                            <div class="candidate-info">
+                                <div class="info-row">
+                                    <div style="width: 100%;"><b>M/Mr</b> &nbsp; <b><input type="text" class="with-line" value="${nomPrenoms}" style="width:75%;"></b></div>
+                                </div>
+                                <div class="info-row" style="margin-top: 4px;">
+                                    <div style="width: 100%;"><b>N° de Table :</b> 000${2811 + index}836</div>
+                                </div>
+                                <div class="info-row" style="margin-top: 4px;">
+                                    <div style="width: 100%;">Né(e) le <input type="text" class="with-line" value="${data.date_naissance || ''}" style="width:100px;"> à <input type="text" class="with-line" value="${lieuNaissance}" style="width:130px;"></div>
+                                </div>
+                                <div class="info-row" style="margin-top: 4px;">
+                                    <div style="width: 100%;"><b>Matricule :</b> <input type="text" class="with-line" value="${matriculeEleve}" style="width:130px;"></div>
+                                </div>
+                                <div style="margin-top: 4px;"><b>Ecole d'origine :</b> <input type="text" class="with-line" value="${ecoleOrigine}" style="width:78%;"></div>
+                                <div class="info-row" style="margin-top: 4px;">
+                                    <div style="width: 100%;"><b>Centre d'Examen :</b> <input type="text" class="with-line" value="${centreExamen}" style="width:70%;"></div>
+                                </div>
+                                <div style="margin-top: 4px;"><b>IEPP :</b> <input type="text" class="with-line" value="${ieppVal}" style="width:170px;"> &nbsp;&nbsp; <b>DREN/DDEN :</b> <input type="text" class="with-line" value="${drenVal}" style="width:110px;"></div>
                             </div>
-                            <div class="info-row" style="margin-top: 4px;">
-                                <div class="info-left">Né(e) le <input type="text" class="with-line" value="${data.date_naissance || ''}" style="width:100px;"> à <input type="text" class="with-line" value="${lieuNaissance}" style="width:130px;"></div>
-                                <div class="info-right"><b>Matricule :</b> <input type="text" class="with-line" value="${matriculeEleve}" style="width:110px;"></div>
+                            <div class="photo-upload-box" title="Cliquez pour importer la photo">
+                                ${photoSrc ? `<img src="${photoSrc}" alt="Photo">` : `<span>📷<br>Photo</span>`}
+                                <input type="file" accept="image/*" onchange="gererImage(this)">
                             </div>
-                            <div style="margin-top: 4px;"><b>Ecole d'origine :</b> <input type="text" class="with-line" value="${ecoleOrigine}" style="width:80%;"></div>
-                            <div class="info-row" style="margin-top: 4px;">
-                                <div><b>Centre d'Examen :</b> <input type="text" class="with-line" value="${centreExamen}" style="width:160px;"></div>
-                                <div><b>Code IEPP :</b> <input type="text" value="" style="width:90px;"></div>
-                            </div>
-                            <div style="margin-top: 4px;"><b>IEPP :</b> <input type="text" class="with-line" value="${ieppVal}" style="width:190px;"> &nbsp;&nbsp; <b>DREN/DDEN :</b> <input type="text" class="with-line" value="${drenVal}" style="width:130px;"></div>
                         </div>
 
                         <div style="font-size: 12.5px; margin-bottom: 6px;">a obtenu les notes et moyennes suivantes :</div>
@@ -310,57 +404,43 @@
                         <table class="notes-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 25%;">TYPE D'EVALUATION</th>
-                                    <th style="width: 35%;">EPREUVES</th>
+                                    <th style="width: 30%;">TYPE D'EVALUATION</th>
+                                    <th style="width: 40%;">EPREUVES</th>
                                     <th style="width: 18%;">POINTS ET MOYENNE OBTENUS</th>
-                                    <th style="width: 10%;">NOTES SUR</th>
-                                    <th style="width: 12%;">EXAMEN DU CEPE</th>
+                                    <th style="width: 12%;">NOTES SUR</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td rowspan="5" style="font-weight: bold;">EVALUATION FINALE<br>60%</td>
+                                    <td rowspan="5" style="font-weight: bold;">${texteEvaluation}</td>
                                     <td class="text-left">EXPLOITATION DE TEXTE</td>
-                                    <td><input type="number" class="exp_texte" value="${exp}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
+                                    <td><input type="text" class="exp_texte" value="${exp}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
                                     <td>50</td>
-                                    <td rowspan="5" style="background:#fff; text-align:center;">
-                                        <div style="font-size: 11px; font-weight:bold;">TGP</div>
-                                        <div class="tgp-box tgp_val">0.00</div>
-                                        <div style="margin-top: 10px; font-size: 11px; font-weight: bold;">DECISION DU JURY</div>
-                                        <div class="decision" style="margin-top: 5px; font-size: 13px; font-weight:bold;">-</div>
-                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="text-left">EVEIL AU MILIEU</td>
-                                    <td><input type="number" class="aem" value="${aem}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
+                                    <td><input type="text" class="aem" value="${aem}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
                                     <td>50</td>
                                 </tr>
                                 <tr>
                                     <td class="text-left">ORTHOGRAPHE</td>
-                                    <td><input type="number" class="orthographe" value="${orth}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
+                                    <td><input type="text" class="orthographe" value="${orth}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
                                     <td>20</td>
                                 </tr>
                                 <tr>
                                     <td class="text-left">MATHEMATIQUES</td>
-                                    <td><input type="number" class="mathematiques" value="${math}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
+                                    <td><input type="text" class="mathematiques" value="${math}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
                                     <td>50</td>
                                 </tr>
                                 <tr style="font-weight: bold; background: #fafafa;">
                                     <td class="text-left">TOTAL (T1)</td>
-                                    <td class="total_t1">0</td>
+                                    <td class="total_t1">.....</td>
                                     <td>170</td>
                                 </tr>
                                 <tr>
-                                    <td rowspan="2" style="font-weight: bold;">CONTRÔLE CONTINU<br>40%</td>
-                                    <td class="text-left">MOYENNE GENERALE ANNUELLE (M.G.A)</td>
-                                    <td><input type="number" step="0.01" class="mga" value="${mga}" oninput="calculerReleve(this.closest('.page-a4'))"></td>
+                                    <td colspan="2" class="text-left" style="font-weight: bold;">MOYENNE</td>
+                                    <td class="mga_val" style="font-weight: bold;">.....</td>
                                     <td>20</td>
-                                    <td rowspan="2" style="background: #fafafa;"></td>
-                                </tr>
-                                <tr style="font-weight: bold; background: #fafafa;">
-                                    <td class="text-left">TOTAL DES POINTS OBTENUS AU CONTRÔLE CONTINU (T2)</td>
-                                    <td class="total_t2">0</td>
-                                    <td>170</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -393,17 +473,15 @@
                     </div>
                 `;
                 conteneur.appendChild(page);
-                
-                // Forcer le calcul des totaux et du TGP immédiatement
+
                 calculerReleve(page);
 
-                // Génération et affichage explicite et robuste du QR code
                 setTimeout(() => {
                     const qrContainer = document.getElementById(qrUniqueId);
                     if (qrContainer) {
-                        qrContainer.innerHTML = ""; // Vider d'éventuels résidus
+                        qrContainer.innerHTML = "";
                         new QRCode(qrContainer, {
-                            text: `Nom & Prénoms: ${nomPrenoms} | Matricule: ${matriculeEleve}`,
+                            text: `${matriculeEleve}`,
                             width: 75,
                             height: 75,
                             colorDark: "#000000",

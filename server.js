@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 const session = require('express-session');
 const path = require('path');
 const multer = require('multer');
@@ -13,122 +13,73 @@ const csv = require('csv-parser');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-});
+// ==========================================
+// 1. INITIALISATION DE LA BASE DE DONNÉES SUPABASE
+// ==========================================
+// Initialisation du client Supabase HTTP (Port 443 - compatible Termux/4G)
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
+// Test de la connexion via l'API Supabase
 async function connectDB() {
     try {
-        await pool.query('SELECT NOW()');
+        const { data, error } = await supabase.from('utilisateurs').select('id', { count: 'exact', head: true });
+        if (error) throw error;
+        console.log('✅ Connecté avec succès à Supabase via API HTTP !');
     } catch (err) {
-        console.error('❌ Erreur de connexion, nouvelle tentative dans 5s...', err.message);
+        console.error('❌ Erreur de connexion Supabase :', err.message);
         setTimeout(connectDB, 5000);
     }
 }
 connectDB();
 
+async function initDB() {
+    try {
+        const { error } = await supabase.from('utilisateurs').select('id').limit(1);
+        if (error && error.code !== 'PGRST116') {
+            console.log('⚠️ Remarque tables :', error.message);
+        } else {
+            console.log('✅ Tables vérifiées/connectées sur Supabase.');
+        }
+    } catch (err) {
+        console.error('❌ Erreur lors de l\'initialisation :', err.message);
+        setTimeout(initDB, 5000);
+    }
+}
+
+// ==========================================
+// 2. MIDDLEWARES ET CONFIGURATION EXPRESS
+// ==========================================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'secret-key-ecole',
+    secret: process.env.SESSION_SECRET || 'secret-key-ecole',
     resave: false,
     saveUninitialized: false
 }));
 
-app.get('/test-db', async (req, res) => {
-    try {
-        const { rows } = await pool.query('SELECT NOW()');
-        res.json({ status: "Connecté", time: rows[0] });
-    } catch (err) {
-        res.status(500).send("Erreur DB");
-    }
-});
+app.use(express.static(__dirname));
+app.use('/uploads', express.static('uploads'));
 
+// ==========================================
+// 3. ROUTES DE BASE ET AUTHENTIFICATION
+// ==========================================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.use(express.static(__dirname));
-app.use('/uploads', express.static('uploads'));
-
-async function initDB() {
+app.get('/test-db', async (req, res) => {
     try {
-        await pool.query(`CREATE TABLE IF NOT EXISTS configuration (
-            nom_ecole TEXT PRIMARY KEY,
-            drena TEXT, iepp TEXT, nom_directeur TEXT, logo_iepp TEXT, logo_ecole TEXT
-        )`);
-        await pool.query(`CREATE TABLE IF NOT EXISTS eleves (
-            id SERIAL PRIMARY KEY,
-            annee TEXT, matricule TEXT, nom TEXT, prenoms TEXT, sexe TEXT, date_naissance TEXT, pays TEXT, localite TEXT, mere TEXT, pere TEXT, contact TEXT, nationalite TEXT, num_acte TEXT, date_etab TEXT, lieu_etab TEXT, ecole TEXT, niveau TEXT, nom_ecole TEXT, moyenne REAL, rang INTEGER, photo TEXT, document TEXT, ecole_origine TEXT
-        )`);
-        await pool.query(`CREATE TABLE IF NOT EXISTS utilisateurs (
-            id SERIAL PRIMARY KEY,
-            username TEXT UNIQUE,
-            password TEXT,
-            nom_ecole TEXT,
-            telephone TEXT
-        )`);
-        await pool.query(`CREATE TABLE IF NOT EXISTS notes_matieres (
-            id SERIAL PRIMARY KEY,
-            nom_ecole TEXT NOT NULL,
-            annee TEXT NOT NULL,
-            niveau TEXT NOT NULL,
-            periode TEXT NOT NULL,
-            matricule TEXT NOT NULL,
-            matiere TEXT NOT NULL,
-            note REAL,
-            UNIQUE(nom_ecole, annee, niveau, periode, matricule, matiere)
-        )`);
-        await pool.query(`CREATE TABLE IF NOT EXISTS resultats_synthese (
-            id SERIAL PRIMARY KEY,
-            nom_ecole TEXT NOT NULL,
-            annee TEXT NOT NULL,
-            niveau TEXT NOT NULL,
-            periode TEXT NOT NULL,
-            matricule TEXT NOT NULL,
-            total REAL,
-            moyen REAL,
-            rang INTEGER,
-            decision TEXT,
-            UNIQUE(nom_ecole, annee, niveau, periode, matricule)
-        )`);
-        await pool.query(`CREATE TABLE IF NOT EXISTS resultats_compositions (
-            id SERIAL PRIMARY KEY,
-            nom_ecole TEXT NOT NULL,
-            annee TEXT NOT NULL,
-            niveau TEXT NOT NULL,
-            periode TEXT NOT NULL,
-            matricule TEXT NOT NULL,
-            nom TEXT,
-            prenoms TEXT,
-            date_naissance TEXT,
-            sexe TEXT,
-            graphisme REAL,
-            disc_visuelle REAL,
-            exp_ecrite REAL,
-            copie REAL,
-            dictee REAL,
-            ecriture REAL,
-            exp_texte REAL,
-            aem REAL,
-            math REAL,
-            edhc REAL,
-            lecture REAL,
-            dessin REAL,
-            poesie REAL,
-            total REAL,
-            moyen REAL,
-            rang INTEGER,
-            decision TEXT,
-            UNIQUE(nom_ecole, annee, niveau, periode, matricule)
-        )`);
-        console.log('✅ Tables vérifiées/créées.');
+        const { data, error } = await supabase.from('utilisateurs').select('id').limit(1);
+        if (error) throw error;
+        res.json({ status: "Connecté à Supabase", time: new Date().toISOString() });
     } catch (err) {
-        console.error('❌ Erreur lors de la création des tables :', err);
+        res.status(500).send("Erreur DB");
     }
-}
+});
 
 app.post('/inscription', async (req, res) => {
     const { schoolName, telephone, password, confirmPassword } = req.body;
@@ -136,12 +87,15 @@ app.post('/inscription', async (req, res) => {
         return res.send("<script>alert('Mots de passe différents'); window.history.back();</script>");
     }
     try {
-        const check = await pool.query("SELECT * FROM utilisateurs WHERE nom_ecole = $1", [schoolName]);
-        if (check.rows.length > 0) {
+        const { data: check } = await supabase.from('utilisateurs').select('*').eq('nom_ecole', schoolName);
+        if (check && check.length > 0) {
             return res.send("<script>alert('École déjà enregistrée'); window.history.back();</script>");
         }
         const hash = await bcrypt.hash(password, 10);
-        await pool.query("INSERT INTO utilisateurs (nom_ecole, telephone, password) VALUES ($1, $2, $3)", [schoolName, telephone, hash]);
+        const { error } = await supabase.from('utilisateurs').insert([
+            { nom_ecole: schoolName, telephone: telephone, password: hash }
+        ]);
+        if (error) throw error;
         res.redirect('/index.html');
     } catch (err) {
         console.error("❌ Erreur inscription :", err);
@@ -152,17 +106,26 @@ app.post('/inscription', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { schoolName, password } = req.body;
     try {
-        const result = await pool.query("SELECT * FROM utilisateurs WHERE nom_ecole = $1", [schoolName]);
-        if (result.rows.length === 0) {
-            return res.send("<script>alert('École non trouvée'); window.location.href='/index.html';</script>");
+        const { data: users, error } = await supabase
+            .from('utilisateurs')
+            .select('*')
+            .eq('nom_ecole', schoolName)
+            .limit(1);
+
+        if (error) throw error;
+
+        if (!users || users.length === 0) {
+            return res.send("<script>alert('École non trouvée'); window.location.href='/';</script>");
         }
-        const user = result.rows[0];
+
+        const user = users[0];
         const match = await bcrypt.compare(password, user.password);
+
         if (match) {
             req.session.nomEcole = user.nom_ecole;
             res.redirect('/accueil.html');
         } else {
-            res.send("<script>alert('Mot de passe incorrect'); window.location.href='/index.html';</script>");
+            res.send("<script>alert('Mot de passe incorrect'); window.location.href='/';</script>");
         }
     } catch (err) {
         console.error("❌ Erreur login :", err);
@@ -170,10 +133,108 @@ app.post('/login', async (req, res) => {
     }
 });
 
+app.get('/accueil.html', (req, res) => {
+    if (!req.session.nomEcole) {
+        return res.redirect('/');
+    }
+    res.sendFile(path.join(__dirname, 'accueil.html'));
+});
+
 app.get('/api/nom-ecole', (req, res) => {
     res.json({ nom: req.session.nomEcole || "Nom de l'école" });
 });
 
+// ==========================================
+// 4. ROUTES API - GESTION DES ÉLÈVES
+// ==========================================
+
+// Route placée en amont pour éviter le conflit avec /api/eleves/:annee
+app.get('/api/eleves/details/:id', async (req, res) => {
+    const matricule = req.params.id.trim();
+    const nomEcole = req.session.nomEcole;
+
+    try {
+        const { data: eleveData, error: errEleve } = await supabase
+            .from('eleves')
+            .select('*')
+            .eq('matricule', matricule)
+            .eq('nom_ecole', nomEcole)
+            .order('annee', { ascending: false });
+
+        if (errEleve) throw errEleve;
+
+        if (eleveData && eleveData.length > 0) {
+            const historique = [];
+            const { data: rcData, error: errRc } = await supabase
+                .from('resultats_compositions')
+                .select('*')
+                .eq('matricule', matricule)
+                .eq('nom_ecole', nomEcole);
+
+            if (errRc) throw errRc;
+
+            for (const row of eleveData) {
+                const yearRCs = rcData.filter(rc => rc.annee === row.annee);
+                const rc_fin = yearRCs.find(rc => rc.periode === 'FIN_ANNEE');
+                const rc1 = yearRCs.find(rc => rc.periode === 'COMPO1');
+                const rc2 = yearRCs.find(rc => rc.periode === 'COMPO2');
+                const rc3 = yearRCs.find(rc => rc.periode === 'COMPO3');
+                const rc_pass = yearRCs.find(rc => rc.periode === 'PASSAGE');
+
+                let mTotalFinal = row.moyenne || 0;
+                let rangFinal = row.rang || '';
+                let decisionFinal = '';
+
+                if (rc_fin || rc1 || rc2 || rc3 || rc_pass) {
+                    let m1 = rc1 ? parseFloat(rc1.moyen) || 0 : 0;
+                    let m2 = rc2 ? parseFloat(rc2.moyen) || 0 : 0;
+                    let m3 = rc3 ? parseFloat(rc3.moyen) || 0 : 0;
+                    let mPassBrut = rc_pass ? parseFloat(rc_pass.moyen) || 0 : 0;
+
+                    let countCompo = 0;
+                    if (m1 > 0) countCompo++;
+                    if (m2 > 0) countCompo++;
+                    if (m3 > 0) countCompo++;
+
+                    let moyenCompoN = countCompo > 0 ? ((m1 + m2 + m3) / countCompo) : 0;
+                    let moyenPassage = mPassBrut * 2;
+                    
+                    let diviseurTotal = 0;
+                    let sommeTotale = 0;
+                    if (moyenCompoN > 0) { sommeTotale += moyenCompoN; diviseurTotal++; }
+                    if (moyenPassage > 0) { sommeTotale += moyenPassage; diviseurTotal++; }
+                    
+                    let moyenTotal = diviseurTotal > 0 ? (sommeTotale / diviseurTotal) : 0;
+
+                    if (moyenTotal > 0) {
+                        mTotalFinal = moyenTotal.toFixed(2);
+                    } else if (rc_fin && rc_fin.moyen) {
+                        mTotalFinal = rc_fin.moyen;
+                    } else {
+                        mTotalFinal = "";
+                    }
+                    if (rc_fin && rc_fin.rang) rangFinal = rc_fin.rang;
+                    if (rc_fin && rc_fin.decision) decisionFinal = rc_fin.decision;
+                }
+
+                historique.push({
+                    annee: row.annee,
+                    niveau: row.niveau,
+                    moyen_total: mTotalFinal,
+                    rang: rangFinal,
+                    observation: decisionFinal
+                });
+            }
+
+            res.json({ ...eleveData[0], historique });
+        } else {
+            res.status(404).json({ error: "Élève non trouvé" });
+        }
+    } catch (err) {
+        console.error("❌ Erreur détails élève :", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.get('/api/eleves/:annee', async (req, res) => {
     try {
@@ -181,49 +242,49 @@ app.get('/api/eleves/:annee', async (req, res) => {
         const { periode } = req.query;
         const nomEcole = req.session.nomEcole;
 
+        const { data: eleves, error: elevesError } = await supabase
+            .from('eleves')
+            .select('*')
+            .eq('annee', annee)
+            .eq('nom_ecole', nomEcole)
+            .order('nom', { ascending: true });
+
+        if (elevesError) throw elevesError;
+
         if (periode) {
+            const { data: rcData, error: rcError } = await supabase
+                .from('resultats_compositions')
+                .select('*')
+                .eq('annee', annee)
+                .eq('nom_ecole', nomEcole);
+
+            if (rcError) throw rcError;
+
             if (periode === 'FIN_ANNEE') {
-                const queryFinAnnee = `
-                    SELECT e.*, 
-                           rc_fin.total, rc_fin.moyen, rc_fin.rang, rc_fin.decision,
-                           rc1.moyen AS moyen_compo1,
-                           rc2.moyen AS moyen_compo2,
-                           rc3.moyen AS moyen_compo3,
-                           rc_pass.moyen AS moyen_passage_brut
-                    FROM eleves e
-                    LEFT JOIN resultats_compositions rc_fin 
-                      ON TRIM(e.matricule) = TRIM(rc_fin.matricule) AND e.annee = rc_fin.annee AND e.nom_ecole = rc_fin.nom_ecole AND rc_fin.periode = 'FIN_ANNEE'
-                    LEFT JOIN resultats_compositions rc1 
-                      ON TRIM(e.matricule) = TRIM(rc1.matricule) AND e.annee = rc1.annee AND e.nom_ecole = rc1.nom_ecole AND rc1.periode = 'COMPO1'
-                    LEFT JOIN resultats_compositions rc2 
-                      ON TRIM(e.matricule) = TRIM(rc2.matricule) AND e.annee = rc2.annee AND e.nom_ecole = rc2.nom_ecole AND rc2.periode = 'COMPO2'
-                    LEFT JOIN resultats_compositions rc3 
-                      ON TRIM(e.matricule) = TRIM(rc3.matricule) AND e.annee = rc3.annee AND e.nom_ecole = rc3.nom_ecole AND rc3.periode = 'COMPO3'
-                    LEFT JOIN resultats_compositions rc_pass 
-                      ON TRIM(e.matricule) = TRIM(rc_pass.matricule) AND e.annee = rc_pass.annee AND e.nom_ecole = rc_pass.nom_ecole AND rc_pass.periode = 'PASSAGE'
-                    WHERE e.annee = $1 AND e.nom_ecole = $2
-                    ORDER BY e.nom ASC
-                `;
-                const result = await pool.query(queryFinAnnee, [annee, nomEcole]);
-                
-                // Application de vos règles de calcul exactes
-                const rowsCalculated = result.rows.map(row => {
-                    let m1 = parseFloat(row.moyen_compo1) || 0;
-                    let m2 = parseFloat(row.moyen_compo2) || 0;
-                    let m3 = parseFloat(row.moyen_compo3) || 0;
-                    let mPassBrut = parseFloat(row.moyen_passage_brut) || 0;
+                const rowsCalculated = eleves.map(row => {
+                    const eMatricule = String(row.matricule).trim();
+                    const studentRCs = rcData.filter(rc => String(rc.matricule).trim() === eMatricule);
+                    const rc_fin = studentRCs.find(rc => rc.periode === 'FIN_ANNEE') || {};
+                    const rc1 = studentRCs.find(rc => rc.periode === 'COMPO1') || {};
+                    const rc2 = studentRCs.find(rc => rc.periode === 'COMPO2') || {};
+                    const rc3 = studentRCs.find(rc => rc.periode === 'COMPO3') || {};
+                    const rc_pass = studentRCs.find(rc => rc.periode === 'PASSAGE') || {};
 
-                    // 1. moyen_compoN = (moyen compo1 + moyen compo2 + moyen compo3) / 3
+                    let m1 = parseFloat(rc1.moyen) || 0;
+                    let m2 = parseFloat(rc2.moyen) || 0;
+                    let m3 = parseFloat(rc3.moyen) || 0;
+                    let mPassBrut = parseFloat(rc_pass.moyen) || 0;
+
                     let moyenCompoN = (m1 > 0 || m2 > 0 || m3 > 0) ? ((m1 + m2 + m3) / 3) : 0;
-
-                    // 2. moyen_passage = moyen_passage_brut * 2
                     let moyenPassage = mPassBrut * 2;
-
-                    // 3. moyen_total = (moyen_compoN + moyen_passage) / 3
                     let moyenTotal = (moyenCompoN > 0 || moyenPassage > 0) ? ((moyenCompoN + moyenPassage) / 3) : 0;
 
                     return {
                         ...row,
+                        total: rc_fin.total,
+                        moyen: rc_fin.moyen,
+                        rang: rc_fin.rang,
+                        decision: rc_fin.decision,
                         moyen_compo1: m1.toFixed(2),
                         moyen_compo2: m2.toFixed(2),
                         moyen_compo3: m3.toFixed(2),
@@ -232,45 +293,33 @@ app.get('/api/eleves/:annee', async (req, res) => {
                         moyen_total: moyenTotal.toFixed(2)
                     };
                 });
-
                 return res.json(rowsCalculated);
             }
 
-            // Comportement normal pour COMPO1, COMPO2, COMPO3, PASSAGE
-            const query = `
-                SELECT e.*, rc.graphisme, rc.disc_visuelle, rc.exp_ecrite, rc.copie,
-                       rc.dictee, rc.ecriture, rc.exp_texte, rc.aem, rc.math, rc.edhc,
-                       rc.lecture, rc.dessin, rc.poesie, rc.total, rc.moyen, rc.rang, rc.decision,
-                       rc.moyen_compo1, rc.moyen_compo2, rc.moyen_compo3, rc.moyen_compoN,
-                       rc.moyen_compo_de_passage, rc.moyen_total
-                FROM eleves e
-                LEFT JOIN resultats_compositions rc
-                  ON TRIM(e.matricule) = TRIM(rc.matricule)
-                  AND e.annee = rc.annee
-                  AND e.nom_ecole = rc.nom_ecole
-                  AND rc.periode = $3
-                WHERE e.annee = $1 AND e.nom_ecole = $2
-                ORDER BY e.nom ASC
-            `;
-            const result = await pool.query(query, [annee, nomEcole, periode]);
-            
-            const rowsFormatted = result.rows.map(row => {
+            const rowsFormatted = eleves.map(row => {
+                const rc = rcData.find(r => String(r.matricule).trim() === String(row.matricule).trim() && r.periode === periode) || {};
                 return {
                     ...row,
+                    total: rc.total,
+                    moyen: rc.moyen,
+                    rang: rc.rang,
+                    decision: rc.decision,
+                    moyen_compo1: rc.moyen_compo1,
+                    moyen_compo2: rc.moyen_compo2,
+                    moyen_compo3: rc.moyen_compo3,
+                    moyen_compoN: rc.moyen_compoN,
+                    moyen_compo_de_passage: rc.moyen_compo_de_passage,
+                    moyen_total: rc.moyen_total,
                     notes: {
-                        graphisme: row.graphisme, disc_visuelle: row.disc_visuelle, exp_ecrite: row.exp_ecrite,
-                        copie: row.copie, dictee: row.dictee, ecriture: row.ecriture, exp_texte: row.exp_texte,
-                        aem: row.aem, math: row.math, edhc: row.edhc, lecture: row.lecture, dessin: row.dessin, poesie: row.poesie
+                        graphisme: rc.graphisme, disc_visuelle: rc.disc_visuelle, exp_ecrite: rc.exp_ecrite,
+                        copie: rc.copie, dictee: rc.dictee, ecriture: rc.ecriture, exp_texte: rc.exp_texte,
+                        aem: rc.aem, math: rc.math, edhc: rc.edhc, lecture: rc.lecture, dessin: rc.dessin, poesie: rc.poesie
                     }
                 };
             });
             return res.json(rowsFormatted);
         } else {
-            const result = await pool.query(
-                "SELECT * FROM eleves WHERE annee = $1 AND nom_ecole = $2 ORDER BY nom ASC",
-                [annee, nomEcole]
-            );
-            res.json(result.rows);
+            res.json(eleves || []);
         }
     } catch (err) {
         console.error("❌ Erreur récupération élèves/notes :", err);
@@ -278,112 +327,132 @@ app.get('/api/eleves/:annee', async (req, res) => {
     }
 });
 
+app.get('/api/eleve/:id', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('eleves')
+            .select('*')
+            .eq('matricule', req.params.id.trim())
+            .eq('nom_ecole', req.session.nomEcole)
+            .limit(1);
 
+        if (error) throw error;
+        data && data.length > 0 ? res.json(data[0]) : res.status(404).send("Non trouvé");
+    } catch (err) {
+        console.error("❌ Erreur détail élève :", err);
+        res.status(500).send("Erreur serveur");
+    }
+});
+
+app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' }]), async (req, res) => {
+    const matricule = req.params.id.trim();
+    const d = req.body;
+    const nomEcole = req.session.nomEcole;
+
+    try {
+        const updateFields = {
+            nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '', sexe: d.sexe,
+            date_naissance: d.date_naissance, pays: d.pays, localite: d.localite,
+            mere: d.mere, pere: d.pere, contact: d.contact, nationalite: d.nationalite,
+            num_acte: d.num_acte, date_etab: d.date_etab, lieu_etab: d.lieu_etab,
+            niveau: d.niveau, ecole: d.ecole
+        };
+
+        if (req.files?.photo) {
+            const file = req.files['photo'][0];
+            const fileBuffer = fs.readFileSync(file.path);
+            const fileName = `photos/${Date.now()}-${file.originalname}`;
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            if (!uploadError) {
+                const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
+                updateFields.photo = pubData.publicUrl;
+            }
+            try { fs.unlinkSync(file.path); } catch(e) {}
+        }
+
+        if (req.files?.document) {
+            const file = req.files['document'][0];
+            const fileBuffer = fs.readFileSync(file.path);
+            const fileName = `documents/${Date.now()}-${file.originalname}`;
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            if (!uploadError) {
+                const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
+                updateFields.document = pubData.publicUrl;
+            }
+            try { fs.unlinkSync(file.path); } catch(e) {}
+        }
+
+        const { error } = await supabase
+            .from('eleves')
+            .update(updateFields)
+            .eq('matricule', matricule)
+            .eq('nom_ecole', nomEcole);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        console.error("❌ Erreur lors de la modification :", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
+// 5. IMPORTATIONS ET AJOUTS D'ÉLÈVES
+// ==========================================
 app.post('/api/importer-eleves', async (req, res) => {
     const nomEcole = req.session.nomEcole;
     const { annee, eleves } = req.body;
-    
+
     if (!eleves || !Array.isArray(eleves)) {
         return res.status(400).json({ success: false, message: "Aucune donnée d'élève valide fournie." });
     }
 
-    const client = await pool.connect();
     try {
-        await client.query('BEGIN');
-        const sql = `INSERT INTO eleves (
-            annee, matricule, nom, prenoms, sexe, date_naissance, pays,
-            localite, mere, pere, contact, nationalite, num_acte,
-            date_etab, lieu_etab, ecole, niveau, nom_ecole
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-        ON CONFLICT DO NOTHING`;
+        const insertData = eleves.map(e => ({
+            annee: annee || '2025',
+            matricule: e.matricule || '', nom: e.nom || '', prenoms: e.prenoms || '',
+            sexe: e.sexe || '', date_naissance: e.date_naissance || '', pays: e.pays || '',
+            localite: e.localite || '', mere: e.mere || '', pere: e.pere || '', contact: e.contact_parent || e.contact || '',
+            nationalite: e.nationalite || '', num_acte: e.n_acte_naissance || e.acte_naissance || '', date_etab: e.date_etab || '', lieu_etab: e.lieu_etab || '',
+            ecole: e.ecole || '', niveau: e.niveau || '', nom_ecole: nomEcole
+        }));
 
-        for (const e of eleves) {
-            await client.query(sql, [
-                annee || '2025',
-                e.matricule || '',
-                e.nom || '',
-                e.prenoms || '',
-                e.sexe || '',
-                e.date_naissance || '',
-                e.pays || '',
-                e.localite || '',
-                e.mere || '',
-                e.pere || '',
-                e.contact_parent || e.contact || '',
-                e.nationalite || '',
-                e.n_acte_naissance || e.acte_naissance || '',
-                e.date_etab || '',
-                e.lieu_etab || '',
-                e.ecole || '',
-                e.niveau || '',
-                nomEcole
-            ]);
-        }
+        const { error } = await supabase.from('eleves').upsert(insertData, { ignoreDuplicates: true });
+        if (error) throw error;
 
-        await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
         console.error("❌ Erreur lors de l'importation JSON des élèves :", err);
         res.status(500).json({ success: false, message: err.message });
-    } finally {
-        client.release();
     }
 });
-
-
-
-
 
 app.post('/importer', upload.single('fichier_csv'), (req, res) => {
     const anneeImport = req.body.annee_import || '2025';
     const nomEcole = req.session.nomEcole;
     const results = [];
-    
+
     fs.createReadStream(req.file.path)
         .pipe(csv({ separator: ',' }))
         .on('data', (data) => results.push(data))
         .on('end', async () => {
-            const client = await pool.connect();
             try {
-                await client.query('BEGIN');
-                const sql = `INSERT INTO eleves (
-                    annee, matricule, nom, prenoms, sexe, date_naissance, pays,
-                    localite, mere, pere, contact, nationalite, num_acte,
-                    date_etab, lieu_etab, ecole_origine, niveau, nom_ecole
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`;
+                const insertData = results.map(row => ({
+                    annee: anneeImport,
+                    matricule: row.matricule || '', nom: row.nom || '', prenoms: row.prenoms || '', sexe: row.sexe || '', date_naissance: row.date_naissance || '', pays: row.pays || '',
+                    localite: row.localite || '', mere: row.mere || '', pere: row.pere || '', contact: row.contact || '', nationalite: row.nationalite || '', num_acte: row.num_acte || '',
+                    date_etab: row.date_etab || '', lieu_etab: row.lieu_etab || '', ecole_origine: row.ecole_origine || '', niveau: row.niveau || '',
+                    nom_ecole: nomEcole
+                }));
 
-                for (const row of results) {
-                    await client.query(sql, [
-                        anneeImport,
-                        row.matricule || '',
-                        row.nom || '',
-                        row.prenoms || '',
-                        row.sexe || '',
-                        row.date_naissance || '',
-                        row.pays || '',
-                        row.localite || '',
-                        row.mere || '',
-                        row.pere || '',
-                        row.contact || '',
-                        row.nationalite || '',
-                        row.num_acte || '',
-                        row.date_etab || '',
-                        row.lieu_etab || '',
-                        row.ecole_origine || '',
-                        row.niveau || '',
-                        nomEcole
-                    ]);
-                }
-                await client.query('COMMIT');
+                const { error } = await supabase.from('eleves').insert(insertData);
+                if (error) throw error;
+
                 fs.unlinkSync(req.file.path);
                 res.redirect(`/liste.html?annee=${anneeImport}`);
             } catch (err) {
-                await client.query('ROLLBACK');
                 console.error("❌ Erreur lors de l'insertion CSV :", err);
                 res.status(500).send("Erreur lors de l'importation.");
-            } finally {
-                client.release();
             }
         });
 });
@@ -393,15 +462,46 @@ app.post('/ajouter-eleve', upload.fields([{ name: 'photo' }, { name: 'document' 
         const d = req.body;
         const nomEcole = req.session.nomEcole;
         const date_naissance = (d.jour && d.mois && d.annee_nais) ? `${d.jour}/${d.mois}/${d.annee_nais}` : (d.date_naissance || '');
-        const sql = `INSERT INTO eleves (
-            annee, matricule, nom, prenoms, sexe, date_naissance, pays, localite, mere, pere, contact, nationalite, num_acte, date_etab, lieu_etab, ecole, niveau, nom_ecole
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`;
-        
-        await pool.query(sql, [
-            d.annee, d.matricule?.trim() || '', d.nom?.trim() || '', d.prenoms?.trim() || '',
-            d.sexe, date_naissance, d.pays, d.localite, d.mere, d.pere, d.contact,
-            d.nationalite, d.num_acte, d.date_etab, d.lieu_etab, d.ecole, d.niveau, nomEcole
-        ]);
+
+        let photoUrl = '';
+        let docUrl = '';
+
+        if (req.files?.photo) {
+            const file = req.files['photo'][0];
+            const fileBuffer = fs.readFileSync(file.path);
+            const fileName = `photos/${Date.now()}-${file.originalname}`;
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            if (!uploadError) {
+                const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
+                photoUrl = pubData.publicUrl;
+            }
+            try { fs.unlinkSync(file.path); } catch(e) {}
+        }
+
+        if (req.files?.document) {
+            const file = req.files['document'][0];
+            const fileBuffer = fs.readFileSync(file.path);
+            const fileName = `documents/${Date.now()}-${file.originalname}`;
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            if (!uploadError) {
+                const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
+                docUrl = pubData.publicUrl;
+            }
+            try { fs.unlinkSync(file.path); } catch(e) {}
+        }
+
+        const insertData = {
+            annee: d.annee, matricule: d.matricule?.trim() || '', nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '',
+            sexe: d.sexe, date_naissance, pays: d.pays, localite: d.localite, mere: d.mere, pere: d.pere, contact: d.contact,
+            nationalite: d.nationalite, num_acte: d.num_acte, date_etab: d.date_etab, lieu_etab: d.lieu_etab, ecole: d.ecole, niveau: d.niveau, nom_ecole: nomEcole
+        };
+
+        if (photoUrl) insertData.photo = photoUrl;
+        if (docUrl) insertData.document = docUrl;
+
+        const { error } = await supabase.from('eleves').insert([insertData]);
+        if (error) throw error;
+
         res.redirect(`/liste.html?annee=${d.annee}`);
     } catch (err) {
         console.error("❌ Erreur ajout manuel :", err);
@@ -412,11 +512,13 @@ app.post('/ajouter-eleve', upload.fields([{ name: 'photo' }, { name: 'document' 
 app.post('/supprimer-eleves', async (req, res) => {
     try {
         const ids = JSON.parse(req.body.ids);
-        const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
-        await pool.query(
-            `DELETE FROM eleves WHERE matricule IN (${placeholders}) AND nom_ecole = $${ids.length + 1}`,
-            [...ids, req.session.nomEcole]
-        );
+        const { error } = await supabase
+            .from('eleves')
+            .delete()
+            .in('matricule', ids)
+            .eq('nom_ecole', req.session.nomEcole);
+
+        if (error) throw error;
         res.redirect('/liste.html');
     } catch (err) {
         console.error("❌ Erreur suppression :", err);
@@ -424,40 +526,29 @@ app.post('/supprimer-eleves', async (req, res) => {
     }
 });
 
-app.get('/api/eleve/:id', async (req, res) => {
-    try {
-        const result = await pool.query(
-            "SELECT * FROM eleves WHERE TRIM(matricule) = $1 AND nom_ecole = $2",
-            [req.params.id.trim(), req.session.nomEcole]
-        );
-        result.rows.length > 0 ? res.json(result.rows[0]) : res.status(404).send("Non trouvé");
-    } catch (err) {
-        console.error("❌ Erreur détail élève :", err);
-        res.status(500).send("Erreur serveur");
-    }
-});
-
+// ==========================================
+// 6. GESTION DES NOTES ET BULLETINS
+// ==========================================
 app.post('/api/importer-notes', async (req, res) => {
     const nomEcole = req.session.nomEcole;
     const { annee, periode, donnees } = req.body;
-    const client = await pool.connect();
-    
+
     try {
-        await client.query('BEGIN');
+        const matricules = donnees.map(d => d.matricule?.trim()).filter(Boolean);
+        const { data: elevesLevels } = await supabase
+            .from('eleves')
+            .select('matricule, niveau')
+            .eq('annee', annee)
+            .eq('nom_ecole', nomEcole)
+            .in('matricule', matricules);
+
+        const upsertData = [];
         for (const item of donnees) {
-            const matricule = item.matricule ? item.matricule.trim() : '';
+            const matricule = item.matricule?.trim();
             if (!matricule) continue;
 
-            // 1. Récupérer proprement le niveau avec TRIM
-            const resEleve = await client.query(
-                `SELECT niveau FROM eleves WHERE TRIM(matricule) = TRIM($1) AND annee = $2 AND nom_ecole = $3 LIMIT 1`,
-                [matricule, annee, nomEcole]
-            );
-            
-            // On nettoie et met en majuscules pour éviter les soucis de casse ("Cm1" -> "CM1")
-            const niveauEleve = resEleve.rows.length > 0 && resEleve.rows[0].niveau 
-                ? resEleve.rows[0].niveau.trim().toUpperCase() 
-                : '';
+            const eleve = elevesLevels?.find(e => String(e.matricule).trim() === matricule);
+            const niveauEleve = eleve?.niveau ? eleve.niveau.trim().toUpperCase() : '';
 
             if (!niveauEleve) {
                 console.warn(`⚠️ Élève non trouvé ou niveau vide pour le matricule : ${matricule}`);
@@ -465,135 +556,176 @@ app.post('/api/importer-notes', async (req, res) => {
             }
 
             const n = item.notes || {};
-
-            // 2. Insérer ou mettre à jour dans resultats_compositions
-            await client.query(`
-                INSERT INTO resultats_compositions (
-                    nom_ecole, annee, niveau, periode, matricule,
-                    graphisme, disc_visuelle, exp_ecrite, copie, dictee, ecriture,
-                    exp_texte, aem, math, edhc, lecture, dessin, poesie,
-                    total, moyen, rang, decision
-                ) VALUES (
-                    $1, $2, $3, $4, $5,
-                    $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
-                )
-                ON CONFLICT (nom_ecole, annee, niveau, periode, matricule)
-                DO UPDATE SET
-                    graphisme = COALESCE(EXCLUDED.graphisme, resultats_compositions.graphisme),
-                    disc_visuelle = COALESCE(EXCLUDED.disc_visuelle, resultats_compositions.disc_visuelle),
-                    exp_ecrite = COALESCE(EXCLUDED.exp_ecrite, resultats_compositions.exp_ecrite),
-                    copie = COALESCE(EXCLUDED.copie, resultats_compositions.copie),
-                    dictee = COALESCE(EXCLUDED.dictee, resultats_compositions.dictee),
-                    ecriture = COALESCE(EXCLUDED.ecriture, resultats_compositions.ecriture),
-                    exp_texte = COALESCE(EXCLUDED.exp_texte, resultats_compositions.exp_texte),
-                    aem = COALESCE(EXCLUDED.aem, resultats_compositions.aem),
-                    math = COALESCE(EXCLUDED.math, resultats_compositions.math),
-                    edhc = COALESCE(EXCLUDED.edhc, resultats_compositions.edhc),
-                    lecture = COALESCE(EXCLUDED.lecture, resultats_compositions.lecture),
-                    dessin = COALESCE(EXCLUDED.dessin, resultats_compositions.dessin),
-                    poesie = COALESCE(EXCLUDED.poesie, resultats_compositions.poesie),
-                    total = COALESCE(EXCLUDED.total, resultats_compositions.total),
-                    moyen = COALESCE(EXCLUDED.moyen, resultats_compositions.moyen),
-                    rang = COALESCE(EXCLUDED.rang, resultats_compositions.rang),
-                    decision = COALESCE(EXCLUDED.decision, resultats_compositions.decision)
-            `, [
-                nomEcole,
-                annee,
-                niveauEleve,
-                periode,
-                matricule,
-                n.graphisme || null,
-                n.disc_visuelle || null,
-                n.exp_ecrite || null,
-                n.copie || null,
-                n.dictee || null,
-                n.ecriture || null,
-                n.exp_texte || null,
-                n.aem || null,
-                n.math || null,
-                n.edhc || null,
-                n.lecture || null,
-                n.dessin || null,
-                n.poesie || null,
-                item.total || 0,
-                item.moyenne || 0,
-                item.rang || 0,
-                item.decision || ''
-            ]);
+            upsertData.push({
+                nom_ecole: nomEcole, annee, niveau: niveauEleve, periode, matricule,
+                graphisme: n.graphisme || null, disc_visuelle: n.disc_visuelle || null, exp_ecrite: n.exp_ecrite || null,
+                copie: n.copie || null, dictee: n.dictee || null, ecriture: n.ecriture || null,
+                exp_texte: n.exp_texte || null, aem: n.aem || null, math: n.math || null, edhc: n.edhc || null,
+                lecture: n.lecture || null, dessin: n.dessin || null, poesie: n.poesie || null,
+                total: item.total || 0, moyen: item.moyenne || 0, rang: item.rang || 0, decision: item.decision || ''
+            });
         }
-        await client.query('COMMIT');
+
+        if (upsertData.length > 0) {
+            const { error } = await supabase.from('resultats_compositions').upsert(upsertData, {
+                onConflict: 'nom_ecole,annee,niveau,periode,matricule'
+            });
+            if (error) throw error;
+        }
+
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
         console.error("❌ Erreur import notes :", err);
         res.status(500).json({ success: false, message: err.message });
-    } finally {
-        client.release();
     }
 });
 
-
-app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' }]), async (req, res) => {
-    const matricule = req.params.id.trim();
-    const d = req.body;
+app.post('/api/update-notes', async (req, res) => {
     const nomEcole = req.session.nomEcole;
+    const { updates, annee, periode } = req.body;
+
     try {
-        let fields = [];
-        let params = [];
-        let i = 1;
-        const updateFields = {
-            nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '', sexe: d.sexe,
-            date_naissance: d.date_naissance, pays: d.pays, localite: d.localite,
-            mere: d.mere, pere: d.pere, contact: d.contact, nationalite: d.nationalite,
-            num_acte: d.num_acte, date_etab: d.date_etab, lieu_etab: d.lieu_etab,
-            niveau: d.niveau, ecole: d.ecole
-        };
-        for (const [key, value] of Object.entries(updateFields)) {
-            fields.push(`${key}=$${i++}`);
-            params.push(value);
+        const matricules = updates.map(u => u.matricule?.trim()).filter(Boolean);
+        const { data: elevesLevels } = await supabase
+            .from('eleves')
+            .select('matricule, niveau')
+            .eq('annee', annee)
+            .eq('nom_ecole', nomEcole)
+            .in('matricule', matricules);
+
+        const upsertData = [];
+        for (const u of updates) {
+            const matricule = u.matricule?.trim();
+            if (!matricule) continue;
+
+            const eleve = elevesLevels?.find(e => String(e.matricule).trim() === matricule);
+            const niveauEleve = eleve?.niveau ? eleve.niveau.trim().toUpperCase() : '';
+            if (!niveauEleve) continue;
+
+            const n = u.notes || {};
+            const valeurMoyen = u.moyen !== '' && u.moyen !== undefined ? u.moyen : (u.moyenne !== '' && u.moyenne !== undefined ? u.moyenne : 0);
+
+            upsertData.push({
+                nom_ecole: nomEcole, annee, niveau: niveauEleve, periode, matricule,
+                graphisme: n.graphisme !== '' && n.graphisme !== undefined ? n.graphisme : null,
+                disc_visuelle: n.disc_visuelle !== '' && n.disc_visuelle !== undefined ? n.disc_visuelle : null,
+                exp_ecrite: n.exp_ecrite !== '' && n.exp_ecrite !== undefined ? n.exp_ecrite : null,
+                copie: n.copie !== '' && n.copie !== undefined ? n.copie : null,
+                dictee: n.dictee !== '' && n.dictee !== undefined ? n.dictee : null,
+                ecriture: n.ecriture !== '' && n.ecriture !== undefined ? n.ecriture : null,
+                exp_texte: n.exp_texte !== '' && n.exp_texte !== undefined ? n.exp_texte : null,
+                aem: n.aem !== '' && n.aem !== undefined ? n.aem : null,
+                math: n.math !== '' && n.math !== undefined ? n.math : null,
+                edhc: n.edhc !== '' && n.edhc !== undefined ? n.edhc : null,
+                lecture: n.lecture !== '' && n.lecture !== undefined ? n.lecture : null,
+                dessin: n.dessin !== '' && n.dessin !== undefined ? n.dessin : null,
+                poesie: n.poesie !== '' && n.poesie !== undefined ? n.poesie : null,
+                total: u.total !== '' && u.total !== undefined ? u.total : 0,
+                moyen: valeurMoyen,
+                rang: u.rang !== '' && u.rang !== undefined ? u.rang : 0,
+                decision: u.decision || ''
+            });
+
+            await supabase.from('eleves')
+                .update({ moyenne: valeurMoyen, rang: u.rang || 0 })
+                .eq('matricule', matricule)
+                .eq('annee', annee)
+                .eq('nom_ecole', nomEcole);
         }
-        if (req.files?.photo) {
-            fields.push(`photo=$${i++}`);
-            params.push('/uploads/' + req.files['photo'][0].filename);
+
+        if (upsertData.length > 0) {
+            const { error } = await supabase.from('resultats_compositions').upsert(upsertData, {
+                onConflict: 'nom_ecole,annee,niveau,periode,matricule'
+            });
+            if (error) throw error;
         }
-        if (req.files?.document) {
-            fields.push(`document=$${i++}`);
-            params.push('/uploads/' + req.files['document'][0].filename);
-        }
-        params.push(matricule, nomEcole);
-        const sql = `UPDATE eleves SET ${fields.join(', ')} WHERE TRIM(matricule)=$${i++} AND nom_ecole=$${i++}`;
-        await pool.query(sql, params);
+
         res.json({ success: true });
     } catch (err) {
-        console.error("❌ Erreur lors de la modification :", err);
+        console.error("❌ Erreur mise à jour notes :", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
+app.post('/api/sauvegarder-bulletin', async (req, res) => {
+    const nomEcole = req.session.nomEcole;
+    const { annee, niveau, periode, lignesEleves } = req.body;
+    try {
+        const upsertData = lignesEleves.map(eleve => {
+            const n = eleve.notes || {};
+            return {
+                nom_ecole: nomEcole, annee, niveau, periode, matricule: eleve.matricule,
+                nom: eleve.nom || '', prenoms: eleve.prenoms || '', date_naissance: eleve.date_naissance || '', sexe: eleve.sexe || '',
+                graphisme: n.graphisme || null, disc_visuelle: n.disc_visuelle || null, exp_ecrite: n.exp_ecrite || null,
+                copie: n.copie || null, dictee: n.dictee || null, ecriture: n.ecriture || null, exp_texte: n.exp_texte || null,
+                aem: n.aem || null, math: n.math || null, edhc: n.edhc || null, lecture: n.lecture || null,
+                dessin: n.dessin || null, poesie: n.poesie || null, total: eleve.total || 0, moyen: eleve.moyen || 0, rang: eleve.rang || 0, decision: eleve.decision || ''
+            };
+        });
+
+        if (upsertData.length > 0) {
+            const { error } = await supabase.from('resultats_compositions').upsert(upsertData, {
+                onConflict: 'nom_ecole,annee,niveau,periode,matricule'
+            });
+            if (error) throw error;
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("❌ Erreur sauvegarde bulletin linéaire :", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/notes/:annee/:niveau/:periode', async (req, res) => {
+    const nomEcole = req.session.nomEcole;
+    try {
+        const { annee, niveau, periode } = req.params;
+        const { data, error } = await supabase
+            .from('resultats_compositions')
+            .select('*')
+            .eq('nom_ecole', nomEcole)
+            .eq('annee', annee)
+            .eq('niveau', niveau)
+            .eq('periode', periode);
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        console.error("❌ Erreur récupération bulletins :", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// 7. EXPORTATIONS ET BASCULE D'ANNÉE
+// ==========================================
 app.get('/exporter', async (req, res) => {
     try {
         const nomEcole = req.session.nomEcole;
-        const annee = req.query.annee || '2025'; // Récupère l'année si transmise
+        const annee = req.query.annee || '2025';
 
-        // Requête combinant élèves et leurs derniers résultats pour l'export
-        const query = `
-            SELECT e.annee, e.matricule, e.nom, e.prenoms, e.sexe, e.niveau, 
-                   rc.total, rc.moyen, rc.rang, rc.decision
-            FROM eleves e
-            LEFT JOIN resultats_compositions rc 
-              ON TRIM(e.matricule) = TRIM(rc.matricule) 
-              AND e.annee = rc.annee 
-              AND e.nom_ecole = rc.nom_ecole
-            WHERE e.nom_ecole = $1 AND e.annee = $2
-        `;
-        
-        const result = await pool.query(query, [nomEcole, annee]);
-        
+        const { data: eleves, error: errEleves } = await supabase
+            .from('eleves')
+            .select('annee, matricule, nom, prenoms, sexe, niveau')
+            .eq('nom_ecole', nomEcole)
+            .eq('annee', annee);
+
+        const { data: resultats, error: errResultats } = await supabase
+            .from('resultats_compositions')
+            .select('matricule, total, moyen, rang, decision')
+            .eq('nom_ecole', nomEcole)
+            .eq('annee', annee);
+
+        if (errEleves || errResultats) throw (errEleves || errResultats);
+
         const headers = ["annee", "matricule", "nom", "prenoms", "sexe", "niveau", "total", "moyen", "rang", "decision"];
-        let csvContent = "\uFEFF" + headers.join(",") + "\n"; // Ajout du BOM UTF-8 pour Excel
+        let csvContent = "\uFEFF" + headers.join(",") + "\n";
 
-        result.rows.forEach(row => {
-            const values = headers.map(h => row[h] !== null && row[h] !== undefined ? row[h] : '');
+        eleves.forEach(e => {
+            const rc = resultats.find(r => String(r.matricule).trim() === String(e.matricule).trim()) || {};
+            const rowData = { ...e, ...rc };
+            const values = headers.map(h => rowData[h] !== null && rowData[h] !== undefined ? rowData[h] : '');
             const sanitized = values.map(v => `"${String(v).replace(/"/g, '""')}"`);
             csvContent += sanitized.join(",") + "\n";
         });
@@ -607,227 +739,84 @@ app.get('/exporter', async (req, res) => {
     }
 });
 
-
 app.post('/api/basculer-eleves', async (req, res) => {
     const { decisions, annee_source } = req.body;
     const annee_cible = (parseInt(annee_source) + 1).toString();
     const nomEcole = req.session.nomEcole;
     const passageNiveau = { 'CP1': 'CP2', 'CP2': 'CE1', 'CE1': 'CE2', 'CE2': 'CM1', 'CM1': 'CM2', 'CM2': 'FIN' };
-    const client = await pool.connect();
+
     try {
-        await client.query('BEGIN');
+        const matricules = decisions.map(d => d.matricule);
+        const { data: elevesExistants } = await supabase
+            .from('eleves')
+            .select('*')
+            .eq('annee', annee_source)
+            .eq('nom_ecole', nomEcole)
+            .in('matricule', matricules);
+
+        const insertData = [];
         for (const item of decisions) {
-            const resSelect = await client.query(
-                "SELECT * FROM eleves WHERE matricule = $1 AND annee = $2 AND nom_ecole = $3",
-                [item.matricule, annee_source, nomEcole]
-            );
-            if (resSelect.rows.length > 0) {
-                const e = resSelect.rows[0];
+            const e = elevesExistants?.find(el => el.matricule === item.matricule);
+            if (e) {
                 let nouveauNiveau = (item.decision === 'A' && passageNiveau[e.niveau]) ? passageNiveau[e.niveau] : e.niveau;
-                await client.query(`INSERT INTO eleves (
-                    annee, matricule, nom, prenoms, sexe, date_naissance, pays, localite, mere, pere, contact, nationalite, num_acte, date_etab, lieu_etab, ecole, niveau, nom_ecole
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
-                    [annee_cible, e.matricule, e.nom, e.prenoms, e.sexe, e.date_naissance, e.pays,
-                    e.localite, e.mere, e.pere, e.contact, e.nationalite, e.num_acte,
-                    e.date_etab, e.lieu_etab, e.ecole, nouveauNiveau, nomEcole]);
+                insertData.push({
+                    annee: annee_cible, matricule: e.matricule, nom: e.nom, prenoms: e.prenoms, sexe: e.sexe,
+                    date_naissance: e.date_naissance, pays: e.pays, localite: e.localite, mere: e.mere, pere: e.pere,
+                    contact: e.contact, nationalite: e.nationalite, num_acte: e.num_acte, date_etab: e.date_etab,
+                    lieu_etab: e.lieu_etab, ecole: e.ecole, niveau: nouveauNiveau, nom_ecole: nomEcole
+                });
             }
         }
-        await client.query('COMMIT');
+
+        if (insertData.length > 0) {
+            const { error } = await supabase.from('eleves').upsert(insertData, { ignoreDuplicates: true });
+            if (error) throw error;
+        }
+
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
         console.error("❌ Erreur lors de la bascule :", err);
         res.status(500).json({ error: err.message });
-    } finally {
-        client.release();
     }
 });
 
-
-app.post('/api/update-notes', async (req, res) => {
-    const nomEcole = req.session.nomEcole;
-    const { updates, annee, periode } = req.body;
-    const client = await pool.connect();
-
-    try {
-        await client.query('BEGIN');
-        for (const u of updates) {
-            const matricule = u.matricule ? u.matricule.trim() : '';
-            if (!matricule) continue;
-
-            const resEleve = await client.query(
-                `SELECT niveau FROM eleves WHERE TRIM(matricule) = TRIM($1) AND annee = $2 AND nom_ecole = $3 LIMIT 1`,
-                [matricule, annee, nomEcole]
-            );
-
-            const niveauEleve = resEleve.rows.length > 0 && resEleve.rows[0].niveau
-                ? resEleve.rows[0].niveau.trim().toUpperCase()
-                : '';
-            if (!niveauEleve) continue;
-
-            const n = u.notes || {};
-            const valeurMoyen = u.moyen !== '' && u.moyen !== undefined ? u.moyen : (u.moyenne !== '' && u.moyenne !== undefined ? u.moyenne : 0);
-
-            await client.query(`
-                INSERT INTO resultats_compositions (
-                    nom_ecole, annee, niveau, periode, matricule,
-                    graphisme, disc_visuelle, exp_ecrite, copie, dictee, ecriture,
-                    exp_texte, aem, math, edhc, lecture, dessin, poesie,
-                    total, moyen, rang, decision
-                ) VALUES (
-                    $1, $2, $3, $4, $5,
-                    $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
-                )
-                ON CONFLICT (nom_ecole, annee, niveau, periode, matricule)
-                DO UPDATE SET
-                    graphisme = COALESCE(EXCLUDED.graphisme, resultats_compositions.graphisme),
-                    disc_visuelle = COALESCE(EXCLUDED.disc_visuelle, resultats_compositions.disc_visuelle),
-                    exp_ecrite = COALESCE(EXCLUDED.exp_ecrite, resultats_compositions.exp_ecrite),
-                    copie = COALESCE(EXCLUDED.copie, resultats_compositions.copie),
-                    dictee = COALESCE(EXCLUDED.dictee, resultats_compositions.dictee),
-                    ecriture = COALESCE(EXCLUDED.ecriture, resultats_compositions.ecriture),
-                    exp_texte = COALESCE(EXCLUDED.exp_texte, resultats_compositions.exp_texte),
-                    aem = COALESCE(EXCLUDED.aem, resultats_compositions.aem),
-                    math = COALESCE(EXCLUDED.math, resultats_compositions.math),
-                    edhc = COALESCE(EXCLUDED.edhc, resultats_compositions.edhc),
-                    lecture = COALESCE(EXCLUDED.lecture, resultats_compositions.lecture),
-                    dessin = COALESCE(EXCLUDED.dessin, resultats_compositions.dessin),
-                    poesie = COALESCE(EXCLUDED.poesie, resultats_compositions.poesie),
-                    total = COALESCE(EXCLUDED.total, resultats_compositions.total),
-                    moyen = COALESCE(EXCLUDED.moyen, resultats_compositions.moyen),
-                    rang = COALESCE(EXCLUDED.rang, resultats_compositions.rang),
-                    decision = COALESCE(EXCLUDED.decision, resultats_compositions.decision)
-            `, [
-                nomEcole, annee, niveauEleve, periode, matricule,
-                n.graphisme !== '' && n.graphisme !== undefined ? n.graphisme : null,
-                n.disc_visuelle !== '' && n.disc_visuelle !== undefined ? n.disc_visuelle : null,
-                n.exp_ecrite !== '' && n.exp_ecrite !== undefined ? n.exp_ecrite : null,
-                n.copie !== '' && n.copie !== undefined ? n.copie : null,
-                n.dictee !== '' && n.dictee !== undefined ? n.dictee : null,
-                n.ecriture !== '' && n.ecriture !== undefined ? n.ecriture : null,
-                n.exp_texte !== '' && n.exp_texte !== undefined ? n.exp_texte : null,
-                n.aem !== '' && n.aem !== undefined ? n.aem : null,
-                n.math !== '' && n.math !== undefined ? n.math : null,
-                n.edhc !== '' && n.edhc !== undefined ? n.edhc : null,
-                n.lecture !== '' && n.lecture !== undefined ? n.lecture : null,
-                n.dessin !== '' && n.dessin !== undefined ? n.dessin : null,
-                n.poesie !== '' && n.poesie !== undefined ? n.poesie : null,
-                u.total !== '' && u.total !== undefined ? u.total : 0,
-                valeurMoyen,
-                u.rang !== '' && u.rang !== undefined ? u.rang : 0,
-                u.decision || ''
-            ]);
-
-            await client.query(
-                `UPDATE eleves SET moyenne = $1, rang = $2 WHERE TRIM(matricule) = TRIM($3) AND annee = $4 AND nom_ecole = $5`,
-                [valeurMoyen, u.rang || 0, matricule, annee, nomEcole]
-            );
-        }
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error("❌ Erreur mise à jour notes :", err);
-        res.status(500).json({ success: false, error: err.message });
-    } finally {
-        client.release();
-    }
-});
-
-app.post('/api/sauvegarder-bulletin', async (req, res) => {
-    const nomEcole = req.session.nomEcole;
-    const { annee, niveau, periode, lignesEleves } = req.body;
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        for (const eleve of lignesEleves) {
-            const n = eleve.notes || {};
-            await client.query(`
-                INSERT INTO resultats_compositions (
-                    nom_ecole, annee, niveau, periode, matricule,
-                    nom, prenoms, date_naissance, sexe,
-                    graphisme, disc_visuelle, exp_ecrite, copie, dictee, ecriture,
-                    exp_texte, aem, math, edhc, lecture, dessin, poesie,
-                    total, moyen, rang, decision
-                ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9,
-                    $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22,
-                    $23, $24, $25, $26
-                )
-                ON CONFLICT (nom_ecole, annee, niveau, periode, matricule)
-                DO UPDATE SET
-                    nom = EXCLUDED.nom,
-                    prenoms = EXCLUDED.prenoms,
-                    date_naissance = EXCLUDED.date_naissance,
-                    sexe = EXCLUDED.sexe,
-                    graphisme = EXCLUDED.graphisme,
-                    disc_visuelle = EXCLUDED.disc_visuelle,
-                    exp_ecrite = EXCLUDED.exp_ecrite,
-                    copie = EXCLUDED.copie,
-                    dictee = EXCLUDED.dictee,
-                    ecriture = EXCLUDED.ecriture,
-                    exp_texte = EXCLUDED.exp_texte,
-                    aem = EXCLUDED.aem,
-                    math = EXCLUDED.math,
-                    edhc = EXCLUDED.edhc,
-                    lecture = EXCLUDED.lecture,
-                    dessin = EXCLUDED.dessin,
-                    poesie = EXCLUDED.poesie,
-                    total = EXCLUDED.total,
-                    moyen = EXCLUDED.moyen,
-                    rang = EXCLUDED.rang,
-                    decision = EXCLUDED.decision
-            `, [
-                nomEcole, annee, niveau, periode, eleve.matricule,
-                eleve.nom || '', eleve.prenoms || '', eleve.date_naissance || '', eleve.sexe || '',
-                n.graphisme || null, n.disc_visuelle || null, n.exp_ecrite || null,
-                n.copie || null, n.dictee || null, n.ecriture || null, n.exp_texte || null,
-                n.aem || null, n.math || null, n.edhc || null, n.lecture || null,
-                n.dessin || null, n.poesie || null,
-                eleve.total || 0, eleve.moyen || 0, eleve.rang || 0, eleve.decision || ''
-            ]);
-        }
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error("❌ Erreur sauvegarde bulletin linéaire :", err);
-        res.status(500).json({ error: err.message });
-    } finally {
-        client.release();
-    }
-});
-
-app.get('/api/notes/:annee/:niveau/:periode', async (req, res) => {
-    const nomEcole = req.session.nomEcole;
-    try {
-        const { annee, niveau, periode } = req.params;
-        const result = await pool.query(
-            `SELECT * FROM resultats_compositions WHERE nom_ecole = $1 AND annee = $2 AND niveau = $3 AND periode = $4`,
-            [nomEcole, annee, niveau, periode]
-        );
-        res.json(result.rows);
-    } catch (err) {
-        console.error("❌ Erreur récupération bulletins :", err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
+// ==========================================
+// 8. CONFIGURATION DE L'ÉCOLE ET ADMIN
+// ==========================================
 app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo_ecole' }]), async (req, res) => {
     const { drena, iepp, nom_directeur } = req.body;
     const nomEcole = req.session.nomEcole;
-    const lIepp = req.files?.logo_iepp ? '/uploads/' + req.files['logo_iepp'][0].filename : null;
-    const lEcole = req.files?.logo_ecole ? '/uploads/' + req.files['logo_ecole'][0].filename : null;
+
     try {
-        const sql = `INSERT INTO configuration (nom_ecole, drena, iepp, nom_directeur, logo_iepp, logo_ecole)
-                     VALUES ($1, $2, $3, $4, $5, $6)
-                     ON CONFLICT (nom_ecole) DO UPDATE SET
-                     drena = EXCLUDED.drena,
-                     iepp = EXCLUDED.iepp,
-                     nom_directeur = EXCLUDED.nom_directeur,
-                     logo_iepp = COALESCE(EXCLUDED.logo_iepp, configuration.logo_iepp),
-                     logo_ecole = COALESCE(EXCLUDED.logo_ecole, configuration.logo_ecole)`;
-        await pool.query(sql, [nomEcole, drena, iepp, nom_directeur, lIepp, lEcole]);
+        const upsertObj = { nom_ecole: nomEcole, drena, iepp, nom_directeur };
+
+        if (req.files?.logo_iepp) {
+            const file = req.files['logo_iepp'][0];
+            const fileBuffer = fs.readFileSync(file.path);
+            const fileName = `logos/${Date.now()}-${file.originalname}`;
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            if (!uploadError) {
+                const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
+                upsertObj.logo_iepp = pubData.publicUrl;
+            }
+            try { fs.unlinkSync(file.path); } catch(e) {}
+        }
+
+        if (req.files?.logo_ecole) {
+            const file = req.files['logo_ecole'][0];
+            const fileBuffer = fs.readFileSync(file.path);
+            const fileName = `logos/${Date.now()}-${file.originalname}`;
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            if (!uploadError) {
+                const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
+                upsertObj.logo_ecole = pubData.publicUrl;
+            }
+            try { fs.unlinkSync(file.path); } catch(e) {}
+        }
+
+        const { error } = await supabase.from('configuration').upsert(upsertObj, { onConflict: 'nom_ecole' });
+        if (error) throw error;
+
         res.json({ success: true });
     } catch (err) {
         console.error("❌ Erreur config:", err);
@@ -837,9 +826,16 @@ app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo
 
 app.get('/api/config-prof', async (req, res) => {
     try {
-        const result = await pool.query("SELECT * FROM configuration WHERE nom_ecole = $1", [req.session.nomEcole]);
-        if (result.rows.length > 0) {
-            res.json(result.rows[0]);
+        const { data, error } = await supabase
+            .from('configuration')
+            .select('*')
+            .eq('nom_ecole', req.session.nomEcole)
+            .limit(1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            res.json(data[0]);
         } else {
             res.json({ drena: '', iepp: '', nom_directeur: '', logo_iepp: '', logo_ecole: '' });
         }
@@ -849,84 +845,11 @@ app.get('/api/config-prof', async (req, res) => {
     }
 });
 
-app.get('/api/eleves/details/:id', async (req, res) => {    
-    const matricule = req.params.id.trim();                        
-    const nomEcole = req.session.nomEcole;                  
-    try {                                                       
-        const result = await pool.query(                            
-            "SELECT * FROM eleves WHERE TRIM(matricule) = $1 AND nom_ecole = $2 ORDER BY annee DESC",                             
-            [matricule, nomEcole]                               
-        );                                                      
-        
-        if (result.rows.length > 0) {                               
-            const historique = [];
-            
-            for (const row of result.rows) {
-                // Récupérer les notes de la période FIN_ANNEE et des trois compo + passage pour chaque année de l'historique
-                const queryFinAnnee = `
-                    SELECT rc.*,
-                           rc1.moyen AS moyen_compo1,
-                           rc2.moyen AS moyen_compo2,
-                           rc3.moyen AS moyen_compo3,
-                           rc_pass.moyen AS moyen_passage_brut
-                    FROM resultats_compositions rc
-                    LEFT JOIN resultats_compositions rc1 ON TRIM(rc.matricule) = TRIM(rc1.matricule) AND rc.annee = rc1.annee AND rc.nom_ecole = rc1.nom_ecole AND rc1.periode = 'COMPO1'
-                    LEFT JOIN resultats_compositions rc2 ON TRIM(rc.matricule) = TRIM(rc2.matricule) AND rc.annee = rc2.annee AND rc.nom_ecole = rc2.nom_ecole AND rc2.periode = 'COMPO2'
-                    LEFT JOIN resultats_compositions rc3 ON TRIM(rc.matricule) = TRIM(rc3.matricule) AND rc.annee = rc3.annee AND rc.nom_ecole = rc3.nom_ecole AND rc3.periode = 'COMPO3'
-                    LEFT JOIN resultats_compositions rc_pass ON TRIM(rc.matricule) = TRIM(rc_pass.matricule) AND rc.annee = rc_pass.annee AND rc.nom_ecole = rc_pass.nom_ecole AND rc_pass.periode = 'PASSAGE'
-                    WHERE TRIM(rc.matricule) = $1 AND rc.annee = $2 AND rc.nom_ecole = $3 AND rc.periode = 'FIN_ANNEE'
-                    LIMIT 1
-                `;
-                const resComp = await pool.query(queryFinAnnee, [matricule, row.annee, nomEcole]);
-                
-                let mTotalFinal = row.moyenne || 0;
-                let rangFinal = row.rang || '';
-                let decisionFinal = '';
-
-                if (resComp.rows.length > 0) {
-                    const rc = resComp.rows[0];
-                    let m1 = parseFloat(rc.moyen_compo1) || 0;
-                    let m2 = parseFloat(rc.moyen_compo2) || 0;
-                    let m3 = parseFloat(rc.moyen_compo3) || 0;
-                    let mPassBrut = parseFloat(rc.moyen_passage_brut) || 0;
-
-                    let moyenCompoN = (m1 > 0 || m2 > 0 || m3 > 0) ? ((m1 + m2 + m3) / 3) : 0;
-                    let moyenPassage = mPassBrut * 2;
-                    let moyenTotal = (moyenCompoN > 0 || moyenPassage > 0) ? ((moyenCompoN + moyenPassage) / 3) : 0;
-
-                    if (moyenTotal > 0) {
-                        mTotalFinal = moyenTotal.toFixed(2);
-                    } else if (rc.moyen) {
-                        mTotalFinal = rc.moyen;
-                    }
-                    if (rc.rang) rangFinal = rc.rang;
-                    if (rc.decision) decisionFinal = rc.decision;
-                }
-
-                historique.push({
-                    annee: row.annee,
-                    niveau: row.niveau,
-                    moyen_total: mTotalFinal,
-                    rang: rangFinal,
-                    observation: decisionFinal
-                });
-            }
-
-            res.json({ ...result.rows[0], historique });        
-        } else {                                                    
-            res.status(404).json({ error: "Élève non trouvé" });                                                        
-        }                                                   
-    } catch (err) {                                             
-        console.error("❌ Erreur détails élève :", err);        
-        res.status(500).json({ error: err.message });       
-    }                                                   
-});
-
-
 app.get('/api/admin/utilisateurs', async (req, res) => {
     try {
-        const result = await pool.query("SELECT id, nom_ecole, telephone FROM utilisateurs");
-        res.json(result.rows);
+        const { data, error } = await supabase.from('utilisateurs').select('id, nom_ecole, telephone');
+        if (error) throw error;
+        res.json(data || []);
     } catch (err) {
         res.status(500).json({ error: "Erreur lors de la récupération des utilisateurs" });
     }
@@ -935,7 +858,12 @@ app.get('/api/admin/utilisateurs', async (req, res) => {
 app.post('/api/admin/reset-password/:id', async (req, res) => {
     try {
         const hash = await bcrypt.hash(req.body.password, 10);
-        await pool.query("UPDATE utilisateurs SET password = $1 WHERE id = $2", [hash, req.params.id]);
+        const { error } = await supabase
+            .from('utilisateurs')
+            .update({ password: hash })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false });
@@ -944,16 +872,22 @@ app.post('/api/admin/reset-password/:id', async (req, res) => {
 
 app.delete('/api/admin/delete-user/:id', async (req, res) => {
     try {
-        await pool.query("DELETE FROM utilisateurs WHERE id = $1", [req.params.id]);
+        const { error } = await supabase
+            .from('utilisateurs')
+            .delete()
+            .eq('id', req.params.id);
+
+        if (error) throw error;
         res.json({ success: true });
     } catch (err) {
+        console.error("❌ Erreur suppression utilisateur :", err);
         res.status(500).json({ success: false });
     }
 });
 
-
-
-
+// ==========================================
+// 9. LANCEMENT DU SERVEUR
+// ==========================================
 async function startServer() {
     await initDB();
     const PORT = process.env.PORT || 8081;
