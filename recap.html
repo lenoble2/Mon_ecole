@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -27,7 +26,7 @@
         .w-mat { width: 60px !important; }
         .w-date { width: 70px !important; }
         .col-nom { text-align: left !important; }
-        .separator-text { font-weight: bold; text-align: left !important; background: #28a745; color: white; }
+        .separator-text { font-weight: bold; text-align: left !important; }
         .blue-text { color: #0000CD; font-weight: 500; }
         .red-text { color: #DC143C; font-weight: 500; }
         .age-col { background-color: #40E0D0 !important; font-weight: bold; }
@@ -36,6 +35,7 @@
         @media print {
             .filter-container, .filter-btn, #annee-select, .btn-print { display: none !important; }
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            thead { display: table-row-group !important; }
         }
     </style>
 </head>
@@ -208,35 +208,51 @@
             }
 
             const triAlpha = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
-            const totalLignes = Math.max(g.length + 1 + f.length, triAlpha.length);
+            const totalLignes = Math.max(g.length + 1 + f.length, triAlpha.length + 1);
             const getColorClass = (sexe) => sexe === 'M' ? 'blue-text' : 'red-text';
 
             for (let i = 0; i < totalLignes; i++) {
                 let row = document.createElement('tr');
                 let eL = null;
                 let isSeparator = false;
+                let alphaIndex = -1;
 
                 if (i < g.length) {
                     eL = g[i];
+                    alphaIndex = i;
                 } else if (i === g.length) {
                     isSeparator = true;
-                } else if (i <= g.length + f.length) {
-                    eL = f[i - g.length - 1];
+                } else {
+                    let girlIndex = i - g.length - 1;
+                    eL = f[girlIndex] || null;
+                    alphaIndex = i - 1;
                 }
 
-                let eA = triAlpha[i] || null;
+                let eA = (alphaIndex >= 0 && alphaIndex < triAlpha.length) ? triAlpha[alphaIndex] : null;
 
                 if (isSeparator) {
-                    row.innerHTML = `<td colspan="6" class="separator-text">FILLES NOM & PRÉNOMS</td><td class="w-n">${eA ? 1 : ''}</td><td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? (eA.nom || '') + ' ' + (eA.prenoms || '') : ''}</td><td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
+                    row.innerHTML = `<td colspan="9" class="separator-text" style="background-color: #00853F; color: white; padding-left: 50px; text-align: left;">FILLES NOM & PRÉNOMS</td>`;
                 } else {
+                    let nVal = '';
+                    if (eL) {
+                        if (i < g.length) {
+                            nVal = i + 1;
+                        } else {
+                            nVal = i - g.length;
+                        }
+                    }
                     let ageVal = eL ? calculerAge(eL.date_naissance, anneeCourante) : '';
+                    let ageClass = ageVal !== '' ? 'age-col' : '';
+                    let matVal = eL ? (eL.matricule || '') : '';
+                    let nAlphaVal = (eA && alphaIndex >= 0) ? alphaIndex + 1 : '';
+
                     row.innerHTML = `
-                        <td class="w-n">${eL ? (i < g.length ? i + 1 : i - g.length) : ''}</td>
+                        <td class="w-n">${nVal}</td>
                         <td class="col-nom ${eL ? getColorClass(eL.sexe) : ''}">${eL ? (eL.nom || '') + ' ' + (eL.prenoms || '') : ''}</td>
-                        <td class="age-col">${ageVal}</td>
+                        <td class="${ageClass}">${ageVal}</td>
                         <td></td><td></td>
-                        <td class="w-mat">${eL ? eL.matricule || '' : ''}</td>
-                        <td class="w-n">${eA ? i + 1 : ''}</td>
+                        <td class="w-mat">${matVal}</td>
+                        <td class="w-n">${nAlphaVal}</td>
                         <td class="col-nom ${eA ? getColorClass(eA.sexe) : ''}">${eA ? (eA.nom || '') + ' ' + (eA.prenoms || '') : ''}</td>
                         <td class="w-date">${eA ? eA.date_naissance || '' : ''}</td>`;
                 }
