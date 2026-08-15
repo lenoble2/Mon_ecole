@@ -1,12 +1,11 @@
 
-
-<!DOCTYPE html>
+<!DOCTYPE html>                                                         
 <html lang="fr">
-<head>
+<head>                                                                      
     <meta charset="UTF-8">
-    <title>Liste des Élèves - Sansext</title>
+    <title>Liste des Élèves - Sansext</title>                               
     <style>
-        @page { size: A4 portrait; margin: 20px; }
+        @page { size: A4 portrait; margin: 20px; }                              
         body { font-family: sans-serif; font-size: 12px; margin: 20px; }
         .header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header-left { font-weight: bold; line-height: 1.4; }
@@ -37,29 +36,29 @@
     <div class="logo-display">
         <img id="img-iepp" src="" alt="IEPP" onerror="this.style.display='none';">
         <img id="img-ecole" src="" alt="Ecole" onerror="this.style.display='none';">
-    </div>
+    </div>                                                                  
     <div style="font-weight: bold;">
-        ANNÉE : <span id="annee-label"></span>
-    </div>
+        ANNÉE : <span id="annee-label"></span>                              
+    </div>                                                              
 </div>
 
 <div class="filter-container">
-    <h2>LISTE DES ÉLÈVES SANS EXTRAIT</h2>
+    <h2>LISTE DES ÉLÈVES SANS EXTRAIT</h2>                                  
     <div style="display: flex; gap: 10px; align-items: center;">
-        <button type="button" class="btn-imprimer" onclick="window.print()">Imprimer</button>
+        <button type="button" class="btn-imprimer" onclick="window.print()">Imprimer</button>                                                           
         <select id="annee-select" onchange="changerAnnee()">
-            <option value="2028">2028-2029</option>
-            <option value="2027">2027-2028</option>
-            <option value="2026" selected>2026-2027</option>
+            <option value="2028">2028-2029</option>                                 
+            <option value="2027">2027-2028</option>                                 
+            <option value="2026" selected>2026-2027</option>                        
             <option value="2025">2025-2026</option>
-            <option value="2024">2024-2025</option>
+            <option value="2024">2024-2025</option>                                 
             <option value="2023">2023-2024</option>
             <option value="2022">2022-2023</option>
-            <option value="2021">2021-2022</option>
+            <option value="2021">2021-2022</option>                             
         </select>
     </div>
 </div>
-
+                                                                        
 <table>
     <thead>
         <tr>
@@ -73,7 +72,7 @@
     <tbody id="tbody-liste"></tbody>
 </table>
 
-<script>
+<script>                                                                    
     // Fonction qui définit les conditions pour "Sans Extrait"
     function estSansExtrait(matricule) {
         const matStr = matricule ? matricule.toString().trim() : "";
@@ -86,24 +85,23 @@
         const sansAucuneLettre = /^\d+$/.test(matStr);
         if (sansAucuneLettre) return true;
 
-        return false;
+        return false;                                                       
     }
 
     // Chargement des entêtes
     fetch('/api/config-prof').then(res => res.json()).then(data => {
-        if(data.drena) document.getElementById('drena-display').innerText = "DRENA : " + data.drena;
+        if(data.drena) document.getElementById('drena-display').innerText = "DRENA : " + data.drena;                                                    
         if(data.iepp) document.getElementById('iepp-display').innerText = "IEPP : " + data.iepp;
         const imgIepp = document.getElementById('img-iepp');
         if(data.logo_iepp) { imgIepp.src = data.logo_iepp; imgIepp.style.display = 'block'; }
         const imgEcole = document.getElementById('img-ecole');
         if(data.logo_ecole) { imgEcole.src = data.logo_ecole; imgEcole.style.display = 'block'; }
-    });
-
+    });                                                                 
     fetch('/api/nom-ecole').then(res => res.json()).then(data => {
         if(data.nom) document.getElementById('ecole-display').innerText = "ÉCOLE : " + data.nom;
     });
 
-    // Charger les élèves
+    // Charger les élèves                                                   
     function chargerEleves() {
         const annee = document.getElementById('annee-select').value;
         document.getElementById('annee-label').innerText = annee + "-" + (parseInt(annee) + 1);
@@ -116,9 +114,9 @@
             console.error("Erreur de chargement des élèves :", err);
         });
     }
-
+                                                                            
     function changerAnnee() {
-        chargerEleves();
+        chargerEleves();                                                    
     }
 
     function afficherTableau(data) {
@@ -128,13 +126,16 @@
         const tri = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
 
         tri.forEach((e, index) => {
-            const couleur = e.sexe === 'M' ? 'blue-text' : 'red-text';
+            const sexeClean = (e.sexe || '').trim().toUpperCase();
+            const estMasculin = (sexeClean === 'M' || sexeClean === 'MASCULIN' || sexeClean === 'GARÇON' || sexeClean === 'GARCON');
+            const couleur = estMasculin ? 'blue-text' : 'red-text';
+            
             tbody.innerHTML += `
-                <tr>
+                <tr>                                                                        
                     <td>${index + 1}</td>
                     <td>${e.matricule || ''}</td>
                     <td class="col-nom ${couleur}">${e.nom || ''} ${e.prenoms || ''}</td>
-                    <td>${e.date_naissance || ''}</td>
+                    <td>${e.date_naissance || ''}</td>                                      
                     <td>${e.niveau || ''}</td>
                 </tr>
             `;
@@ -142,7 +143,7 @@
     }
 
     // Appel initial au chargement de la page
-    chargerEleves();
+    chargerEleves();                                                    
 </script>
 </body>
 </html>

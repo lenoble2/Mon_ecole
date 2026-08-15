@@ -53,6 +53,8 @@
                     <th>Localité</th>
                     <th>Mère</th>
                     <th>Père</th>
+                    <th>Profession</th>
+                    <th>Domicile</th>
                     <th>Contact Parent</th>
                     <th>N° Acte Naissance</th>
                     <th>Date Établissement</th>
@@ -106,22 +108,24 @@
             .then(res => res.json())
             .then(eleves => {
                 listeEleves = Array.isArray(eleves) ? eleves : (eleves.eleves || []);
+                if(listeEleves.length > 0) console.log("🔍 Données reçues du serveur (Exemple) :", listeEleves[0]);
                 filtrer(classeFiltreeActuelle, null);
             })
             .catch(err => {
                 console.error("Erreur chargement :", err);
-                document.getElementById('tableau-eleves').innerHTML = '<tr><td colspan="18" style="text-align:center; color:red;">Erreur de chargement des élèves.</td></tr>';
+                document.getElementById('tableau-eleves').innerHTML = '<tr><td colspan="20" style="text-align:center; color:red;">Erreur de chargement des élèves.</td></tr>';
             });
 
         function afficherTableau(data) {
             const tbody = document.getElementById('tableau-eleves');
             tbody.innerHTML = '';
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="18" style="text-align:center; color:#666; padding:15px;">Aucun élève trouvé.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="20" style="text-align:center; color:#666; padding:15px;">Aucun élève trouvé.</td></tr>';
                 return;
             }
             data.forEach(e => {
-                const dateNaissVal = e.date_naissance || '';
+                const dateNaissVal = e.date_naissance || e.date_naiss || e.date_de_naissance || '';
+                const numActeVal = e.num_acte || e.n_acte_naissance || e.acte_naissance || '';
                 tbody.innerHTML += `<tr>
                     <td class="checkbox"><input type="checkbox" class="row-checkbox" data-id="${e.matricule || ''}"></td>
                     <td>${e.matricule || ''}</td>
@@ -135,8 +139,10 @@
                     <td>${e.localite || ''}</td>
                     <td>${e.mere || ''}</td>
                     <td>${e.pere || ''}</td>
+                    <td>${e.profession || ''}</td>
+                    <td>${e.domicile || ''}</td>
                     <td>${e.contact || e.contact_parent || ''}</td>
-                    <td>${e.num_acte || e.n_acte_naissance || e.acte_naissance || ''}</td>
+                    <td>${numActeVal}</td>
                     <td>${e.date_etab || e.date_etablissement || ''}</td>
                     <td>${e.lieu_etab || e.lieu_etablissement || ''}</td>
                     <td>${e.ecole || ''}</td>
@@ -202,22 +208,24 @@
                 "Nom": e.nom || '',
                 "Prénoms": e.prenoms || '',
                 "Sexe": e.sexe || '',
-                "Date Naiss.": e.date_naissance || '',
+                "date_naissance": e.date_naissance || e.date_naiss || '',
                 "Niveau": e.niveau || '',
                 "Nationalité": e.nationalite || '',
                 "Pays": e.pays || '',
                 "Localité": e.localite || '',
                 "Mère": e.mere || '',
                 "Père": e.pere || '',
+                "Profession": e.profession || '',
+                "Domicile": e.domicile || '',
                 "Contact Parent": e.contact || '',
-                "N° Acte Naissance": e.num_acte || '',
+                "N° Acte Naissance": e.num_acte || e.n_acte_naissance || '',
                 "Date Établissement": e.date_etab || '',
                 "Lieu Établissement": e.lieu_etab || '',
                 "École": e.ecole || ''
             })) : [{
-                "N°": "", "Matricule": "", "Nom": "", "Prénoms": "", "Sexe": "", "Date Naiss.": "", "Niveau": "",
-                "Nationalité": "", "Pays": "", "Localité": "", "Mère": "", "Père": "", "Contact Parent": "",
-                "N° Acte Naissance": "", "Date Établissement": "", "Lieu Établissement": "", "École": ""
+                "N°": "", "Matricule": "", "Nom": "", "Prénoms": "", "Sexe": "", "date_naissance": "", "Niveau": "",
+                "Nationalité": "", "Pays": "", "Localité": "", "Mère": "", "Père": "", "Profession": "", "Domicile": "",
+                "Contact Parent": "", "N° Acte Naissance": "", "Date Établissement": "", "Lieu Établissement": "", "École": ""
             }];
 
             const wb = XLSX.utils.book_new();
@@ -235,14 +243,13 @@
 
             const fichier = inputFichier.files[0];
             const lecteur = new FileReader();
-
             lecteur.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                     const premiereFeuilleNom = workbook.SheetNames[0];
                     const feuille = workbook.Sheets[premiereFeuilleNom];
-                    const donneesBrutes = XLSX.utils.sheet_to_json(feuille);
+                    const donneesBrutes = XLSX.utils.sheet_to_json(feuille, { raw: false, dateNF: 'YYYY-MM-DD' });
 
                     if (!donneesBrutes || donneesBrutes.length === 0) {
                         alert("Le fichier sélectionné est vide ou mal formaté.");
@@ -253,7 +260,7 @@
                     donneesBrutes.forEach((row) => {
                         let rowNorm = {};
                         for (let [k, v] of Object.entries(row)) {
-                            let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_");
+                            let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_");
                             rowNorm[clePropre] = v;
                         }
 
@@ -266,20 +273,25 @@
                         );
 
                         if (!existeDeja && matriculeImport !== "") {
+                            let dateNaissExtracted = rowNorm['date_naissance'] || rowNorm['date_naiss'] || rowNorm['datenaissance'] || rowNorm['date'] || '';
+                            let numActeExtracted = rowNorm['num_acte'] || rowNorm['n_acte_naissance'] || rowNorm['acte_naissance'] || rowNorm['n_acte'] || '';
+
                             elevesImportes.push({
                                 matricule: matriculeImport,
                                 nom: rowNorm['nom'] || '',
                                 prenoms: rowNorm['prenoms'] || rowNorm['prenom'] || '',
                                 sexe: rowNorm['sexe'] || '',
-                                date_naissance: rowNorm['date_naissance'] || rowNorm['date_naiss'] || '',
+                                date_naissance: dateNaissExtracted,
                                 niveau: rowNorm['niveau'] || classeFiltreeActuelle,
                                 nationalite: rowNorm['nationalite'] || '',
                                 pays: rowNorm['pays'] || '',
                                 localite: rowNorm['localite'] || '',
                                 mere: rowNorm['mere'] || '',
                                 pere: rowNorm['pere'] || '',
+                                profession: rowNorm['profession'] || '',
+                                domicile: rowNorm['domicile'] || '',
                                 contact: rowNorm['contact_parent'] || rowNorm['contact'] || '',
-                                num_acte: rowNorm['num_acte'] || rowNorm['n_acte_naissance'] || rowNorm['acte_naissance'] || '',
+                                num_acte: numActeExtracted,
                                 date_etab: rowNorm['date_etab'] || rowNorm['date_etablissement'] || '',
                                 lieu_etab: rowNorm['lieu_etab'] || rowNorm['lieu_etablissement'] || '',
                                 ecole: rowNorm['ecole'] || ''

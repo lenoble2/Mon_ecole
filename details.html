@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -33,6 +34,8 @@
                 <div class="form-group"><label>Localité :</label> <input type="text" name="localite" id="localite"></div>
                 <div class="form-group"><label>Mère :</label> <input type="text" name="mere" id="mere"></div>
                 <div class="form-group"><label>Père :</label> <input type="text" name="pere" id="pere"></div>
+                <div class="form-group"><label>Profession :</label> <input type="text" name="profession" id="profession"></div>
+                <div class="form-group"><label>Domicile :</label> <input type="text" name="domicile" id="domicile"></div>
                 <div class="form-group"><label>Contact parent :</label> <input type="text" name="contact" id="contact"></div>
                 <div class="form-group"><label>Nationalité :</label> <input type="text" name="nationalite" id="nationalite"></div>
                 <div class="form-group"><label>N° acte de naissance :</label> <input type="text" name="num_acte" id="num_acte"></div>
@@ -64,11 +67,11 @@
                 .then(res => res.json())
                 .then(e => {
                     const fields = [
-                        'annee', 'matricule', 'nom', 'prenoms', 'sexe', 'date_naissance', 
-                        'pays', 'localite', 'mere', 'pere', 'contact', 'nationalite', 
+                        'annee', 'matricule', 'nom', 'prenoms', 'sexe', 'date_naissance',
+                        'pays', 'localite', 'mere', 'pere', 'profession', 'domicile', 'contact', 'nationalite',
                         'num_acte', 'date_etab', 'lieu_etab', 'niveau', 'ecole'
                     ];
-                    
+
                     fields.forEach(field => {
                         const el = document.getElementById(field);
                         if (el) el.value = e[field] || '';
@@ -94,7 +97,7 @@
                 });
             }
         }
-        
+
         setupPreview('photo', 'photo-preview');
         setupPreview('document', 'doc-preview');
 

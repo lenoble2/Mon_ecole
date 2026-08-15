@@ -153,6 +153,18 @@
             return parseInt(anneeScolaire) - anneeNaiss;
         }
 
+        function estGarcon(sexe) {
+            if (!sexe) return false;
+            const s = sexe.toString().trim().toUpperCase();
+            return s === 'M' || s === 'MASCULIN' || s === 'GARCON' || s === 'G';
+        }
+
+        function estFille(sexe) {
+            if (!sexe) return false;
+            const s = sexe.toString().trim().toUpperCase();
+            return s === 'F' || s === 'FEMININ' || s === 'FILLE';
+        }
+
         fetch('/api/config-prof').then(res => res.json()).then(data => {
             if(data.drena) document.getElementById('drena-display').innerText = "DRENA : " + data.drena;
             if(data.iepp) document.getElementById('iepp-display').innerText = "IEPP : " + data.iepp;
@@ -190,8 +202,8 @@
             tbody.innerHTML = '';
             const anneeCourante = document.getElementById('annee-select').value;
 
-            const g = data.filter(e => e.sexe === 'M');
-            const f = data.filter(e => e.sexe === 'F');
+            const g = data.filter(e => estGarcon(e.sexe));
+            const f = data.filter(e => estFille(e.sexe));
             const redG = g.filter(e => e.statut === 'Redoublant');
             const redF = f.filter(e => e.statut === 'Redoublant');
 
@@ -209,7 +221,7 @@
 
             const triAlpha = [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
             const totalLignes = Math.max(g.length + 1 + f.length, triAlpha.length + 1);
-            const getColorClass = (sexe) => sexe === 'M' ? 'blue-text' : 'red-text';
+            const getColorClass = (sexe) => estGarcon(sexe) ? 'blue-text' : (estFille(sexe) ? 'red-text' : '');
 
             for (let i = 0; i < totalLignes; i++) {
                 let row = document.createElement('tr');

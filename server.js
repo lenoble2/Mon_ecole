@@ -16,13 +16,11 @@ const upload = multer({ dest: 'uploads/' });
 // ==========================================
 // 1. INITIALISATION DE LA BASE DE DONNÉES SUPABASE
 // ==========================================
-// Initialisation du client Supabase HTTP (Port 443 - compatible Termux/4G)
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Test de la connexion via l'API Supabase
 async function connectDB() {
     try {
         const { data, error } = await supabase.from('utilisateurs').select('id', { count: 'exact', head: true });
@@ -147,12 +145,9 @@ app.get('/api/nom-ecole', (req, res) => {
 // ==========================================
 // 4. ROUTES API - GESTION DES ÉLÈVES
 // ==========================================
-
-// Route placée en amont pour éviter le conflit avec /api/eleves/:annee
 app.get('/api/eleves/details/:id', async (req, res) => {
     const matricule = req.params.id.trim();
     const nomEcole = req.session.nomEcole;
-
     try {
         const { data: eleveData, error: errEleve } = await supabase
             .from('eleves')
@@ -198,12 +193,12 @@ app.get('/api/eleves/details/:id', async (req, res) => {
 
                     let moyenCompoN = countCompo > 0 ? ((m1 + m2 + m3) / countCompo) : 0;
                     let moyenPassage = mPassBrut * 2;
-                    
                     let diviseurTotal = 0;
                     let sommeTotale = 0;
+
                     if (moyenCompoN > 0) { sommeTotale += moyenCompoN; diviseurTotal++; }
                     if (moyenPassage > 0) { sommeTotale += moyenPassage; diviseurTotal++; }
-                    
+
                     let moyenTotal = diviseurTotal > 0 ? (sommeTotale / diviseurTotal) : 0;
 
                     if (moyenTotal > 0) {
@@ -353,7 +348,7 @@ app.post('/api/eleve/:id', upload.fields([{ name: 'photo' }, { name: 'document' 
         const updateFields = {
             nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '', sexe: d.sexe,
             date_naissance: d.date_naissance, pays: d.pays, localite: d.localite,
-            mere: d.mere, pere: d.pere, contact: d.contact, nationalite: d.nationalite,
+            mere: d.mere, pere: d.pere, profession: d.profession?.trim() || '', domicile: d.domicile?.trim() || '', contact: d.contact, nationalite: d.nationalite,
             num_acte: d.num_acte, date_etab: d.date_etab, lieu_etab: d.lieu_etab,
             niveau: d.niveau, ecole: d.ecole
         };
@@ -410,11 +405,25 @@ app.post('/api/importer-eleves', async (req, res) => {
     try {
         const insertData = eleves.map(e => ({
             annee: annee || '2025',
-            matricule: e.matricule || '', nom: e.nom || '', prenoms: e.prenoms || '',
-            sexe: e.sexe || '', date_naissance: e.date_naissance || '', pays: e.pays || '',
-            localite: e.localite || '', mere: e.mere || '', pere: e.pere || '', contact: e.contact_parent || e.contact || '',
-            nationalite: e.nationalite || '', num_acte: e.n_acte_naissance || e.acte_naissance || '', date_etab: e.date_etab || '', lieu_etab: e.lieu_etab || '',
-            ecole: e.ecole || '', niveau: e.niveau || '', nom_ecole: nomEcole
+            matricule: e.matricule || '',
+            nom: e.nom || '',
+            prenoms: e.prenoms || e.prenom || '',
+            sexe: e.sexe || '',
+            date_naissance: e.date_naissance || e.date_naiss || e.datenaissance || '',
+            pays: e.pays || '',
+            localite: e.localite || '',
+            mere: e.mere || '',
+            pere: e.pere || '',
+            profession: e.profession || '',
+            domicile: e.domicile || '',
+            contact: e.contact_parent || e.contact || e.telephone || '',
+            nationalite: e.nationalite || '',
+            num_acte: e.n_acte_naissance || e.acte_naissance || e.num_acte || '',
+            date_etab: e.date_etab || '',
+            lieu_etab: e.lieu_etab || '',
+            ecole: e.ecole || '',
+            niveau: e.niveau || '',
+            nom_ecole: nomEcole
         }));
 
         const { error } = await supabase.from('eleves').upsert(insertData, { ignoreDuplicates: true });
@@ -437,13 +446,37 @@ app.post('/importer', upload.single('fichier_csv'), (req, res) => {
         .on('data', (data) => results.push(data))
         .on('end', async () => {
             try {
-                const insertData = results.map(row => ({
-                    annee: anneeImport,
-                    matricule: row.matricule || '', nom: row.nom || '', prenoms: row.prenoms || '', sexe: row.sexe || '', date_naissance: row.date_naissance || '', pays: row.pays || '',
-                    localite: row.localite || '', mere: row.mere || '', pere: row.pere || '', contact: row.contact || '', nationalite: row.nationalite || '', num_acte: row.num_acte || '',
-                    date_etab: row.date_etab || '', lieu_etab: row.lieu_etab || '', ecole_origine: row.ecole_origine || '', niveau: row.niveau || '',
-                    nom_ecole: nomEcole
-                }));
+                const insertData = results.map(row => {
+                    // Normalisation des clés pour accepter les espaces, majuscules et accents
+                    const cleanRow = {};
+                    for (let key in row) {
+                        const cleanKey = key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+                        cleanRow[cleanKey] = row[key];
+                    }
+
+                    return {
+                        annee: anneeImport,
+                        matricule: cleanRow.matricule || '',
+                        nom: cleanRow.nom || '',
+                        prenoms: cleanRow.prenoms || cleanRow.prenom || '',
+                        sexe: cleanRow.sexe || '',
+                        date_naissance: cleanRow.date_naissance || cleanRow.date_naiss || cleanRow.datenaissance || '',
+                        pays: cleanRow.pays || '',
+                        localite: cleanRow.localite || '',
+                        mere: cleanRow.mere || '',
+                        pere: cleanRow.pere || '',
+                        profession: cleanRow.profession || '',
+                        domicile: cleanRow.domicile || '',
+                        contact: cleanRow.contact || cleanRow.telephone || '',
+                        nationalite: cleanRow.nationalite || '',
+                        num_acte: cleanRow.num_acte || cleanRow.n_acte_naissance || cleanRow.acte_naissance || '',
+                        date_etab: cleanRow.date_etab || '',
+                        lieu_etab: cleanRow.lieu_etab || '',
+                        ecole_origine: cleanRow.ecole_origine || '',
+                        niveau: cleanRow.niveau || '',
+                        nom_ecole: nomEcole
+                    };
+                });
 
                 const { error } = await supabase.from('eleves').insert(insertData);
                 if (error) throw error;
@@ -492,7 +525,7 @@ app.post('/ajouter-eleve', upload.fields([{ name: 'photo' }, { name: 'document' 
 
         const insertData = {
             annee: d.annee, matricule: d.matricule?.trim() || '', nom: d.nom?.trim() || '', prenoms: d.prenoms?.trim() || '',
-            sexe: d.sexe, date_naissance, pays: d.pays, localite: d.localite, mere: d.mere, pere: d.pere, contact: d.contact,
+            sexe: d.sexe, date_naissance, pays: d.pays, localite: d.localite, mere: d.mere, pere: d.pere, profession: d.profession?.trim() || '', domicile: d.domicile?.trim() || '', contact: d.contact,
             nationalite: d.nationalite, num_acte: d.num_acte, date_etab: d.date_etab, lieu_etab: d.lieu_etab, ecole: d.ecole, niveau: d.niveau, nom_ecole: nomEcole
         };
 
@@ -650,6 +683,7 @@ app.post('/api/update-notes', async (req, res) => {
 app.post('/api/sauvegarder-bulletin', async (req, res) => {
     const nomEcole = req.session.nomEcole;
     const { annee, niveau, periode, lignesEleves } = req.body;
+
     try {
         const upsertData = lignesEleves.map(eleve => {
             const n = eleve.notes || {};
@@ -761,7 +795,7 @@ app.post('/api/basculer-eleves', async (req, res) => {
                 let nouveauNiveau = (item.decision === 'A' && passageNiveau[e.niveau]) ? passageNiveau[e.niveau] : e.niveau;
                 insertData.push({
                     annee: annee_cible, matricule: e.matricule, nom: e.nom, prenoms: e.prenoms, sexe: e.sexe,
-                    date_naissance: e.date_naissance, pays: e.pays, localite: e.localite, mere: e.mere, pere: e.pere,
+                    date_naissance: e.date_naissance, pays: e.pays, localite: e.localite, mere: e.mere, pere: e.pere, profession: e.profession, domicile: e.domicile,
                     contact: e.contact, nationalite: e.nationalite, num_acte: e.num_acte, date_etab: e.date_etab,
                     lieu_etab: e.lieu_etab, ecole: e.ecole, niveau: nouveauNiveau, nom_ecole: nomEcole
                 });

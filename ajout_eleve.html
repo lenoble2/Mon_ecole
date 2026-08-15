@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -17,12 +18,11 @@
 
     <h2>Ajouter un nouvel élève</h2>
 
-    <form action="/ajouter-eleve" method="POST" enctype="multipart/form-data">
-
+    <form action="/ajouter-eleve" method="POST" enctype="multipart/form-data">                              
         <section>
             <h3>Identification</h3>
             <div class="form-group"><label>Photo :</label> <input type="file" name="photo" accept="image/*"></div>
-            <div class="form-group"><label>Année scolaire :</label> <input type="text" name="annee" value="2025"></div>
+            <div class="form-group"><label>Année scolaire :</label> <input type="text" name="annee"></div>
             <div class="form-group"><label>Matricule :</label> <input type="text" name="matricule"></div>
             <div class="form-group"><label>Nom :</label> <input type="text" name="nom"></div>
             <div class="form-group"><label>Prénoms :</label> <input type="text" name="prenoms"></div>
@@ -36,6 +36,8 @@
             <div class="form-group"><label>Localité :</label> <input type="text" name="localite"></div>
             <div class="form-group"><label>Mère :</label> <input type="text" name="mere"></div>
             <div class="form-group"><label>Père :</label> <input type="text" name="pere"></div>
+            <div class="form-group"><label>Profession :</label> <input type="text" name="profession"></div>
+            <div class="form-group"><label>Domicile :</label> <input type="text" name="domicile"></div>
             <div class="form-group"><label>Contact parent :</label> <input type="text" name="contact"></div>
             <div class="form-group"><label>Nationalité :</label> <input type="text" name="nationalite"></div>
         </section>
