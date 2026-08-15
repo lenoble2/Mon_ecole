@@ -24,9 +24,9 @@
     </style>
 </head>
 <body>
-
+    
     <h2 id="titre-annee">Fichier élèves</h2>
-
+    
     <div class="filter-container">
         <button class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>
         <button class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
@@ -36,7 +36,7 @@
         <button class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>
         <button class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>
     </div>
-
+    
     <div id="conteneurTableau">
         <table>
             <thead>
@@ -71,13 +71,13 @@
         <a href="ajout_eleve.html" class="btn" style="background-color: #28a745;">+ Ajouter un élève</a>
         <button id="delete-btn" class="btn" style="background-color: #d32f2f;">Supprimer sélectionnés</button>
         <button type="button" class="btn" style="background-color: #007bff;" onclick="telechargerExcelEleves()">Télécharger Excel Élèves</button>
-
+        
         <!-- Input fichier caché pour l'import Excel / CSV -->
         <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">
         <button type="button" class="btn" style="background-color: #6c757d;" onclick="document.getElementById('inputFichierExcel').click()">Ajouter fichier</button>
         <span id="nomFichierAffiche" style="font-size: 0.85em; color: #555; font-style: italic; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Aucun fichier choisi">Aucun fichier</span>
         <button type="button" class="btn" style="background-color: #212529;" onclick="importerFichierEleves()">Importer les élèves</button>
-
+        
         <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour vers Accueil</a>
     </div>
 
@@ -104,6 +104,7 @@
             return parseInt(anneeSelectionnee) - anneeNaiss;
         }
 
+        // Chargement ciblé des élèves en passant l'année dans l'URL pour éviter les interférences globales
         fetch(`/api/eleves/${anneeSelectionnee}`)
             .then(res => res.json())
             .then(eleves => {
@@ -126,10 +127,11 @@
             data.forEach(e => {
                 const dateNaissVal = e.date_naissance || e.date_naiss || e.date_de_naissance || '';
                 const numActeVal = e.num_acte || e.n_acte_naissance || e.acte_naissance || '';
+                // On transmet l'année dans le lien des détails pour que la modification soit spécifique à l'année courante
                 tbody.innerHTML += `<tr>
                     <td class="checkbox"><input type="checkbox" class="row-checkbox" data-id="${e.matricule || ''}"></td>
                     <td>${e.matricule || ''}</td>
-                    <td><a href="details.html?id=${e.matricule || ''}" class="nom-lien">${e.nom || ''}</a></td>
+                    <td><a href="details.html?id=${e.matricule || ''}&annee=${anneeSelectionnee}" class="nom-lien">${e.nom || ''}</a></td>
                     <td>${e.prenoms || ''}</td>
                     <td>${e.sexe || ''}</td>
                     <td>${dateNaissVal}</td>
@@ -275,7 +277,6 @@
                         if (!existeDeja && matriculeImport !== "") {
                             let dateNaissExtracted = rowNorm['date_naissance'] || rowNorm['date_naiss'] || rowNorm['datenaissance'] || rowNorm['date'] || '';
                             let numActeExtracted = rowNorm['num_acte'] || rowNorm['n_acte_naissance'] || rowNorm['acte_naissance'] || rowNorm['n_acte'] || '';
-
                             elevesImportes.push({
                                 matricule: matriculeImport,
                                 nom: rowNorm['nom'] || '',
@@ -290,7 +291,7 @@
                                 pere: rowNorm['pere'] || '',
                                 profession: rowNorm['profession'] || '',
                                 domicile: rowNorm['domicile'] || '',
-                                contact: rowNorm['contact_parent'] || rowNorm['contact'] || '',
+                                contact: rowNom['contact_parent'] || rowNorm['contact'] || '',
                                 num_acte: numActeExtracted,
                                 date_etab: rowNorm['date_etab'] || rowNorm['date_etablissement'] || '',
                                 lieu_etab: rowNorm['lieu_etab'] || rowNorm['lieu_etablissement'] || '',

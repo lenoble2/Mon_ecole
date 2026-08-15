@@ -5,87 +5,43 @@
     <meta charset="UTF-8">
     <title>Certificat de Scolarité et Fiche Scolaire</title>
     <style>
-        @page { size: A4; margin: 10mm; }
-        body { font-family: 'Times New Roman', serif; margin: 0; padding: 0; line-height: 1.15; font-size: 11pt; color: #000; padding-bottom: 60px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .page {
-            box-sizing: border-box;
-            padding: 5mm;
+        @page { size: A4; margin: 10mm; }                     body { font-family: 'Times New Roman', serif; margin: 0; padding: 0; line-height: 1.15; font-size: 11pt; color: #000; padding-bottom: 60px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }             .page {
+            box-sizing: border-box;                               padding: 5mm;
             height: 277mm;
-            max-height: 277mm;
-            position: relative;
-            page-break-after: always;
-            page-break-inside: avoid;
-            background: #fff;
-            overflow: hidden;
-            -webkit-print-color-adjust: exact;
+            max-height: 277mm;                                    position: relative;                                   page-break-after: always;
+            page-break-inside: avoid;                             background: #fff;
+            overflow: hidden;                                     -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
-        }
-        .page::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: none;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
-            opacity: 0;
-            z-index: 1;
-            pointer-events: none;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        .page > * {
+        }                                                     .page::before {
+            content: "";                                          position: absolute;
+            top: 0;                                               left: 0;                                              width: 100%;
+            height: 100%;                                         background-image: none;                               background-repeat: no-repeat;
+            background-position: center;                          background-size: contain;
+            opacity: 0;                                           z-index: 1;                                           pointer-events: none;
+            -webkit-print-color-adjust: exact;                    print-color-adjust: exact;
+        }                                                     .page > * {
             position: relative;
-            z-index: 2;
-        }
-        .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-        .header-left { text-align: left; font-size: 0.75em; }
-        .header-right { text-align: center; font-size: 0.8em; }
-        .armoiries { width: 40px; display: block; margin: 0 auto; }
+            z-index: 2;                                       }                                                     .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }                                                 .header-left { text-align: left; font-size: 0.75em; }                                                       .header-right { text-align: center; font-size: 0.8em; }                                                     .armoiries { width: 40px; display: block; margin: 0 auto; }
         .titre { text-decoration: underline; font-weight: bold; font-size: 1.1em; margin: 4px 0; text-align: center; }
-        .contenu { margin-bottom: 4px; text-align: justify; font-size: 0.9em; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 0.8em; background-color: rgba(255, 255, 255, 0.85); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        th, td { border: 1px solid black; padding: 3px; text-align: center; }
-        .table-signature { width: 100%; border-collapse: collapse; margin-top: 4px; }
-        .table-signature td { height: 60px; vertical-align: top; padding: 3px; }
+        .contenu { margin-bottom: 4px; text-align: justify; font-size: 0.9em; }                                     table { width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 0.8em; background-color: rgba(255, 255, 255, 0.85); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        th, td { border: 1px solid black; padding: 3px; text-align: center; }                                       .table-signature { width: 100%; border-collapse: collapse; margin-top: 4px; }                               .table-signature td { height: 60px; vertical-align: top; padding: 3px; }
         .footer-note { font-style: italic; font-size: 0.65em; margin-top: 4px; border-top: 1px solid #000; padding-top: 2px; }
-        .btn { padding: 6px 12px; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .fiche-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
-        .photo-box { width: 140px; height: 180px; border: 1px solid black; display: flex; align-items: center; justify-content: center; font-size: 0.7em; text-align: center; background-color: #f9f9f9; overflow: hidden; }
-        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        .section-title { background-color: #e2e2e2; font-weight: bold; text-align: center; padding: 2px; border: 1px solid black; margin-top: 6px; font-size: 0.85em; text-transform: uppercase; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-        @media print {
-            #zone-recherche { display: none !important; }
-            body { padding-bottom: 0; }
-            .page {
-                page-break-after: always;
-                height: 277mm;
-                max-height: 277mm;
-                overflow: hidden;
+        .btn { padding: 6px 12px; color: white; border: none; border-radius: 4px; cursor: pointer; }                .fiche-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }                                                     .photo-box { width: 140px; height: 180px; border: 1px solid black; display: flex; align-items: center; justify-content: center; font-size: 0.7em; text-align: center; background-color: #f9f9f9; overflow: hidden; }                                                          .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .section-title { background-color: #e2e2e2; font-weight: bold; text-align: center; padding: 2px; border: 1px solid black; margin-top: 6px; font-size: 0.85em; text-transform: uppercase; -webkit-print-color-adjust: exact; print-color-adjust: exact; }              
+        @media print {                                            #zone-recherche { display: none !important; }
+            body { padding-bottom: 0; }                           .page {                                                   page-break-after: always;
+                height: 277mm;                                        max-height: 277mm;                                    overflow: hidden;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
             .page::before {
                 -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .section-title {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            table {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-        }
-    </style>
-</head>
-<body>
-
+                print-color-adjust: exact;                        }
+            .section-title {                                          -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;                        }
+            table {                                                   -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;                        }
+        }                                                 </style>                                          </head>                                               <body>                                                
     <!-- PAGE 1 : CERTIFICAT DE SCOLARITÉ -->
     <div class="page">
         <div class="header-container">
@@ -95,19 +51,15 @@
                 <p>DIRECTION RÉGIONALE <span id="prefix-drena">DE</span> <span id="drena-val"></span></p>
                 <p>---------------------------</p>
                 <p>INSPECTION DE L'ENSEIGNEMENT PRIMAIRE<br>ET PRÉSCOLAIRE <span id="prefix-iepp">DE</span> <span id="iepp-val"></span></p>
-                <p style="margin: 2px 0;">Adresse: <span id="adresse-val"></span> | Mail: <span id="mail-val"></span> | Tel: <span id="tel-val"></span></p>
-            </div>
-            <div class="header-right">
-                <div style="font-weight: bold;">RÉPUBLIQUE DE CÔTE D'IVOIRE</div>
+                <p style="margin: 2px 0;">Adresse: <span id="adresse-val"></span> | Mail: <span id="mail-val"></span> | Tel: <span id="tel-val"></span></p>                   </div>
+            <div class="header-right">                                <div style="font-weight: bold;">RÉPUBLIQUE DE CÔTE D'IVOIRE</div>
                 <img src="Armoiries.jpg" alt="Armoiries" class="armoiries">
                 <div style="font-size: 0.7em;">Union-Discipline-Travail</div>
                 <p style="margin: 2px 0;"><strong>École : <span id="nom-ecole-top"></span></strong></p>
-            </div>
-        </div>
+            </div>                                            </div>
 
         <div class="titre">CERTIFICAT DE SCOLARITÉ</div>
-        <div class="contenu">
-            <p>Le Directeur de l'école primaire publique <strong><span id="nom-ecole-body"></span></strong>; Circonscription de l'enseignement préscolaire et primaire <span id="prefix-iepp-body">DE</span> <span id="iepp-body"></span>, certifie que l'élève: <strong><span id="nom-eleve"></span></strong> né(e) le <strong><span id="date-naiss"></span></strong> à <strong class="capitalize-text"><span id="lieu-naiss"></span></strong>, selon l'acte de naissance ou jugement supplétif N°<strong><span id="num_acte"></span></strong> du <strong><span id="date_etab"></span></strong>, inscrit dans le registre de l'établissement sous N°.......... du matricule <strong><span id="num-reg"></span></strong>, est régulièrement inscrit(e) dans notre établissement et y suit une scolarité assidue. </p>
+        <div class="contenu">                                     <p>Le Directeur de l'école primaire publique <strong><span id="nom-ecole-body"></span></strong>; Circonscription de l'enseignement préscolaire et primaire <span id="prefix-iepp-body">DE</span> <span id="iepp-body"></span>, certifie que l'élève: <strong><span id="nom-eleve"></span></strong> né(e) le <strong><span id="date-naiss"></span></strong> à <strong class="capitalize-text"><span id="lieu-naiss"></span></strong>, selon l'acte de naissance ou jugement supplétif N°<strong><span id="num_acte"></span></strong> du <strong><span id="date_etab"></span></strong>, inscrit dans le registre de l'établissement sous N°.......... du matricule <strong><span id="num-reg"></span></strong>, est régulièrement inscrit(e) dans notre établissement et y suit une scolarité assidue. </p>
             <p>En foi de quoi, le présent certificat est délivré pour servir et valoir ce que de droit.</p>
         </div>
 
@@ -116,430 +68,179 @@
                 <tr><th>ANNÉE SCOLAIRE</th><th>COURS FRÉQUENTÉ</th><th>MOYENNE</th><th>CLASSEMENT</th><th>OBSERVATIONS</th></tr>
             </thead>
             <tbody id="tableau-scolarite"></tbody>
-        </table>
-
-        <div style="text-align: right; margin-bottom: 4px; font-size: 0.8em;">
-            <p style="margin: 2px 0;">Appréciation générale : Bon-travail <strong><span id="appreciation-travail"></span></strong></p>
+        </table>                                      
+        <div style="text-align: right; margin-bottom: 4px; font-size: 0.8em;">                                          <p style="margin: 2px 0;">Appréciation générale : Bon-travail <strong><span id="appreciation-travail"></span></strong></p>
             <p style="margin: 2px 0;">Conduite : Bonne conduite <strong><span id="appreciation-conduite"></span></strong></p>
-            <p style="margin: 2px 0;">Fait à................ <span id="prefix-ville">À</span> <span id="ville-signature"></span>, le <span id="date-jour"></span></p>
-        </div>
-
-        <table class="table-signature" style="background-color: rgba(255, 255, 255, 0.85);">
-            <tr>
-                <th style="padding: 3px; border: 1px solid black; width: 50%;">NOM ET PRÉNOMS DU DIRECTEUR</th>
-                <th style="padding: 3px; border: 1px solid black; width: 50%;">CACHET DE L'ÉTABLISSEMENT ET SIGNATURE DU DIRECTEUR</th>
-            </tr>
-            <tr>
-                <td style="text-align: left; vertical-align: top;"><span id="nom-directeur"></span></td>
-                <td></td>
-            </tr>
+            <p style="margin: 2px 0;">Fait à................ <span id="prefix-ville">À</span> <span id="ville-signature"></span>, le <span id="date-jour"></span></p>                                                           </div>
+                                                              <table class="table-signature" style="background-color: rgba(255, 255, 255, 0.85);">                            <tr>                                                      <th style="padding: 3px; border: 1px solid black; width: 50%;">NOM ET PRÉNOMS DU DIRECTEUR</th>                                                                   <th style="padding: 3px; border: 1px solid black; width: 50%;">CACHET DE L'ÉTABLISSEMENT ET SIGNATURE DU DIRECTEUR</th>
+            </tr>                                                 <tr>                                                      <td style="text-align: left; vertical-align: top;"><span id="nom-directeur"></span></td>                    <td></td>                                         </tr>
         </table>
-        <div class="footer-note">
-            NB : Les ratures, grattages, surcharges ou omissions conduisent à la nullité de la présente pièce. Toute falsification sera punie des peines prévues par la loi.
-        </div>
+        <div class="footer-note">                                 NB : Les ratures, grattages, surcharges ou omissions conduisent à la nullité de la présente pièce. Toute falsification sera punie des peines prévues par la loi.                                                    </div>
     </div>
 
-    <!-- PAGE 2 : FICHE SCOLAIRE -->
-    <div class="page">
+    <!-- PAGE 2 : FICHE SCOLAIRE -->                      <div class="page">
         <div class="fiche-header">
             <div class="header-left" style="font-size: 0.75em;">
                 <p>MINISTÈRE DE L'ÉDUCATION NATIONALE<br>ET DE L' ALPHABÉTISATION</p>
                 <p style="margin: 2px 0;"><strong>DREN :</strong> <span id="f-drena"></span></p>
-                <p style="margin: 2px 0;"><strong>IEPP :</strong> <span id="f-iepp"></span></p>
-                <p style="margin: 2px 0;"><strong>ECOLE :</strong> <span id="f-ecole"></span></p>
+                <p style="margin: 2px 0;"><strong>IEPP :</strong> <span id="f-iepp"></span></p>                             <p style="margin: 2px 0;"><strong>ECOLE :</strong> <span id="f-ecole"></span></p>
                 <p style="margin: 2px 0;"><strong>Classe :</strong> <span id="f-classe"></span></p>
-            </div>
-            <div class="photo-box" id="f-photo-container">
-                <span>PHOTO</span>
-            </div>
-        </div>
-
-        <div class="titre" style="margin: 2px 0;">FICHE SCOLAIRE</div>
-        <div style="font-size: 0.8em; margin-bottom: 4px;">
-            N° Registre 1 : <span id="f-reg1">........................</span> &nbsp;&nbsp;&nbsp;&nbsp; N° Registre 2 : <span id="f-reg2">........................</span> &nbsp;&nbsp;&nbsp;&nbsp; Matricule : <strong><span id="f-matricule"></span></strong>
-        </div>
+            </div>                                                <div class="photo-box" id="f-photo-container">                                                                  <span>PHOTO</span>
+            </div>                                            </div>
+                                                              <div class="titre" style="margin: 2px 0;">FICHE SCOLAIRE</div>                                              <div style="font-size: 0.8em; margin-bottom: 4px;">
+            N° Registre 1 : <span id="f-reg1">........................</span> &nbsp;&nbsp;&nbsp;&nbsp; N° Registre 2 : <span id="f-reg2">........................</span> &nbsp;&nbsp;&nbsp;&nbsp; Matricule : <strong><span id="f-matricule"></span></strong>                         </div>
 
         <div class="section-title">Informations sur l'élève</div>
         <table style="margin-top: 2px; font-size: 0.8em; background-color: rgba(255, 255, 255, 0.85);">
             <tr>
                 <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Nom :</strong> <span id="f-nom"></span></td>
-                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Prénoms :</strong> <span id="f-prenoms"></span></td>
-            </tr>
-            <tr>
-                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Né(e) le :</strong> <span id="f-date-naiss"></span></td>
-                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>à :</strong> <span id="f-lieu-naiss"></span></td>
-            </tr>
-            <tr>
-                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Sexe :</strong> <span id="f-sexe"></span></td>
-                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Nationalité :</strong> <span id="f-nationalite"></span></td>
-            </tr>
-            <tr>
-                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Pays :</strong> <span id="f-pays"></span></td>
+                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Prénoms :</strong> <span id="f-prenoms"></span></td>                             </tr>
+            <tr>                                                      <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Né(e) le :</strong> <span id="f-date-naiss"></span></td>
+                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>à :</strong> <span id="f-lieu-naiss"></span></td>                                </tr>                                                 <tr>
+                <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Sexe :</strong> <span id="f-sexe"></span></td>                                       <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Nationalité :</strong> <span id="f-nationalite"></span></td>
+            </tr>                                                 <tr>                                                      <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Pays :</strong> <span id="f-pays"></span></td>
                 <td style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Contact parent :</strong> <span id="f-contact"></span></td>
             </tr>
             <tr>
-                <td colspan="2" style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Acte de naissance ou jugement N° :</strong> <span id="f-num-acte"></span> &nbsp;&nbsp; <strong>délivré le :</strong> <span id="f-date-etab"></span> à <span id="f-lieu-etab"></span></td>
-            </tr>
-        </table>
-
-        <div class="section-title">Informations sur les parents et tuteur</div>
-        <table style="margin-top: 2px; font-size: 0.8em; background-color: rgba(255, 255, 255, 0.85);">
-            <thead>
-                <tr>
-                    <th style="width: 25%;"></th>
+                <td colspan="2" style="text-align: left; border: 1px solid black; padding: 3px;"><strong>Acte de naissance ou jugement N° :</strong> <span id="f-num-acte"></span> &nbsp;&nbsp; <strong>délivré le :</strong> <span id="f-date-etab"></span> à <span id="f-lieu-etab"></span></td>                                              </tr>
+        </table>                                      
+        <div class="section-title">Informations sur les parents et tuteur</div>                                     <table style="margin-top: 2px; font-size: 0.8em; background-color: rgba(255, 255, 255, 0.85);">                 <thead>
+                <tr>                                                      <th style="width: 25%;"></th>
                     <th style="width: 25%;">Le père</th>
                     <th style="width: 25%;">La mère</th>
-                    <th style="width: 25%;">Le tuteur</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="text-align: left; font-weight: bold; padding: 3px;">Nom et prénoms</td>
-                    <td style="text-align: left; padding: 3px;"><span id="f-pere-nom"></span></td>
-                    <td style="text-align: left; padding: 3px;"><span id="f-mere-nom"></span></td>
-                    <td style="text-align: left; padding: 3px;"><span id="f-tuteur-nom"></span></td>
-                </tr>
-                <tr>
-                    <td style="text-align: left; font-weight: bold; padding: 3px;">Profession</td>
-                    <td style="text-align: left; padding: 3px;"><span id="f-pere-prof"></span></td>
-                    <td style="text-align: left; padding: 3px;"><span id="f-mere-prof"></span></td>
-                    <td style="text-align: left; padding: 3px;"><span id="f-tuteur-prof"></span></td>
-                </tr>
-                <tr>
+                    <th style="width: 25%;">Le tuteur</th>                                                                  </tr>                                             </thead>                                              <tbody>
+                <tr>                                                      <td style="text-align: left; font-weight: bold; padding: 3px;">Nom et prénoms</td>                          <td style="text-align: left; padding: 3px;"><span id="f-pere-nom"></span></td>
+                    <td style="text-align: left; padding: 3px;"><span id="f-mere-nom"></span></td>                              <td style="text-align: left; padding: 3px;"><span id="f-tuteur-nom"></span></td>                        </tr>                                                 <tr>
+                    <td style="text-align: left; font-weight: bold; padding: 3px;">Profession</td>                              <td style="text-align: left; padding: 3px;"><span id="f-pere-prof"></span></td>
+                    <td style="text-align: left; padding: 3px;"><span id="f-mere-prof"></span></td>                             <td style="text-align: left; padding: 3px;"><span id="f-tuteur-prof"></span></td>                       </tr>                                                 <tr>
                     <td style="text-align: left; font-weight: bold; padding: 3px;">Domicile</td>
                     <td style="text-align: left; padding: 3px;"><span id="f-pere-dom"></span></td>
                     <td style="text-align: left; padding: 3px;"><span id="f-mere-dom"></span></td>
-                    <td style="text-align: left; padding: 3px;"><span id="f-tuteur-dom"></span></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="section-title">Cursus scolaire</div>
-        <table style="margin-top: 2px; font-size: 0.75em; background-color: rgba(255, 255, 255, 0.85);">
-            <thead>
-                <tr id="f-cursus-annees">
-                    <th>Année scolaire</th>
-                    <th>20.../20...</th>
-                    <th>20.../20...</th>
-                    <th>20.../20...</th>
-                    <th>20.../20...</th>
-                    <th>20.../20...</th>
-                    <th>20.../20...</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr id="f-cursus-niveau">
-                    <td style="font-weight: bold;">Niveau / Classe</td>
-                    <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
+                    <td style="text-align: left; padding: 3px;"><span id="f-tuteur-dom"></span></td>                        </tr>                                             </tbody>
+        </table>                                      
+        <div class="section-title">Cursus scolaire</div>                                                            <table style="margin-top: 2px; font-size: 0.75em; background-color: rgba(255, 255, 255, 0.85);">
+            <thead>                                                   <tr id="f-cursus-annees">                                 <th>Année scolaire</th>                               <th>20.../20...</th>
+                    <th>20.../20...</th>                                  <th>20.../20...</th>                                  <th>20.../20...</th>
+                    <th>20.../20...</th>                                  <th>20.../20...</th>
+                </tr>                                             </thead>
+            <tbody>                                                   <tr id="f-cursus-niveau">                                 <td style="font-weight: bold;">Niveau / Classe</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td>                                                  </tr>
                 <tr id="f-cursus-effectif">
-                    <td style="font-weight: bold;">Effectif</td>
-                    <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr id="f-cursus-moyenne">
-                    <td style="font-weight: bold;">Moyenne annuelle</td>
-                    <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr id="f-cursus-rang">
-                    <td style="font-weight: bold;">Rang</td>
-                    <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
+                    <td style="font-weight: bold;">Effectif</td>                                                                <td></td><td></td><td></td><td></td><td></td><td></td>                                                  </tr>                                                 <tr id="f-cursus-moyenne">                                <td style="font-weight: bold;">Moyenne annuelle</td>                                                        <td></td><td></td><td></td><td></td><td></td><td></td>                                                  </tr>                                                 <tr id="f-cursus-rang">                                   <td style="font-weight: bold;">Rang</td>                                                                    <td></td><td></td><td></td><td></td><td></td><td></td>                                                  </tr>
             </tbody>
         </table>
 
-        <div style="text-align: right; margin-top: 4px; font-size: 0.8em;">
-            <p style="margin: 2px 0;">Fait à................ <span id="f-prefix-ville">À</span> <span id="f-ville-signature"></span>, le <span id="f-date-jour"></span></p>
-        </div>
+        <div style="text-align: right; margin-top: 4px; font-size: 0.8em;">                                             <p style="margin: 2px 0;">Fait à................ <span id="f-prefix-ville">À</span> <span id="f-ville-signature"></span>, le <span id="f-date-jour"></span></p>                                                     </div>
 
         <table class="table-signature" style="background-color: rgba(255, 255, 255, 0.85);">
-            <tr>
-                <th style="padding: 3px; border: 1px solid black; width: 50%;">NOM ET PRÉNOMS DU DIRECTEUR</th>
-                <th style="padding: 3px; border: 1px solid black; width: 50%;">CACHET DE L'ÉTABLISSEMENT ET SIGNATURE DU DIRECTEUR</th>
-            </tr>
-            <tr>
-                <td style="text-align: left; vertical-align: top;"><span id="f-nom-directeur"></span></td>
-                <td></td>
-            </tr>
-        </table>
-        <div class="footer-note">
-            NB : Les ratures, grattages, surcharges ou omissions conduisent à la nullité de la présente pièce. Toute falsification sera punie des peines prévues par la loi.
-        </div>
-    </div>
-
-    <!-- ZONE DE RECHERCHE ET BOUTONS -->
-    <div id="zone-recherche" style="position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; border-top: 2px dashed #ccc; text-align: center; z-index: 1000; box-shadow: 0 -2px 5px rgba(0,0,0,0.1);">
-        <label for="recherche-eleve"><strong>Rechercher : </strong></label>
-        <input list="liste-eleves" id="recherche-eleve" placeholder="Matricule..." style="padding: 4px; width: 200px;">
+            <tr>                                                      <th style="padding: 3px; border: 1px solid black; width: 50%;">NOM ET PRÉNOMS DU DIRECTEUR</th>                                                                   <th style="padding: 3px; border: 1px solid black; width: 50%;">CACHET DE L'ÉTABLISSEMENT ET SIGNATURE DU DIRECTEUR</th>                                       </tr>                                                 <tr>                                                      <td style="text-align: left; vertical-align: top;"><span id="f-nom-directeur"></span></td>
+                <td></td>                                         </tr>                                             </table>                                              <div class="footer-note">                                 NB : Les ratures, grattages, surcharges ou omissions conduisent à la nullité de la présente pièce. Toute falsification sera punie des peines prévues par la loi.                                                    </div>
+    </div>                                            
+    <!-- ZONE DE RECHERCHE ET BOUTONS -->                 <div id="zone-recherche" style="position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; border-top: 2px dashed #ccc; text-align: center; z-index: 1000; box-shadow: 0 -2px 5px rgba(0,0,0,0.1);">                                                        <label for="recherche-eleve"><strong>Rechercher : </strong></label>                                         <input list="liste-eleves" id="recherche-eleve" placeholder="Matricule..." style="padding: 4px; width: 200px;">
         <datalist id="liste-eleves"></datalist>
         <button onclick="chargerEleve()" class="btn" style="background-color: #007bff;">Importer</button>
         <button onclick="window.print()" class="btn" style="background-color: #28a745;">Imprimer les documents</button>
-    </div>
-
-    <script>
-        function formaterLieu(texte) {
-            if (!texte) return '';
-            let t = texte.trim().toLowerCase();
+    </div>                                                                                                      <script>                                                  function formaterLieu(texte) {
+            if (!texte) return '';                                let t = texte.trim().toLowerCase();
             return t.charAt(0).toUpperCase() + t.slice(1);
-        }
-
-        function obtenirPreposition(nomVille) {
-            if (!nomVille) return "DE";
-            let v = nomVille.trim().toLowerCase();
+        }                                             
+        function obtenirPreposition(nomVille) {                   if (!nomVille) return "DE";                           let v = nomVille.trim().toLowerCase();
             let premiereLettre = v.charAt(0);
             if (['a', 'e', 'i', 'o', 'u', 'y', 'à', 'â', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'ù', 'û'].includes(premiereLettre)) {
-                return "D'";
-            }
-            return "DE";
-        }
-
-        function obtenirPrepositionVille(nomVille) {
-            if (!nomVille) return "À";
-            let v = nomVille.trim().toLowerCase();
-            let premiereLettre = v.charAt(0);
-            if (['a', 'e', 'i', 'o', 'u', 'y', 'à', 'â', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'ù', 'û'].includes(premiereLettre)) {
-                return "À D'";
-            }
-            return "À";
-        }
-
-        Promise.all([
-            fetch('/api/config-prof').then(res => res.json()),
-            fetch('/api/nom-ecole').then(res => res.json()),
-            fetch('/api/eleves/tous').then(res => res.json())
-        ]).then(([config, ecoleData, eleves]) => {
-            const drena = (config.drena || '').toUpperCase();
-            const iepp = (config.iepp || '').toUpperCase();
-            const ville = config.ville || '';
-            
-            document.getElementById('prefix-drena').innerText = obtenirPreposition(drena);
-            document.getElementById('drena-val').innerText = drena;
-            document.getElementById('prefix-iepp').innerText = obtenirPreposition(iepp);
-            document.getElementById('iepp-val').innerText = iepp;
-            document.getElementById('prefix-iepp-body').innerText = obtenirPreposition(iepp);
-            document.getElementById('iepp-body').innerText = iepp;
-            document.getElementById('prefix-ville').innerText = obtenirPrepositionVille(ville);
-            document.getElementById('ville-signature').innerText = ville;
-
-            document.getElementById('f-prefix-ville').innerText = obtenirPrepositionVille(ville);
-            document.getElementById('f-ville-signature').innerText = ville;
-
-            document.getElementById('adresse-val').innerText = config.adresse || '';
-            document.getElementById('mail-val').innerText = config.mail || '';
-            document.getElementById('tel-val').innerText = config.tel || '';
-            document.getElementById('nom-directeur').innerText = config.nom_directeur || '';
-            document.getElementById('f-nom-directeur').innerText = config.nom_directeur || '';
+                return "D'";                                      }
+            return "DE";                                      }                                                                                                           function obtenirPrepositionVille(nomVille) {              if (!nomVille) return "À";                            let v = nomVille.trim().toLowerCase();                let premiereLettre = v.charAt(0);                     if (['a', 'e', 'i', 'o', 'u', 'y', 'à', 'â', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'ù', 'û'].includes(premiereLettre)) {                                                 return "À D'";                                    }                                                     return "À";
+        }                                                                                                           Promise.all([                                             fetch('/api/config-prof').then(res => res.json()),                                                          fetch('/api/nom-ecole').then(res => res.json()),                                                            fetch('/api/eleves/tous').then(res => res.json())
+        ]).then(([config, ecoleData, eleves]) => {                const drena = (config.drena || '').toUpperCase();                                                           const iepp = (config.iepp || '').toUpperCase();                                                             const ville = config.ville || '';
+                                                                  document.getElementById('prefix-drena').innerText = obtenirPreposition(drena);                              document.getElementById('drena-val').innerText = drena;                                                     document.getElementById('prefix-iepp').innerText = obtenirPreposition(iepp);                                document.getElementById('iepp-val').innerText = iepp;
+            document.getElementById('prefix-iepp-body').innerText = obtenirPreposition(iepp);                           document.getElementById('iepp-body').innerText = iepp;                                                      document.getElementById('prefix-ville').innerText = obtenirPrepositionVille(ville);                         document.getElementById('ville-signature').innerText = ville;                                                                                                     document.getElementById('f-prefix-ville').innerText = obtenirPrepositionVille(ville);                       document.getElementById('f-ville-signature').innerText = ville;                                                                                                   document.getElementById('adresse-val').innerText = config.adresse || '';                                    document.getElementById('mail-val').innerText = config.mail || '';                                          document.getElementById('tel-val').innerText = config.tel || '';                                            document.getElementById('nom-directeur').innerText = config.nom_directeur || '';                            document.getElementById('f-nom-directeur').innerText = config.nom_directeur || '';
             document.getElementById('nom-ecole-top').innerText = ecoleData.nom || '';
-            document.getElementById('nom-ecole-body').innerText = ecoleData.nom || '';
-
-            document.getElementById('f-drena').innerText = drena;
-            document.getElementById('f-iepp').innerText = iepp;
-            document.getElementById('f-ecole').innerText = ecoleData.nom || '';
-            
-            const dateJourStr = new Date().toLocaleDateString('fr-FR');
-            document.getElementById('date-jour').innerText = dateJourStr;
-            document.getElementById('f-date-jour').innerText = dateJourStr;
-
-            const datalist = document.getElementById('liste-eleves');
-            eleves.forEach(e => {
-                let option = document.createElement('option');
-                option.value = e.matricule;
-                option.textContent = `${e.nom} ${e.prenoms} (${e.matricule})`;
-                datalist.appendChild(option);
-            });
-        }).catch(err => console.error("Erreur lors du chargement des configurations :", err));
-
-        function chargerEleve() {
-            const id = document.getElementById('recherche-eleve').value;
-            if(id) window.location.href = `certi.html?id=${id}`;
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const eleveId = urlParams.get('id');
-
-        if (eleveId) {
-            fetch(`/api/eleves/details/${eleveId}`)
+            document.getElementById('nom-ecole-body').innerText = ecoleData.nom || '';                                                                                        document.getElementById('f-drena').innerText = drena;
+            document.getElementById('f-iepp').innerText = iepp;                                                         document.getElementById('f-ecole').innerText = ecoleData.nom || '';
+                                                                  const dateJourStr = new Date().toLocaleDateString('fr-FR');                                                 document.getElementById('date-jour').innerText = dateJourStr;
+            document.getElementById('f-date-jour').innerText = dateJourStr;                                 
+            const datalist = document.getElementById('liste-eleves');                                                   eleves.forEach(e => {                                     let option = document.createElement('option');                                                              option.value = e.matricule;
+                option.textContent = `${e.nom} ${e.prenoms} (${e.matricule})`;                                              datalist.appendChild(option);                     });                                               }).catch(err => console.error("Erreur lors du chargement des configurations :", err));              
+        function chargerEleve() {                                 const id = document.getElementById('recherche-eleve').value;                                                if(id) window.location.href = `certi.html?id=${id}`;                                                    }                                             
+        const urlParams = new URLSearchParams(window.location.search);                                              const eleveId = urlParams.get('id');
+                                                              if (eleveId) {                                            fetch(`/api/eleves/details/${eleveId}`)
                 .then(res => res.json())
-                .then(data => {
-                    const nomPrenoms = (data.nom || '') + ' ' + (data.prenoms || '');
+                .then(data => {                                           const nomPrenoms = (data.nom || '') + ' ' + (data.prenoms || '');
                     const rawLieu = data.localite || data.lieu_naissance || '';
-                    const lieuFormate = formaterLieu(rawLieu);
-                    const dateNaiss = data.date_naissance || '';
-                    const numActe = data.num_acte || '';
-                    const dateEtab = data.date_etab || '';
-                    const matricule = data.matricule || '';
-
+                    const lieuFormate = formaterLieu(rawLieu);                                                                  const dateNaiss = data.date_naissance || '';
+                    const numActe = data.num_acte || '';                                                                        const dateEtab = data.date_etab || '';                                                                      const matricule = data.matricule || '';                                                 
                     document.getElementById('nom-eleve').innerText = nomPrenoms;
                     document.getElementById('date-naiss').innerText = dateNaiss;
                     document.getElementById('lieu-naiss').innerText = lieuFormate;
-                    document.getElementById('num_acte').innerText = numActe;
-                    document.getElementById('date_etab').innerText = dateEtab;
+                    document.getElementById('num_acte').innerText = numActe;                                                    document.getElementById('date_etab').innerText = dateEtab;
                     document.getElementById('num-reg').innerText = matricule;
-                    document.getElementById('appreciation-travail').innerText = data.appreciation_travail || '';
-                    document.getElementById('appreciation-conduite').innerText = data.appreciation_conduite || '';
-                    
-                    document.getElementById('f-classe').innerText = data.classe || data.niveau || '';
-                    document.getElementById('f-matricule').innerText = matricule;
-                    document.getElementById('f-nom').innerText = data.nom || '';
-                    document.getElementById('f-prenoms').innerText = data.prenoms || '';
-                    document.getElementById('f-date-naiss').innerText = dateNaiss;
-                    document.getElementById('f-lieu-naiss').innerText = lieuFormate;
-                    document.getElementById('f-sexe').innerText = data.sexe || '';
-                    document.getElementById('f-nationalite').innerText = data.nationalite || '';
-                    document.getElementById('f-pays').innerText = data.pays || '';
-                    document.getElementById('f-contact').innerText = data.contact || '';
-                    document.getElementById('f-pere-nom').innerText = data.pere || data.nom_pere || '';
-                    document.getElementById('f-pere-prof').innerText = data.profession || data.profession_pere || '';
-                    document.getElementById('f-pere-dom').innerText = data.domicile || data.domicile_pere || '';
-                    document.getElementById('f-mere-nom').innerText = data.mere || data.nom_mere || '';
-                    document.getElementById('f-mere-prof').innerText = data.profession_mere || '';
+                    document.getElementById('appreciation-travail').innerText = data.appreciation_travail || '';                                                                      document.getElementById('appreciation-conduite').innerText = data.appreciation_conduite || '';                                                                                                                          document.getElementById('f-classe').innerText = data.classe || data.niveau || '';                           document.getElementById('f-matricule').innerText = matricule;                                               document.getElementById('f-nom').innerText = data.nom || '';                                                document.getElementById('f-prenoms').innerText = data.prenoms || '';
+                    document.getElementById('f-date-naiss').innerText = dateNaiss;                                              document.getElementById('f-lieu-naiss').innerText = lieuFormate;                                            document.getElementById('f-sexe').innerText = data.sexe || '';                                              document.getElementById('f-nationalite').innerText = data.nationalite || '';                                document.getElementById('f-pays').innerText = data.pays || '';
+                    document.getElementById('f-contact').innerText = data.contact || '';                                        document.getElementById('f-pere-nom').innerText = data.pere || data.nom_pere || '';                         document.getElementById('f-pere-prof').innerText = data.profession || data.profession_pere || '';
+                    document.getElementById('f-pere-dom').innerText = data.domicile || data.domicile_pere || '';                                                                      document.getElementById('f-mere-nom').innerText = data.mere || data.nom_mere || '';                         document.getElementById('f-mere-prof').innerText = data.profession_mere || '';
                     document.getElementById('f-mere-dom').innerText = data.domicile_mere || '';
                     document.getElementById('f-tuteur-nom').innerText = data.tuteur || data.nom_tuteur || '';
-                    document.getElementById('f-tuteur-prof').innerText = data.profession_tuteur || '';
-                    document.getElementById('f-tuteur-dom').innerText = data.domicile_tuteur || '';
+                    document.getElementById('f-tuteur-prof').innerText = data.profession_tuteur || '';                          document.getElementById('f-tuteur-dom').innerText = data.domicile_tuteur || '';
                     document.getElementById('f-num-acte').innerText = numActe;
                     document.getElementById('f-date-etab').innerText = dateEtab;
-                    document.getElementById('f-lieu-etab').innerText = data.lieu_etab || '';
-
-                    if (data.photo) {
-                        const photoContainer = document.getElementById('f-photo-container');
+                    document.getElementById('f-lieu-etab').innerText = data.lieu_etab || '';                
+                    if (data.photo) {                                         const photoContainer = document.getElementById('f-photo-container');
                         photoContainer.innerHTML = `<img src="${data.photo}" alt="Photo de l'élève">`;
                     }
-
-                    const tbody = document.getElementById('tableau-scolarite');
-                    tbody.innerHTML = '';
-                    if (data.historique && Array.isArray(data.historique)) {
-                        let historiqueTrie = [...data.historique].sort((a, b) => parseInt(a.annee) - parseInt(b.annee));
-
-                        let promises = historiqueTrie.map(h => {
-                            return fetch(`/api/eleves/${h.annee}?periode=FIN_ANNEE`)
-                                .then(res => res.json())
-                                .then(listeClasseBrute => {
-                                    let listeClasse = Array.isArray(listeClasseBrute) ? listeClasseBrute : (listeClasseBrute.eleves || []);
-                                    let trouve = listeClasse.find(el => String(el.matricule || '').trim() === String(data.matricule).trim());
-                                    
-                                    let effectifCalcule = '';
-                                    if (trouve && trouve.effectif !== undefined && trouve.effectif !== null && trouve.effectif !== '') {
-                                        effectifCalcule = trouve.effectif;
-                                    } else if (h.effectif !== undefined && h.effectif !== null && h.effectif !== '') {
-                                        effectifCalcule = h.effectif;
-                                    } else if (Array.isArray(listeClasse) && listeClasse.length > 0) {
-                                        let matchingClass = listeClasse.filter(el => (el.niveau || '').trim().toUpperCase() === (h.niveau || '').trim().toUpperCase());
-                                        effectifCalcule = matchingClass.length > 0 ? matchingClass.length : listeClasse.length;
-                                    }
-
+                                                                          const tbody = document.getElementById('tableau-scolarite');
+                    tbody.innerHTML = '';                                 if (data.historique && Array.isArray(data.historique)) {                                                        let historiqueTrie = [...data.historique].sort((a, b) => parseInt(a.annee) - parseInt(b.annee));                                                                                                                        let promises = historiqueTrie.map(h => {
+                            return fetch(`/api/eleves/${h.annee}?periode=FIN_ANNEE`)                                                        .then(res => res.json())                                                                                    .then(listeClasseBrute => {                                                                                     let listeClasse = Array.isArray(listeClasseBrute) ? listeClasseBrute : (listeClasseBrute.eleves || []);
+                                    let trouve = listeClasse.find(el => String(el.matricule || '').trim() === String(data.matricule).trim());                     
+                                    let effectifCalcule = '';                                                                                   if (trouve && trouve.effectif !== undefined && trouve.effectif !== null && trouve.effectif !== '') {
+                                        effectifCalcule = trouve.effectif;                                                                      } else if (h.effectif !== undefined && h.effectif !== null && h.effectif !== '') {                                                                                    effectifCalcule = h.effectif;                                                                           } else if (Array.isArray(listeClasse) && listeClasse.length > 0) {                                              let matchingClass = listeClasse.filter(el => (el.niveau || '').trim().toUpperCase() === (h.niveau || '').trim().toUpperCase());                                                                                         effectifCalcule = matchingClass.length > 0 ? matchingClass.length : listeClasse.length;
+                                    }                 
                                     return {
-                                        annee: h.annee,
-                                        niveau: h.niveau,
-                                        effectif: effectifCalcule,
-                                        moyen_total: trouve && trouve.moyen_total !== undefined ? trouve.moyen_total : h.moyen_total,
-                                        rang: trouve && trouve.rang !== undefined && trouve.rang !== null && trouve.rang !== 0 ? trouve.rang : h.rang,
-                                        observation: trouve && trouve.decision !== undefined ? trouve.decision : h.observation
-                                    };
+                                        annee: h.annee,                                                                                             niveau: (trouve && trouve.niveau) ? trouve.niveau : h.niveau,                                                                                           effectif: effectifCalcule,                                                                                  moyen_total: trouve && trouve.moyen_total !== undefined ? trouve.moyen_total : h.moyen_total,
+                                        rang: trouve && trouve.rang !== undefined && trouve.rang !== null && trouve.rang !== 0 ? trouve.rang : h.rang,                                                    observation: trouve && trouve.decision !== undefined ? trouve.decision : h.observation                                                                        };
                                 }).catch(() => {
                                     return { annee: h.annee, niveau: h.niveau, effectif: h.effectif || '', moyen_total: h.moyen_total, rang: h.rang, observation: h.observation };
                                 });
                         });
 
-                        Promise.all(promises).then(historiqueCalculee => {
-                            historiqueCalculee.forEach(h => {
-                                const anneeSuivante = parseInt(h.annee) + 1;
+                        Promise.all(promises).then(historiqueCalculee => {                                                              historiqueCalculee.forEach(h => {                                                                               const anneeSuivante = parseInt(h.annee) + 1;
                                 const anneeAffichage = `${h.annee}-${anneeSuivante}`;
                                 let totalValue = (h.moyen_total !== undefined && h.moyen_total !== null && h.moyen_total !== '') ? h.moyen_total : '0.00';
                                 const m = parseFloat(totalValue);
-                                const niv = (h.niveau || '').toUpperCase();
-
+                                const niv = (h.niveau || '').toUpperCase();                                 
                                 let moyAffichage = !isNaN(m) ? m.toFixed(2) : totalValue;
-                                let obs = h.observation || '';
-                                if (['CP1', 'CP2', 'CE1', 'CE2'].includes(niv)) {
+                                let obs = h.observation || '';                                                                              if (['CP1', 'CP2', 'CE1', 'CE2'].includes(niv)) {
                                     if (moyAffichage !== '') moyAffichage += ' /10';
-                                    if (!obs) {
-                                        if (m < 3) obs = "Insuffisant";
-                                        else if (m < 5) obs = "Médiocre";
-                                        else if (m < 6) obs = "Passable";
-                                        else if (m < 8) obs = "Assez-bien";
-                                        else if (m < 9) obs = "Bien";
-                                        else obs = "Très-bien";
-                                    }
-                                } else if (['CM1', 'CM2'].includes(niv)) {
-                                    if (moyAffichage !== '') moyAffichage += ' /20';
-                                    if (!obs) {
-                                        if (m < 6) obs = "Insuffisant";
-                                        else if (m < 10) obs = "Médiocre";
-                                        else if (m < 12) obs = "Passable";
-                                        else if (m < 15) obs = "Assez-bien";
-                                        else if (m < 18) obs = "Bien";
+                                    if (!obs) {                                               if (m < 3) obs = "Insuffisant";                                                                             else if (m < 5) obs = "Médiocre";
+                                        else if (m < 6) obs = "Passable";                                                                           else if (m < 8) obs = "Assez-bien";                                                                         else if (m < 9) obs = "Bien";
+                                        else obs = "Très-bien";                                                                                 }                                                 } else if (['CM1', 'CM2'].includes(niv)) {                                                                      if (moyAffichage !== '') moyAffichage += ' /20';                                                            if (!obs) {                                               if (m < 6) obs = "Insuffisant";                                                                             else if (m < 10) obs = "Médiocre";                                                                          else if (m < 12) obs = "Passable";                                                                          else if (m < 15) obs = "Assez-bien";                                                                        else if (m < 18) obs = "Bien";
                                         else obs = "Très bien";
-                                    }
-                                }
-
-                                let rangAffichage = (h.rang !== undefined && h.rang !== null && h.rang !== '') ? String(h.rang).trim() : '';
-                                if (rangAffichage && rangAffichage !== 'N/A' && rangAffichage !== '0') {
+                                    }                                                 }                                                                                                           let rangAffichage = (h.rang !== undefined && h.rang !== null && h.rang !== '') ? String(h.rang).trim() : '';                                                      if (rangAffichage && rangAffichage !== 'N/A' && rangAffichage !== '0') {
                                     let numRang = parseInt(rangAffichage, 10);
                                     if (!isNaN(numRang) && numRang > 0) {
                                         let suffixe = (numRang === 1) ? "1er" : numRang + "e";
-                                        let effectifVal = (h.effectif !== undefined && h.effectif !== null && h.effectif !== '') ? h.effectif : '';
-                                        rangAffichage = effectifVal !== '' ? `${suffixe}/${effectifVal}` : suffixe;
-                                    } else {
-                                        rangAffichage = '';
-                                    }
-                                } else {
-                                    rangAffichage = '';
-                                }
-                                tbody.innerHTML += `<tr><td>${anneeAffichage}</td><td>${h.niveau || ''}</td><td>${moyAffichage}</td><td>${rangAffichage}</td><td>${obs}</td></tr>`;
+                                        let effectifVal = (h.effectif !== undefined && h.effectif !== null && h.effectif !== '') ? h.effectif : '';                                                       rangAffichage = effectifVal !== '' ? `${suffixe}/${effectifVal}` : suffixe;
+                                    } else {                                                  rangAffichage = '';                                                                                     }
+                                } else {                                                  rangAffichage = '';                                                                                     }                                                     tbody.innerHTML += `<tr><td>${anneeAffichage}</td><td>${h.niveau || ''}</td><td>${moyAffichage}</td><td>${rangAffichage}</td><td>${obs}</td></tr>`;
                             });
-
-                            let trAnnees = '<th>Année scolaire</th>';
-                            let trNiveau = '<td style="font-weight: bold;">Niveau / Classe</td>';
-                            let trEffectif = '<td style="font-weight: bold;">Effectif</td>';
-                            let trMoyenne = '<td style="font-weight: bold;">Moyenne annuelle</td>';
-                            let trRang = '<td style="font-weight: bold;">Rang</td>';
-
-                            for (let i = 0; i < 6; i++) {
-                                let h = historiqueCalculee[i];
-                                if (h) {
+                                                                                  let trAnnees = '<th>Année scolaire</th>';                                                                   let trNiveau = '<td style="font-weight: bold;">Niveau / Classe</td>';
+                            let trEffectif = '<td style="font-weight: bold;">Effectif</td>';                                            let trMoyenne = '<td style="font-weight: bold;">Moyenne annuelle</td>';                                     let trRang = '<td style="font-weight: bold;">Rang</td>';                                                                                                          for (let i = 0; i < 6; i++) {                                                                                   let h = historiqueCalculee[i];                                                                              if (h) {
                                     const anneeSuivante = parseInt(h.annee) + 1;
-                                    trAnnees += `<th>${h.annee}-${anneeSuivante}</th>`;
-                                    trNiveau += `<td>${h.niveau || ''}</td>`;
+                                    trAnnees += `<th>${h.annee}-${anneeSuivante}</th>`;                                                         trNiveau += `<td>${h.niveau || ''}</td>`;
                                     trEffectif += `<td>${h.effectif || ''}</td>`;
-
-                                    let totalValue = (h.moyen_total !== undefined && h.moyen_total !== null && h.moyen_total !== '') ? h.moyen_total : '';
-                                    const m = parseFloat(totalValue);
-                                    let moyAffichage = !isNaN(m) ? m.toFixed(2) : totalValue;
-                                    trMoyenne += `<td>${moyAffichage}</td>`;
-
+                                                                                          let totalValue = (h.moyen_total !== undefined && h.moyen_total !== null && h.moyen_total !== '') ? h.moyen_total : '';                                            const m = parseFloat(totalValue);                                                                           let moyAffichage = !isNaN(m) ? m.toFixed(2) : totalValue;
+                                    trMoyenne += `<td>${moyAffichage}</td>`;                                
                                     let rangAffichage = (h.rang !== undefined && h.rang !== null && h.rang !== '') ? String(h.rang).trim() : '';
-                                    if (rangAffichage && rangAffichage !== 'N/A' && rangAffichage !== '0') {
-                                        let numRang = parseInt(rangAffichage, 10);
-                                        if (!isNaN(numRang) && numRang > 0) {
+                                    if (rangAffichage && rangAffichage !== 'N/A' && rangAffichage !== '0') {                                        let numRang = parseInt(rangAffichage, 10);                                                                  if (!isNaN(numRang) && numRang > 0) {
                                             let suffixe = (numRang === 1) ? "1er" : numRang + "e";
                                             let effectifVal = (h.effectif !== undefined && h.effectif !== null && h.effectif !== '') ? h.effectif : '';
                                             rangAffichage = effectifVal !== '' ? `${suffixe}/${effectifVal}` : suffixe;
-                                        } else {
-                                            rangAffichage = '';
-                                        }
-                                    } else {
-                                        rangAffichage = '';
-                                    }
+                                        } else {                                                  rangAffichage = '';
+                                        }                                                 } else {                                                  rangAffichage = '';                                                                                     }
                                     trRang += `<td>${rangAffichage}</td>`;
-                                } else {
-                                    trAnnees += `<th>20.../20...</th>`;
-                                    trNiveau += `<td></td>`;
-                                    trEffectif += `<td></td>`;
-                                    trMoyenne += `<td></td>`;
+                                } else {                                                  trAnnees += `<th>20.../20...</th>`;                                                                         trNiveau += `<td></td>`;                                                                                    trEffectif += `<td></td>`;                                                                                  trMoyenne += `<td></td>`;
                                     trRang += `<td></td>`;
-                                }
-                            }
-
-                            document.getElementById('f-cursus-annees').innerHTML = trAnnees;
-                            document.getElementById('f-cursus-niveau').innerHTML = trNiveau;
-                            document.getElementById('f-cursus-effectif').innerHTML = trEffectif;
-                            document.getElementById('f-cursus-moyenne').innerHTML = trMoyenne;
-                            document.getElementById('f-cursus-rang').innerHTML = trRang;
-                        });
-                    }
-                })
-                .catch(err => console.error("Erreur chargement détails élève :", err));
-        }
-    </script>
-</body>
-</html>
+                                }                                                 }
+                                                                                  document.getElementById('f-cursus-annees').innerHTML = trAnnees;                                            document.getElementById('f-cursus-niveau').innerHTML = trNiveau;                                            document.getElementById('f-cursus-effectif').innerHTML = trEffectif;
+                            document.getElementById('f-cursus-moyenne').innerHTML = trMoyenne;                                          document.getElementById('f-cursus-rang').innerHTML = trRang;                                            });
+                    }                                                 })                                                    .catch(err => console.error("Erreur chargement détails élève :", err));
+        }                                                 </script>
+</body>                                               </html>

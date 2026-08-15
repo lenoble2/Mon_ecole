@@ -60,21 +60,40 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
+        const anneeUrl = urlParams.get('annee');
 
-        // Chargement des données
+        // Pré-remplir l'année si elle est présente dans l'URL
+        if (anneeUrl) {
+            const champAnnee = document.getElementById('annee');
+            if (champAnnee) champAnnee.value = anneeUrl;
+        }
+
+        // Chargement des données de l'élève en ciblant l'année et l'ID
         if (id) {
-            fetch(`/api/eleve/${encodeURIComponent(id)}`)
+            let fetchUrl = `/api/eleve/${encodeURIComponent(id)}`;
+            if (anneeUrl) {
+                fetchUrl += `?annee=${encodeURIComponent(anneeUrl)}`;
+            }
+
+            fetch(fetchUrl)
                 .then(res => res.json())
                 .then(e => {
                     const fields = [
-                        'annee', 'matricule', 'nom', 'prenoms', 'sexe', 'date_naissance',
+                        'annee', 'matricule', 'nom', 'prenoms', 'sexe', 'date_naissance', 
                         'pays', 'localite', 'mere', 'pere', 'profession', 'domicile', 'contact', 'nationalite',
                         'num_acte', 'date_etab', 'lieu_etab', 'niveau', 'ecole'
                     ];
 
                     fields.forEach(field => {
                         const el = document.getElementById(field);
-                        if (el) el.value = e[field] || '';
+                        if (el) {
+                            // Si le champ 'annee' vient de l'URL, on le garde prioritaire, sinon on prend la valeur de l'objet
+                            if (field === 'annee' && anneeUrl) {
+                                el.value = anneeUrl;
+                            } else {
+                                el.value = e[field] || '';
+                            }
+                        }
                     });
 
                     if (e.photo) document.getElementById('photo-preview').src = e.photo;
@@ -104,7 +123,13 @@
         document.getElementById('details-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-            fetch(`/api/eleve/${encodeURIComponent(id)}`, {
+            
+            let postUrl = `/api/eleve/${encodeURIComponent(id)}`;
+            if (anneeUrl) {
+                postUrl += `?annee=${encodeURIComponent(anneeUrl)}`;
+            }
+
+            fetch(postUrl, {
                 method: 'POST',
                 body: formData
             })
@@ -112,10 +137,15 @@
             .then(data => {
                 if (data.success) {
                     alert("Modification enregistrée !");
-                    window.location.href = 'liste.html';
+                    // Rediriger vers la liste en conservant l'année active
+                    window.location.href = `liste.html?annee=${anneeUrl || document.getElementById('annee').value || '2025'}`;
                 } else {
                     alert("Erreur lors de l'enregistrement.");
                 }
+            })
+            .catch(err => {
+                console.error("Erreur réseau :", err);
+                alert("Erreur réseau lors de la modification.");
             });
         });
     </script>

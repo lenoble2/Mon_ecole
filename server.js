@@ -792,18 +792,40 @@ app.post('/api/basculer-eleves', async (req, res) => {
         for (const item of decisions) {
             const e = elevesExistants?.find(el => el.matricule === item.matricule);
             if (e) {
-                let nouveauNiveau = (item.decision === 'A' && passageNiveau[e.niveau]) ? passageNiveau[e.niveau] : e.niveau;
+                // Nettoyage et mise en majuscule du niveau pour correspondre à passageNiveau
+                const niveauActuel = e.niveau ? e.niveau.trim().toUpperCase() : '';
+                let nouveauNiveau = (item.decision === 'A' && passageNiveau[niveauActuel]) ? passageNiveau[niveauActuel] : niveauActuel;
+
                 insertData.push({
-                    annee: annee_cible, matricule: e.matricule, nom: e.nom, prenoms: e.prenoms, sexe: e.sexe,
-                    date_naissance: e.date_naissance, pays: e.pays, localite: e.localite, mere: e.mere, pere: e.pere, profession: e.profession, domicile: e.domicile,
-                    contact: e.contact, nationalite: e.nationalite, num_acte: e.num_acte, date_etab: e.date_etab,
-                    lieu_etab: e.lieu_etab, ecole: e.ecole, niveau: nouveauNiveau, nom_ecole: nomEcole
+                    annee: annee_cible,
+                    matricule: e.matricule,
+                    nom: e.nom,
+                    prenoms: e.prenoms,
+                    sexe: e.sexe,
+                    date_naissance: e.date_naissance,
+                    pays: e.pays,
+                    localite: e.localite,
+                    mere: e.mere,
+                    pere: e.pere,
+                    profession: e.profession,
+                    domicile: e.domicile,
+                    contact: e.contact,
+                    nationalite: e.nationalite,
+                    num_acte: e.num_acte,
+                    date_etab: e.date_etab,
+                    lieu_etab: e.lieu_etab,
+                    ecole: e.ecole,
+                    niveau: nouveauNiveau, // Utilisation du nouveau niveau calculé (ou le même si redoublement / fin)
+                    nom_ecole: nomEcole
                 });
             }
         }
 
         if (insertData.length > 0) {
-            const { error } = await supabase.from('eleves').upsert(insertData, { ignoreDuplicates: true });
+            // Retrait de "ignoreDuplicates: true" pour permettre la mise à jour du niveau si l'élève existe déjà
+            const { error } = await supabase.from('eleves').upsert(insertData, {
+                onConflict: 'nom_ecole,annee,matricule'
+            });
             if (error) throw error;
         }
 

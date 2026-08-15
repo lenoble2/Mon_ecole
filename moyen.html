@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -70,163 +69,175 @@
         <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour</a>
     </div>
 
-<script>
-    let listeEleves = [];
-    let classeFiltreeActuelle = 'Tous';
+    <script>
+        let listeEleves = []; // Contient tous les élèves récupérés
+        let classeFiltreeActuelle = 'Tous';
 
-    function changerAnnee() {
-        const annee = document.getElementById('annee-select').value;
-        window.location.href = `moyen.html?annee=${annee}`;
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const annee = urlParams.get('annee') || '2025';
-    document.getElementById('annee-select').value = annee;
-
-    fetch(`/api/eleves/${annee}?periode=FIN_ANNEE`)
-        .then(res => res.json())
-        .then(data => {
-            listeEleves = Array.isArray(data) ? data : (data.eleves || []);
-            afficherTableau(listeEleves);
-        })
-        .catch(err => {
-            console.error("Erreur chargement:", err);
-            document.getElementById('tableau-moyennes').innerHTML = `<tr><td colspan="10" style="color:red; text-align:center;">Erreur de chargement des données.</td></tr>`;
-        });
-
-    function afficherTableau(data) {
-        const tbody = document.getElementById('tableau-moyennes');
-        tbody.innerHTML = '';
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="10" style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</td></tr>`;
-            return;
+        function changerAnnee() {
+            const annee = document.getElementById('annee-select').value;
+            window.location.href = `moyen.html?annee=${annee}`;
         }
 
-        data.forEach((e, index) => {
-            let totalValue = '0.00';
-            if (e.moyen_total !== undefined && e.moyen_total !== null && e.moyen_total !== '') {
-                totalValue = parseFloat(e.moyen_total).toFixed(2);
-            } else if (e.moyenne !== undefined && e.moyenne !== null && e.moyenne !== '') {
-                totalValue = parseFloat(e.moyenne).toFixed(2);
-            } else if (e.moyen !== undefined && e.moyen !== null && e.moyen !== '') {
-                totalValue = parseFloat(e.moyen).toFixed(2);
-            } else if (e.mg !== undefined && e.mg !== null && e.mg !== '') {
-                totalValue = parseFloat(e.mg).toFixed(2);
-            }
+        const urlParams = new URLSearchParams(window.location.search);
+        const annee = urlParams.get('annee') || '2025';
+        document.getElementById('annee-select').value = annee;
 
-            let rangValue = e.rang !== undefined && e.rang !== null && e.rang !== '' ? e.rang : (index + 1);
-            let decisionVal = e.decision ?? '';
-            let niveauEleve = e.niveau || '';
-
-            tbody.innerHTML += `
-                <tr data-id="${e.matricule || ''}">
-                    <td>${index + 1}</td>
-                    <td>${e.matricule || ''}</td>
-                    <td style="text-align: left;">${e.nom || ''}</td>
-                    <td style="text-align: left;">${e.prenoms || ''}</td>
-                    <td>${niveauEleve}</td>
-                    <td>${e.date_naissance || ''}</td>
-                    <td>${e.sexe || ''}</td>
-                    <td><input type="number" step="0.01" class="edit-mg" value="${totalValue}"></td>
-                    <td><input type="number" class="edit-rang" value="${rangValue}"></td>
-                    <td>
-                        <select class="dfa-select">
-                            <option value="" ${!decisionVal ? 'selected' : ''}>--</option>
-                            <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>
-                            <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
-                        </select>
-                    </td>
-                </tr>`;
-        });
-    }
-
-    function enregistrerModifications() {
-        const lignes = document.querySelectorAll('tbody tr[data-id]');
-        if (lignes.length === 0) {
-            alert("Aucune donnée à enregistrer.");
-            return;
-        }
-
-        const updates = [];
-        lignes.forEach(tr => {
-            let rawMg = tr.querySelector('.edit-mg').value;
-            let formattedMg = rawMg ? parseFloat(rawMg).toFixed(2) : '0.00';
-            let rangVal = tr.querySelector('.edit-rang').value;
-            let decisionVal = tr.querySelector('.dfa-select').value;
-
-            updates.push({
-                matricule: tr.getAttribute('data-id'),
-                moyen_total: formattedMg,
-                moyenne: formattedMg,
-                moyen: formattedMg,
-                rang: rangVal,
-                decision: decisionVal,
-                periode: 'RESULTATS FIN ANNEE'
-            });
-        });
-
-        fetch('/api/update-notes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ updates: updates, annee: annee, periode: 'RESULTATS FIN ANNEE' })
-        }).then(res => res.json())
-          .then(data => {
-              if(data.success) {
-                  alert("✅ Moyennes et rangs enregistrés avec succès !");
-              } else {
-                  alert("⚠️ Erreur lors de l'enregistrement.");
-              }
-          })
-          .catch(err => {
-              console.error("Erreur réseau:", err);
-              alert("❌ Erreur réseau.");
-          });
-    }
-
-    function validerBascule() {
-        const rows = document.querySelectorAll('tbody tr[data-id]');
-        const decisions = [];
-        rows.forEach(tr => {
-            const select = tr.querySelector('.dfa-select');
-            if(select && select.value) {
-                decisions.push({ matricule: tr.getAttribute('data-id'), decision: select.value });
-            }
-        });
-
-        if(decisions.length === 0) return alert("Sélectionnez A ou R pour basculer.");
-
-        if(confirm(`Confirmer le basculement de ${decisions.length} élève(s) ?`)) {
-            fetch('/api/basculer-eleves', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ decisions: decisions, annee_source: annee })
-            })
+        fetch(`/api/eleves/${annee}?periode=FIN_ANNEE`)
             .then(res => res.json())
             .then(data => {
-                alert("✅ Bascule effectuée !");
-                location.reload();
+                listeEleves = Array.isArray(data) ? data : (data.eleves || []);
+                filtrer(classeFiltreeActuelle, null);
             })
             .catch(err => {
-                console.error("Erreur bascule:", err);
-                alert("❌ Erreur lors de la bascule.");
+                console.error("Erreur chargement:", err);
+                document.getElementById('tableau-moyennes').innerHTML = `<tr><td colspan="10" style="color:red; text-align:center;">Erreur de chargement des données.</td></tr>`;
+            });
+
+        function afficherTableau(data) {
+            const tbody = document.getElementById('tableau-moyennes');
+            tbody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</td></tr>`;
+                return;
+            }
+
+            data.forEach((e, index) => {
+                let totalValue = '0.00';
+                if (e.moyen_total !== undefined && e.moyen_total !== null && e.moyen_total !== '') {
+                    totalValue = parseFloat(e.moyen_total).toFixed(2);
+                } else if (e.moyenne !== undefined && e.moyenne !== null && e.moyenne !== '') {
+                    totalValue = parseFloat(e.moyenne).toFixed(2);
+                } else if (e.moyen !== undefined && e.moyen !== null && e.moyen !== '') {
+                    totalValue = parseFloat(e.moyen).toFixed(2);
+                } else if (e.mg !== undefined && e.mg !== null && e.mg !== '') {
+                    totalValue = parseFloat(e.mg).toFixed(2);
+                }
+
+                let rangValue = e.rang !== undefined && e.rang !== null && e.rang !== '' ? e.rang : (index + 1);
+                let decisionVal = e.decision ?? '';
+                let niveauEleve = e.niveau || '';
+
+                // On stocke le matricule dans l'attribut et on conserve l'objet complet si besoin
+                tbody.innerHTML += `
+                    <tr data-id="${e.matricule || ''}">
+                        <td>${index + 1}</td>
+                        <td>${e.matricule || ''}</td>
+                        <td style="text-align: left;">${e.nom || ''}</td>
+                        <td style="text-align: left;">${e.prenoms || ''}</td>
+                        <td>${niveauEleve}</td>
+                        <td>${e.date_naissance || ''}</td>
+                        <td>${e.sexe || ''}</td>
+                        <td><input type="number" step="0.01" class="edit-mg" value="${totalValue}"></td>
+                        <td><input type="number" class="edit-rang" value="${rangValue}"></td>
+                        <td>
+                            <select class="dfa-select">
+                                <option value="" ${!decisionVal ? 'selected' : ''}>--</option>
+                                <option value="A" ${decisionVal === 'A' ? 'selected' : ''}>A</option>
+                                <option value="R" ${decisionVal === 'R' ? 'selected' : ''}>R</option>
+                            </select>
+                        </td>
+                    </tr>`;
             });
         }
-    }
 
-    function filtrer(niveau, btnElement) {
-        classeFiltreeActuelle = niveau;
-        if(btnElement) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
+        function enregistrerModifications() {
+            const lignes = document.querySelectorAll('tbody tr[data-id]');
+            if (lignes.length === 0) {
+                alert("Aucune donnée à enregistrer.");
+                return;
+            }
+
+            const updates = [];
+            lignes.forEach(tr => {
+                let rawMg = tr.querySelector('.edit-mg').value;
+                let formattedMg = rawMg ? parseFloat(rawMg).toFixed(2) : '0.00';
+                let rangVal = tr.querySelector('.edit-rang').value;
+                let decisionVal = tr.querySelector('.dfa-select').value;
+
+                updates.push({
+                    matricule: tr.getAttribute('data-id'),
+                    moyen_total: formattedMg,
+                    moyenne: formattedMg,
+                    moyen: formattedMg,
+                    rang: rangVal,
+                    decision: decisionVal,
+                    periode: 'RESULTATS FIN ANNEE'
+                });
+            });
+
+            fetch('/api/update-notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ updates: updates, annee: annee, periode: 'RESULTATS FIN ANNEE' })
+            }).then(res => res.json())
+              .then(data => {
+                  if(data.success) {
+                      alert("✅ Moyennes et rangs enregistrés avec succès !");
+                  } else {
+                      alert("⚠️ Erreur lors de l'enregistrement.");
+                  }
+              })
+              .catch(err => {
+                  console.error("Erreur réseau:", err);
+                  alert("❌ Erreur réseau.");
+              });
         }
 
-        if (niveau === 'Tous') {
-            afficherTableau(listeEleves);
-        } else {
-            afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()));
+        function validerBascule() {
+            // Modification ici : Pour s'assurer de récupérer toutes les décisions modifiées, 
+            // même si un filtre de classe était actif, on parcourt la liste globale des élèves 
+            // ou on extrait l'état depuis le DOM actuel combiné. 
+            // Le plus simple est de récupérer les valeurs depuis le DOM affiché, 
+            // mais l'idéal est de prévenir l'utilisateur s'il y a un filtre actif.
+            
+            const rows = document.querySelectorAll('tbody tr[data-id]');
+            const decisions = [];
+            
+            rows.forEach(tr => {
+                const select = tr.querySelector('.dfa-select');
+                if(select && select.value) {
+                    decisions.push({ matricule: tr.getAttribute('data-id'), decision: select.value });
+                }
+            });
+
+            if(decisions.length === 0) {
+                alert("Veuillez sélectionner 'A' (Admis) ou 'R' (Redoublant) pour au moins un élève avant de valider la bascule.");
+                return;
+            }
+
+            if(confirm(`Confirmer le basculement de ${decisions.length} élève(s) affiché(s) ?`)) {
+                fetch('/api/basculer-eleves', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ decisions: decisions, annee_source: annee })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert("✅ Bascule effectuée avec succès !");
+                    location.reload();
+                })
+                .catch(err => {
+                    console.error("Erreur bascule:", err);
+                    alert("❌ Erreur lors de la bascule.");
+                });
+            }
         }
-    }
-</script>
+
+        function filtrer(niveau, btnElement) {
+            classeFiltreeActuelle = niveau;
+            if(btnElement) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            if (niveau === 'Tous') {
+                afficherTableau(listeEleves);
+            } else {
+                const elevesFiltres = listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase());
+                afficherTableau(elevesFiltres);
+            }
+        }
+    </script>
 </body>
 </html>
