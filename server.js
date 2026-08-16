@@ -942,6 +942,109 @@ app.delete('/api/admin/delete-user/:id', async (req, res) => {
 });
 
 // ==========================================
+// ROUTES POUR L'ÉTAT DU PERSONNEL
+// ==========================================
+app.post('/api/save-personnel', async (req, res) => {
+    try {
+        const personnelList = req.body;
+
+        if (!Array.isArray(personnelList) || personnelList.length === 0) {
+            return res.status(400).json({ success: false, message: "Aucune donnée à enregistrer." });
+        }
+
+        let successCount = 0;
+        let errors = [];
+
+        // Traiter chaque ligne une par une de façon sécurisée
+        for (const item of personnelList) {
+            // Nettoyage des champs vides ou superflus
+            const matricule = item.matricule ? String(item.matricule).trim() : '';
+            const nomPrenoms = item.nom_prenoms ? String(item.nom_prenoms).trim() : '';
+
+            // Si la ligne n'a ni matricule ni nom, on l'ignore
+            if (!matricule && !nomPrenoms) continue;
+
+            // Préparation de l'objet à envoyer (on retire l'id vide pour laisser Postgres/Supabase l'incrémenter)
+            const cleanItem = { ...item };
+            delete cleanItem.id;
+
+            console.log(`Tentative d'enregistrement pour : ${nomPrenoms} (Matricule: ${matricule})`);
+
+            // Utilisation directe de upsert sur la contrainte unique du matricule
+            const { data, error } = await supabase
+                .from('personnel')
+                .upsert([cleanItem], { onConflict: 'matricule' });
+
+            if (error) {
+                console.error(`Erreur pour ${nomPrenoms}:`, error.message);
+                errors.push(`${nomPrenoms}: ${error.message}`);
+            } else {
+                successCount++;
+            }
+        }
+
+        if (errors.length > 0 && successCount === 0) {
+            return res.status(500).json({ success: false, message: "Erreurs : " + errors.join(' | ') });
+        }
+
+        res.json({ success: true, message: `${successCount} personne(s) enregistrée(s) avec succès !` });
+    } catch (err) {
+        console.error("Erreur générale sauvegarde personnel:", err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Route unique et robuste pour supprimer un membre du personnel
+app.delete('/api/delete-personnel/:identifier', async (req, res) => {
+    const identifier = req.params.identifier;
+
+    if (!identifier || identifier === 'undefined' || identifier.trim() === '') {
+        return res.json({ success: true, message: "Ligne locale supprimée." });
+    }
+
+    try {
+        // On vérifie si l'identifiant est un nombre (ID de la base) ou une chaîne (Matricule)
+        let query = supabase.from('personnel').delete();
+
+        if (!isNaN(identifier)) {
+            query = query.eq('id', identifier);
+        } else {
+            query = query.eq('matricule', identifier);
+        }
+
+        const { error } = await query;
+        if (error) throw error;
+
+        res.json({ success: true, message: "Supprimé avec succès de Supabase !" });
+    } catch (error) {
+        console.error("Erreur suppression personnel:", error.message);
+        res.status(500).json({ success: false, message: "Erreur serveur: " + error.message });
+    }
+});
+
+// Route pour récupérer l'état du personnel depuis Supabase
+app.get('/api/get-personnel', async (req, res) => {
+    try {
+        // La session est la source la plus sûre, on l'utilise en priorité
+        const ecole = req.session.nomEcole || req.query.ecole;
+        
+        let query = supabase.from('personnel').select('*');
+        
+        if (ecole && ecole.trim() !== '') {
+            query = query.eq('nom_ecole', ecole);
+        }
+        
+        const { data, error } = await query;
+        if (error) throw error;
+        
+        res.json(data || []);
+    } catch (err) {
+        console.error("Erreur chargement personnel:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
 // 9. LANCEMENT DU SERVEUR
 // ==========================================
 async function startServer() {
