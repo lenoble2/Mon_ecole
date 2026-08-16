@@ -840,17 +840,19 @@ app.post('/api/basculer-eleves', async (req, res) => {
 // 8. CONFIGURATION DE L'ÉCOLE ET ADMIN
 // ==========================================
 app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo_ecole' }]), async (req, res) => {
-    const { drena, iepp, nom_directeur } = req.body;
+    // Ajout de ville_village ici
+    const { drena, iepp, nom_directeur, ville_village } = req.body;
     const nomEcole = req.session.nomEcole;
 
     try {
-        const upsertObj = { nom_ecole: nomEcole, drena, iepp, nom_directeur };
+        // Ajout de ville_village dans l'objet d'insertion
+        const upsertObj = { nom_ecole: nomEcole, drena, iepp, nom_directeur, ville_village };
 
         if (req.files?.logo_iepp) {
             const file = req.files['logo_iepp'][0];
             const fileBuffer = fs.readFileSync(file.path);
             const fileName = `logos/${Date.now()}-${file.originalname}`;
-            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer);
             if (!uploadError) {
                 const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
                 upsertObj.logo_iepp = pubData.publicUrl;
@@ -862,7 +864,7 @@ app.post('/api/config-prof', upload.fields([{ name: 'logo_iepp' }, { name: 'logo
             const file = req.files['logo_ecole'][0];
             const fileBuffer = fs.readFileSync(file.path);
             const fileName = `logos/${Date.now()}-${file.originalname}`;
-            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer, { contentType: file.mimetype, upsert: true });
+            const { error: uploadError } = await supabase.storage.from('Fichier').upload(fileName, fileBuffer);
             if (!uploadError) {
                 const { data: pubData } = supabase.storage.from('Fichier').getPublicUrl(fileName);
                 upsertObj.logo_ecole = pubData.publicUrl;
@@ -893,7 +895,8 @@ app.get('/api/config-prof', async (req, res) => {
         if (data && data.length > 0) {
             res.json(data[0]);
         } else {
-            res.json({ drena: '', iepp: '', nom_directeur: '', logo_iepp: '', logo_ecole: '' });
+            // Ajout du champ par défaut vide pour éviter les erreurs undefined
+            res.json({ drena: '', iepp: '', nom_directeur: '', ville_village: '', logo_iepp: '', logo_ecole: '' });
         }
     } catch (err) {
         console.error("❌ Erreur config-prof :", err);
