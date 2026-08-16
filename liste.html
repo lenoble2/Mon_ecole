@@ -1,92 +1,200 @@
 
-<!DOCTYPE html>                                                    <html lang="fr">                                                   <head>                                                                 <meta charset="UTF-8">
-    <title>Gestion Élèves - Fichier Scolaire</title>                   <!-- Inclusion de SheetJS (xlsx) pour la génération et l'exportation de fichiers Excel complets -->                                   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>                                                <style>                                                                body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }                                               h2 { color: #333; }                                                .filter-container { margin-bottom: 15px; }                         .filter-btn { padding: 8px 15px; margin-right: 5px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; font-weight: bold; }                                         .filter-btn:hover { background-color: #e2e6ea; }                   .filter-btn.active { background-color: #007bff; color: white; border-color: #007bff; }                                                #conteneurTableau { overflow-x: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ddd; max-height: 550px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.85em; }                                                 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap; }                                               th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }                                                               .checkbox { text-align: center; width: 30px; }
-        .btn { padding: 10px 15px; color: white; text-decoration: none; border-radius: 5px; display: inline-block; cursor: pointer; border: none; font-size: 0.9em; font-weight: bold; }                         .nom-lien { text-decoration: none; color: #007bff; font-weight: bold; }
-       .nom-lien:hover { text-decoration: underline; }                </style>                                                       </head>                                                            <body>
+<!DOCTYPE html>                                                    
+<html lang="fr">                                                   
+<head>                                                                 
+    <meta charset="UTF-8">
+    <title>Gestion Élèves - Fichier Scolaire</title>                   
+    <!-- Inclusion de SheetJS (xlsx) pour la génération et l'exportation de fichiers Excel complets -->                                   
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>                                                
+    <style>                                                                
+        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }                                               
+        h2 { color: #333; }                                                
+        .filter-container { margin-bottom: 15px; }                         
+        .filter-btn { padding: 8px 15px; margin-right: 5px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; font-weight: bold; }                                         
+        .filter-btn:hover { background-color: #e2e6ea; }                   
+        .filter-btn.active { background-color: #007bff; color: white; border-color: #007bff; }                                                
+        #conteneurTableau { overflow-x: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ddd; max-height: 550px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.85em; }                                                 
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap; }                                               
+        th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }                                                               
+        .checkbox { text-align: center; width: 30px; }
+        .btn { padding: 10px 15px; color: white; text-decoration: none; border-radius: 5px; display: inline-block; cursor: pointer; border: none; font-size: 0.9em; font-weight: bold; }                         
+        .nom-lien { text-decoration: none; color: #007bff; font-weight: bold; }
+        .nom-lien:hover { text-decoration: underline; }                
+    </style>                                                       
+</head>                                                            
+<body>
     <h2 id="titre-annee">Fichier élèves</h2>
-    <div class="filter-container">                                         <button class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>                                                       <button class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
-        <button class="filter-btn" onclick="filtrer('CP2', this)">CP2</button>                                                                <button class="filter-btn" onclick="filtrer('CE1', this)">CE1</button>                                                                <button class="filter-btn" onclick="filtrer('CE2', this)">CE2</button>                                                                <button class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>                                                                <button class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>
+    <div class="filter-container">                                         
+        <button class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>                                                       
+        <button class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
+        <button class="filter-btn" onclick="filtrer('CP2', this)">CP2</button>                                                                
+        <button class="filter-btn" onclick="filtrer('CE1', this)">CE1</button>                                                                
+        <button class="filter-btn" onclick="filtrer('CE2', this)">CE2</button>                                                                
+        <button class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>                                                                
+        <button class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>
     </div>
     <div id="conteneurTableau">
-        <table>                                                                <thead>                                                                <tr>
-                    <th class="checkbox"><input type="checkbox" id="select-all"></th>                                                                     <th>Matricule</th>                                                 <th>Nom</th>
+        <table>                                                                
+            <thead>                                                                
+                <tr>
+                    <th class="checkbox"><input type="checkbox" id="select-all"></th>                                                                     
+                    <th>Matricule</th>                                                 
+                    <th>Nom</th>
                     <th>Prénoms</th>
-                    <th>Sexe</th>                                                      <th>Date Naiss.</th>
-                    <th>Niveau</th>                                                    <th>Nationalité</th>
+                    <th>Sexe</th>                                                      
+                    <th>Date Naiss.</th>
+                    <th>Niveau</th>                                                    
+                    <th>Nationalité</th>
                     <th>Pays</th>
-                    <th>Localité</th>                                                  <th>Mère</th>
+                    <th>Localité</th>                                                  
+                    <th>Mère</th>
                     <th>Père</th>
                     <th>Profession</th>
                     <th>Domicile</th>
-                    <th>Contact Parent</th>                                            <th>N° Acte Naissance</th>
-                    <th>Date Établissement</th>                                        <th>Lieu Établissement</th>                                        <th>École</th>                                                     <th>Âge</th>
-                </tr>                                                          </thead>
-            <tbody id="tableau-eleves"></tbody>                            </table>
+                    <th>Contact Parent</th>                                            
+                    <th>N° Acte Naissance</th>
+                    <th>Date Établissement</th>                                        
+                    <th>Lieu Établissement</th>                                        
+                    <th>École</th>                                                     
+                    <th>Âge</th>
+                </tr>                                                          
+            </thead>
+            <tbody id="tableau-eleves"></tbody>                            
+        </table>
     </div>
     <div style="margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <a href="ajout_eleve.html" class="btn" style="background-color: #28a745;">+ Ajouter un élève</a>                                      <button id="delete-btn" class="btn" style="background-color: #d32f2f;">Supprimer sélectionnés</button>                                <button type="button" class="btn" style="background-color: #007bff;" onclick="telechargerExcelEleves()">Télécharger Excel Élèves</button>
+        <a href="ajout_eleve.html" class="btn" style="background-color: #28a745;">+ Ajouter un élève</a>                                      
+        <button id="delete-btn" class="btn" style="background-color: #d32f2f;">Supprimer sélectionnés</button>                                
+        <button type="button" class="btn" style="background-color: #007bff;" onclick="telechargerExcelEleves()">Télécharger Excel Élèves</button>
         <!-- Input fichier caché pour l'import Excel / CSV -->
-        <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">                                                                         <button type="button" class="btn" style="background-color: #6c757d;" onclick="document.getElementById('inputFichierExcel').click()">Ajouter fichier</button>                                             <span id="nomFichierAffiche" style="font-size: 0.85em; color: #555; font-style: italic; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Aucun fichier choisi">Aucun fichier</span>                                                <button type="button" class="btn" style="background-color: #212529;" onclick="importerFichierEleves()">Importer les élèves</button>
-        <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour vers Accueil</a>                                     </div>
+        <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">                                                                         
+        <button type="button" class="btn" style="background-color: #6c757d;" onclick="document.getElementById('inputFichierExcel').click()">Ajouter fichier</button>                                             
+        <span id="nomFichierAffiche" style="font-size: 0.85em; color: #555; font-style: italic; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Aucun fichier choisi">Aucun fichier</span>                                                
+        <button type="button" class="btn" style="background-color: #212529;" onclick="importerFichierEleves()">Importer les élèves</button>
+        <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour vers Accueil</a>                                     
+    </div>
 
-    <form id="delete-form" action="/supprimer-eleves" method="POST" style="display:none;">                                                    <input type="hidden" name="ids" id="hidden-ids">
+    <form id="delete-form" action="/supprimer-eleves" method="POST" style="display:none;">                                                    
+        <input type="hidden" name="ids" id="hidden-ids">
     </form>
-    <script>                                                               let listeEleves = [];                                              let classeFiltreeActuelle = 'Tous';
-        const urlParams = new URLSearchParams(window.location.search);                                                                        const anneeSelectionnee = urlParams.get('annee') || '2025';
+    <script>                                                               
+        let listeEleves = [];                                              
+        let classeFiltreeActuelle = 'Tous';
+        const urlParams = new URLSearchParams(window.location.search);                                                                        
+        const anneeSelectionnee = urlParams.get('annee') || '2025';
 
         const titreElement = document.getElementById('titre-annee');
         const anneeSuivante = parseInt(anneeSelectionnee) + 1;
         titreElement.textContent = `Fichier élèves ${anneeSelectionnee}-${anneeSuivante}`;
+        
         function calculerAge(dateNaissance) {
             if (!dateNaissance) return '';
-            const anneeStr = dateNaissance.toString().slice(-4);               const anneeNaiss = parseInt(anneeStr);
-            if (isNaN(anneeNaiss)) return '';                                  return parseInt(anneeSelectionnee) - anneeNaiss;
+            const anneeStr = dateNaissance.toString().slice(-4);               
+            const anneeNaiss = parseInt(anneeStr);
+            if (isNaN(anneeNaiss)) return '';                                  
+            return parseInt(anneeSelectionnee) - anneeNaiss;
         }
 
         // Chargement ciblé des élèves en passant l'année dans l'URL pour éviter les interférences globales
         fetch(`/api/eleves/${anneeSelectionnee}`)
             .then(res => res.json())
-            .then(eleves => {                                                      listeEleves = Array.isArray(eleves) ? eleves : (eleves.eleves || []);
+            .then(eleves => {                                                      
+                listeEleves = Array.isArray(eleves) ? eleves : (eleves.eleves || []);
                 if(listeEleves.length > 0) console.log("🔍 Données reçues du serveur (Exemple) :", listeEleves[0]);
-                filtrer(classeFiltreeActuelle, null);                          })                                                                 .catch(err => {                                                        console.error("Erreur chargement :", err);
-                document.getElementById('tableau-eleves').innerHTML = '<tr><td colspan="20" style="text-align:center; color:red;">Erreur de chargement des élèves.</td></tr>';                                       });
-        function afficherTableau(data) {                                       const tbody = document.getElementById('tableau-eleves');                                                                              tbody.innerHTML = '';
+                filtrer(classeFiltreeActuelle, null);                          
+            })                                                                 
+            .catch(err => {                                                        
+                console.error("Erreur chargement :", err);
+                document.getElementById('tableau-eleves').innerHTML = '<tr><td colspan="20" style="text-align:center; color:red;">Erreur de chargement des élèves.</td></tr>';                                       
+            });
+
+        function afficherTableau(data) {                                       
+            const tbody = document.getElementById('tableau-eleves');                                                                              
+            tbody.innerHTML = '';
             if (!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="20" style="text-align:center; color:#666; padding:15px;">Aucun élève trouvé.</td></tr>';
- return;                                                        }                                                                  data.forEach(e => {                                                    const dateNaissVal = e.date_naissance || e.date_naiss || e.date_de_naissance || '';                                                   const numActeVal = e.num_acte || e.n_acte_naissance || e.acte_naissance || '';
+                return;                                                        
+            }                                                                  
+            data.forEach(e => {                                                    
+                const dateNaissVal = e.date_naissance || e.date_naiss || e.date_de_naissance || '';                                                   
+                const numActeVal = e.num_acte || e.n_acte_naissance || e.acte_naissance || '';
                 // On transmet l'année dans le lien des détails pour que la modification soit spécifique à l'année courante
                 tbody.innerHTML += `<tr>
-                    <td class="checkbox"><input type="checkbox" class="row-checkbox" data-id="${e.matricule || ''}"></td>                                 <td>${e.matricule || ''}</td>                                      <td><a href="details.html?id=${e.matricule || ''}&annee=${anneeSelectionnee}" class="nom-lien">${e.nom || ''}</a></td>                                                                                   <td>${e.prenoms || ''}</td>
-                    <td>${e.sexe || ''}</td>                                           <td>${dateNaissVal}</td>                                           <td>${e.niveau || ''}</td>                                         <td>${e.nationalite || ''}</td>                                    <td>${e.pays || ''}</td>                                           <td>${e.localite || ''}</td>                                       <td>${e.mere || ''}</td>
-                    <td>${e.pere || ''}</td>                                           <td>${e.profession || ''}</td>                                     <td>${e.domicile || ''}</td>                                       <td>${e.contact || e.contact_parent || ''}</td>
-                    <td>${numActeVal}</td>                                             <td>${e.date_etab || e.date_etablissement || ''}</td>
-     <td>${e.lieu_etab || e.lieu_etablissement || ''}</td>
-     <td>${e.ecole || ''}</td>                                          <td>${calculerAge(dateNaissVal)}</td>                          </tr>`;                                                        });
+                    <td class="checkbox"><input type="checkbox" class="row-checkbox" data-id="${e.matricule || ''}"></td>                                 
+                    <td>${e.matricule || ''}</td>                                      
+                    <td><a href="details.html?id=${e.matricule || ''}&annee=${anneeSelectionnee}" class="nom-lien">${e.nom || ''}</a></td>                                                                                   
+                    <td>${e.prenoms || ''}</td>
+                    <td>${e.sexe || ''}</td>                                           
+                    <td>${dateNaissVal}</td>                                           
+                    <td>${e.niveau || ''}</td>                                         
+                    <td>${e.nationalite || ''}</td>                                    
+                    <td>${e.pays || ''}</td>                                           
+                    <td>${e.localite || ''}</td>                                       
+                    <td>${e.mere || ''}</td>
+                    <td>${e.pere || ''}</td>                                           
+                    <td>${e.profession || ''}</td>                                     
+                    <td>${e.domicile || ''}</td>                                       
+                    <td>${e.contact || e.contact_parent || ''}</td>
+                    <td>${numActeVal}</td>                                             
+                    <td>${e.date_etab || e.date_etablissement || ''}</td>
+                    <td>${e.lieu_etab || e.lieu_etablissement || ''}</td>
+                    <td>${e.ecole || ''}</td>                                          
+                    <td>${calculerAge(dateNaissVal)}</td>                          
+                </tr>`;                                                        
+            });
         }
-        function filtrer(niveau, btnElement) {                                 classeFiltreeActuelle = niveau;
-            if(btnElement) {                                                       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));                                                  btnElement.classList.add('active');
-            } else {                                                               document.querySelectorAll('.filter-btn').forEach(b => {
-     if(b.textContent.trim() === niveau) b.classList.add('active');
-     else b.classList.remove('active');                             });                                                            }
-            if (niveau === 'Tous') {                                               afficherTableau(listeEleves);
+
+        function filtrer(niveau, btnElement) {                                 
+            classeFiltreeActuelle = niveau;
+            if(btnElement) {                                                       
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));                                                  
+                btnElement.classList.add('active');
+            } else {                                                               
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    if(b.textContent.trim() === niveau) b.classList.add('active');
+                    else b.classList.remove('active');                             
+                });                                                            
+            }
+            if (niveau === 'Tous') {                                               
+                afficherTableau(listeEleves);
             } else {
-                afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()));                            }                                                              }
-        document.getElementById('select-all').addEventListener('change', (e) => {                                                                 document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);                                          });
-        document.getElementById('delete-btn').addEventListener('click', () => {                                                                   const checkboxes = document.querySelectorAll('.row-checkbox:checked');
-            const ids = Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));                                                             if(ids.length > 0) {
+                afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()));                            
+            }                                                              
+        }
+
+        document.getElementById('select-all').addEventListener('change', (e) => {                                                                 
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);                                          
+        });
+
+        document.getElementById('delete-btn').addEventListener('click', () => {                                                                   
+            const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+            const ids = Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));                                                             
+            if(ids.length > 0) {
                 if(confirm("Supprimer les " + ids.length + " élève(s) sélectionné(s) ?")) {
                     document.getElementById('hidden-ids').value = JSON.stringify(ids);
                     document.getElementById('delete-form').submit();
-      }                                                              } else {                                                               alert("Veuillez d'abord cocher les cases des élèves à supprimer.");                                                               }                                                              });
+                }                                                              
+            } else {                                                               
+                alert("Veuillez d'abord cocher les cases des élèves à supprimer.");                                                               
+            }                                                              
+        });
+
         function afficherNomFichier(input) {
             const spanNom = document.getElementById('nomFichierAffiche');
             if (input.files && input.files[0]) {
-                spanNom.textContent = input.files[0].name;                         spanNom.title = input.files[0].name;                           } else {                                                               spanNom.textContent = "Aucun fichier";
+                spanNom.textContent = input.files[0].name;                         
+                spanNom.title = input.files[0].name;                           
+            } else {                                                               
+                spanNom.textContent = "Aucun fichier";
                 spanNom.title = "Aucun fichier choisi";
-            }                                                              }
+            }                                                              
+        }
+
         function telechargerExcelEleves() {
-            let elevesExport = (classeFiltreeActuelle !== 'Tous')                  ? listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase())                                 : listeEleves;
+            let elevesExport = (classeFiltreeActuelle !== 'Tous')                  
+                ? listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase())                                 
+                : listeEleves;
             const lignesExcel = elevesExport.length > 0 ? elevesExport.map((e, idx) => ({
                 "N°": idx + 1,
                 "Matricule": e.matricule || '',
@@ -120,70 +228,103 @@
         }
 
         async function importerFichierEleves() {
-            const inputFichier = document.getElementById('inputFichierExcel');                                                                    if (!inputFichier.files || inputFichier.files.length === 0) {         
-    alert("Veuillez d'abord cliquer sur 'Ajouter fichier' pour sélectionner un fichier Excel ou CSV.");                                   return;
+            const inputFichier = document.getElementById('inputFichierExcel');                                                                    
+            if (!inputFichier.files || inputFichier.files.length === 0) {
+                alert("Veuillez d'abord cliquer sur 'Ajouter fichier' pour sélectionner un fichier Excel ou CSV.");                                   
+                return;
             }
 
-            const fichier = inputFichier.files[0];                             const lecteur = new FileReader();                                  lecteur.onload = async function(e) {                                   try {
+            const fichier = inputFichier.files[0];                             
+            const lecteur = new FileReader();                                  
+            lecteur.onload = async function(e) {                                   
+                try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });                                                                 const premiereFeuilleNom = workbook.SheetNames[0];
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });                                                                 
+                    const premiereFeuilleNom = workbook.SheetNames[0];
                     const feuille = workbook.Sheets[premiereFeuilleNom];
-          const donneesBrutes = XLSX.utils.sheet_to_json(feuille, { raw: false, dateNF: 'YYYY-MM-DD' });
+                    const donneesBrutes = XLSX.utils.sheet_to_json(feuille, { raw: false, dateNF: 'YYYY-MM-DD' });
                     if (!donneesBrutes || donneesBrutes.length === 0) {
-              alert("Le fichier sélectionné est vide ou mal formaté.");
-    return;                                                        }
-                    let elevesImportes = [];                                           donneesBrutes.forEach((row) => {
+                        alert("Le fichier sélectionné est vide ou mal formaté.");
+                        return;                                                        
+                    }
+                    let elevesImportes = [];                                           
+                    donneesBrutes.forEach((row) => {
                         let rowNorm = {};
-                        for (let [k, v] of Object.entries(row)) {                              let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_");
-                            rowNorm[clePropre] = v;                                        }
+                        for (let [k, v] of Object.entries(row)) {                              
+                            let clePropre = k.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_");
+                            rowNorm[clePropre] = v;                                        
+                        }
 
                         const matriculeImport = (rowNorm['matricule'] || '').toString().trim();
                         const nomImport = (rowNorm['nom'] || '').toString().trim().toUpperCase();
 
-                        const existeDeja = listeEleves.some(el =>                              (el.matricule || '').toString().trim() === matriculeImport &&      
-     (el.nom || '').toString().trim().toUpperCase() === nomImport                                                                      );
+                        const existeDeja = listeEleves.some(el =>                              
+                            (el.matricule || '').toString().trim() === matriculeImport &&
+                            (el.nom || '').toString().trim().toUpperCase() === nomImport                                                                      
+                        );
                         if (!existeDeja && matriculeImport !== "") {
                             let dateNaissExtracted = rowNorm['date_naissance'] || rowNorm['date_naiss'] || rowNorm['datenaissance'] || rowNorm['date'] || '';
                             let numActeExtracted = rowNorm['num_acte'] || rowNorm['n_acte_naissance'] || rowNorm['acte_naissance'] || rowNorm['n_acte'] || '';
-                            elevesImportes.push({                                                  matricule: matriculeImport,                                        nom: rowNorm['nom'] || '',                                         prenoms: rowNorm['prenoms'] || rowNorm['prenom'] || '',
-       sexe: rowNorm['sexe'] || '',                                       date_naissance: dateNaissExtracted,
+                            elevesImportes.push({                                                  
+                                matricule: matriculeImport,                                        
+                                nom: rowNorm['nom'] || '',                                         
+                                prenoms: rowNorm['prenoms'] || rowNorm['prenom'] || '',
+                                sexe: rowNorm['sexe'] || '',                                       
+                                date_naissance: dateNaissExtracted,
                                 niveau: rowNorm['niveau'] || classeFiltreeActuelle,
                                 nationalite: rowNorm['nationalite'] || '',
-                                pays: rowNorm['pays'] || '',                                       localite: rowNorm['localite'] || '',
-                 mere: rowNorm['mere'] || '',                                       pere: rowNorm['pere'] || '',                                       profession: rowNorm['profession'] || '',
+                                pays: rowNorm['pays'] || '',                                       
+                                localite: rowNorm['localite'] || '',
+                                mere: rowNorm['mere'] || '',                                       
+                                pere: rowNorm['pere'] || '',                                       
+                                profession: rowNorm['profession'] || '',
                                 domicile: rowNorm['domicile'] || '',
-                                contact: rowNom['contact_parent'] || rowNorm['contact'] || '',
-                                num_acte: numActeExtracted,                                        date_etab: rowNorm['date_etab'] || rowNorm['date_etablissement'] || '',
-                                lieu_etab: rowNorm['lieu_etab'] || rowNorm['lieu_etablissement'] || '',                                                               ecole: rowNorm['ecole'] || ''
-                            });                                                            }
+                                contact: rowNorm['contact_parent'] || rowNorm['contact'] || '',
+                                num_acte: numActeExtracted,                                        
+                                date_etab: rowNorm['date_etab'] || rowNorm['date_etablissement'] || '',
+                                lieu_etab: rowNorm['lieu_etab'] || rowNorm['lieu_etablissement'] || '',                                                               
+                                ecole: rowNorm['ecole'] || ''
+                            });                                                            
+                        }
                     });
 
                     if (elevesImportes.length === 0) {
-                        alert("⚠️ Aucun nouvel élève à importer (tous les élèves du fichier existent déjà ou les lignes sont vides).");                        return;
+                        alert("⚠️ Aucun nouvel élève à importer (tous les élèves du fichier existent déjà ou les lignes sont vides).");                        
+                        return;
                     }
 
                     const res = await fetch('/api/importer-eleves', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ annee: anneeSelectionnee, eleves: elevesImportes })
+                        body: JSON.stringify({ annee: anneeSelectionnee, eleves: elevesImportes })
                     });
                     const contentType = res.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {                                                                          throw new Error("Le serveur a renvoyé une page HTML au lieu du JSON attendu (route /api/importer-eleves manquante ou erreur serveur).");
+                    if (!contentType || !contentType.includes("application/json")) {                                                                          
+                        throw new Error("Le serveur a renvoyé une page HTML au lieu du JSON attendu (route /api/importer-eleves manquante ou erreur serveur).");
                     }
 
-                    const reponse = await res.json();                                  if (reponse.success) {
+                    const reponse = await res.json();                                  
+                    if (reponse.success) {
                         alert("✅ Élèves importés avec succès !");
                         inputFichier.value = "";
-                        document.getElementById('nomFichierAffiche').textContent = "Aucun fichier";                                                           location.reload();
+                        document.getElementById('nomFichierAffiche').textContent = "Aucun fichier";                                                           
+                        location.reload();
                     } else {
                         alert("⚠️ Erreur serveur : " + (reponse.message || "Inconnue"));
-                    }                                                              } catch (erreur) {
+                    }                                                              
+                } catch (erreur) {
                     console.error("Erreur lecture fichier:", erreur);
-          alert("❌ Impossible de lire ce fichier : " + erreur.message);                                                                    }                                                              };                                                                 lecteur.readAsArrayBuffer(fichier);
+                    alert("❌ Impossible de lire ce fichier : " + erreur.message);                                                                    
+                }                                                              
+            };                                                                 
+            lecteur.readAsArrayBuffer(fichier);
         }
-        window.addEventListener('pageshow', function(event) {                  if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+
+        window.addEventListener('pageshow', function(event) {                  
+            if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
                 window.location.reload();
-            }                                                              });
+            }                                                              
+        });
     </script>
 </body>
 </html>

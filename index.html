@@ -1,12 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-
-<link rel="manifest" href="/manifest.json">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription - Gestion Élèves</title>
+    <link rel="manifest" href="/manifest.json">
+    <title>Espace MonÉcole</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,101 +17,106 @@
             margin: 0;
             padding: 10px;
         }
-        form {
+        .container {
             background: white;
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
             width: 100%;
-            max-width: 320px;
+            max-width: 380px;
         }
         .logo { width: 80px; margin-bottom: 10px; }
         .header-text { margin-bottom: 15px; }
         .header-text p { font-weight: bold; font-size: 13px; margin: 0 0 8px 0; color: #333; }
-
-        .flag-bar { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; }
+        
+        .flag-bar { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 15px; }
         .orange { background-color: #FF8C00; flex: 1; }
         .white { background-color: #FFFFFF; flex: 1; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
         .green { background-color: #009E60; flex: 1; }
 
-        h2 { color: #333; margin: 15px 0; font-size: 20px; }
-        input[type="password"], input[type="text"], input[type="tel"] {
-            margin: 8px 0;
-            padding: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-        }
-        button {
-            background: #2e7d32;
-            color: white;
-            border: none;
-            padding: 12px;
-            width: 100%;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 15px;
-        }
-        button:hover { background: #1b5e20; }
-        .toggle-container { text-align: left; font-size: 13px; margin-top: 5px; }
+        h2 { color: #333; margin: 10px 0 20px 0; font-size: 20px; }
+
+        .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .role-card { background: #ffffff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 10px 2px; cursor: pointer; transition: all 0.2s; }
+        .role-card:hover, .role-card.active { border-color: #2e7d32; background-color: #f4faf4; }
+        .role-icon { font-size: 20px; display: block; }
+        .role-title { font-size: 11px; font-weight: bold; color: #2e7d32; }
+
+        .form-section { display: none; text-align: left; }
+        .form-section.active { display: block; }
+
+        input { margin: 8px 0; padding: 10px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; }
+        button.submit-btn { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
         
-        /* Nouveau style pour le lien de bas de page */
-        .login-link { margin-top: 20px; font-size: 13px; color: #666; }
-        .login-link a { color: #2e7d32; text-decoration: none; font-weight: bold; }
+        .toggle-container { font-size: 12px; margin-bottom: 10px; }
+        .link-text { margin-top: 15px; font-size: 13px; color: #666; text-align: center; }
+        .link-text a { color: #2e7d32; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<form action="/inscription" method="POST">
-    <img src="Armoiries.jpg" alt="Armoiries" class="logo">
-
+<div class="container">
+    <img src="Armoiries.jpg" alt="Armoiries" class="logo">     
     <div class="header-text">
-        <p>RÉPUBLIQUE DE CÔTE D'IVOIRE</p>
+        <p>RÉPUBLIQUE DE CÔTE D'IVOIRE</p>                             
         <div class="flag-bar">
-            <div class="orange"></div>
-            <div class="white"></div>
-            <div class="green"></div>
+            <div class="orange"></div><div class="white"></div><div class="green"></div>
         </div>
     </div>
 
-    <h2>Inscription</h2>
+    <h2>MonÉcole Portail</h2>
 
-    <input type="text" id="schoolName" name="schoolName" placeholder="Nom de l'école" required>
-
-    <input type="tel" id="tel" name="telephone" placeholder="Numéro de téléphone" required>
-
-    <input type="password" id="passInput" name="password" placeholder="Mot de passe" required>
-
-    <input type="password" id="confirmPassInput" name="confirmPassword" placeholder="Confirmer mot de passe" required>
-
-    <div class="toggle-container">
-        <label>
-            <input type="checkbox" onclick="togglePass()"> Voir les mots de passe
-        </label>
+    <div class="role-grid">
+        <div class="role-card active" onclick="switchRole('directeur', this)">
+            <span class="role-icon">👨‍💼</span><span class="role-title">Directeur</span>
+        </div>
+        <div class="role-card" onclick="switchRole('enseignant', this)">
+            <span class="role-icon">👨‍🏫</span><span class="role-title">Enseignant</span>
+        </div>
+        <div class="role-card" onclick="switchRole('parent', this)">
+            <span class="role-icon">👨‍👩‍👧‍👦</span><span class="role-title">Parent</span>
+        </div>
     </div>
 
-    <button type="submit">S'inscrire</button>
+    <!-- DIRECTEUR : Inscription + Lien Connexion -->
+    <form id="form-directeur" class="form-section active" action="/inscription" method="POST">
+        <input type="text" name="schoolName" placeholder="Nom de l'école" required style="text-transform: uppercase;">
+        <input type="tel" name="telephone" placeholder="Numéro de téléphone" required>
+        <input type="password" id="p1" name="password" placeholder="Mot de passe" required>
+        <input type="password" id="p2" name="confirmPassword" placeholder="Confirmer mot de passe" required>
+        <div class="toggle-container"><label><input type="checkbox" onclick="togglePass('p1', 'p2')"> Voir les mots de passe</label></div>
+        <button type="submit" class="submit-btn">S'inscrire</button>
+        <div class="link-text">Déjà inscrit ? <a href="login.html">Se connecter</a></div>
+    </form>
 
-    <div class="login-link">
-        Déjà inscrit ? <a href="login.html">Se connecter</a>
-    </div>
-</form>
+    <!-- ENSEIGNANT -->
+    <form id="form-enseignant" class="form-section" action="/login-enseignant" method="POST">
+        <input type="tel" name="telephone" placeholder="Numéro de téléphone" required>
+        <input type="text" name="code_acces" placeholder="Code d'accès Enseignant" required style="text-align:center;">
+        <button type="submit" class="submit-btn">Accéder</button>
+    </form>
+
+    <!-- PARENT -->
+    <form id="form-parent" class="form-section" action="/login-parent" method="POST">
+        <input type="tel" name="telephone" placeholder="Numéro de téléphone" required>
+        <input type="text" name="code_acces" placeholder="Code d'accès Parent" required style="text-align:center;">
+        <button type="submit" class="submit-btn">Consulter</button>
+    </form>
+</div>
 
 <script>
-function togglePass() {
-    var x = document.getElementById("passInput");
-    var y = document.getElementById("confirmPassInput");
-    if (x.type === "password") {
-        x.type = "text";
-        y.type = "text";
-    } else {
-        x.type = "password";
-        y.type = "password";
+    function switchRole(role, el) {
+        document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+        document.getElementById('form-' + role).classList.add('active');
     }
-}
+    function togglePass(id1, id2) {
+        let x = document.getElementById(id1), y = document.getElementById(id2);
+        let type = (x.type === "password") ? "text" : "password";
+        x.type = y.type = type;
+    }
 </script>
 
 </body>

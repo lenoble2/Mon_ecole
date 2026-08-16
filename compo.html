@@ -76,10 +76,10 @@
                     return colonnesParNiveau[nivUpper][periode];                                                                              }                                                              return colonnesParNiveau[nivUpper]['COMPO1'] || [];
             }                                                              return [];                                                 }                                                                                                                             const urlParams = new URLSearchParams(window.location.search);
         const annee = urlParams.get('annee') || '2025';
-        document.getElementById('annee-select').value = annee; 
+        document.getElementById('annee-select').value = annee;
         function changerAnnee() {                                          const valAnnee = document.getElementById('annee-select').value;
-            const pageActuelle = window.location.pathname.split('/').pop() || 'compo.html';                                               window.location.href = `${pageActuelle}?annee=${valAnnee}&periode=${periodeActuelle}`;                                    }                                                      
-        function gererSelectionCompo(selectElement) {                      const val = selectElement.value;                               if (val) {                                                         document.getElementById('select-bulletins').selectedIndex = 0;                                                                changerPeriode(val, null);                                 }                                                          }                                                      
+            const pageActuelle = window.location.pathname.split('/').pop() || 'compo.html';                                               window.location.href = `${pageActuelle}?annee=${valAnnee}&periode=${periodeActuelle}`;                                    }
+        function gererSelectionCompo(selectElement) {                      const val = selectElement.value;                               if (val) {                                                         document.getElementById('select-bulletins').selectedIndex = 0;                                                                changerPeriode(val, null);                                 }                                                          }
         function gererSelectionBulletin(selectElement) {                   const val = selectElement.value;                               if (val) {                                                         document.getElementById('select-compositions').selectedIndex = 0;                                                             const niveau = val;                                            const pageCible = (niveau === 'CM2') ? 'bul.html' : 'bulcp.html';                                                             window.location.href = `${pageCible}?niveau=${niveau}&annee=${annee}`;                                                    }                                                          }
                                                                        function changerPeriode(periode) {
             periodeActuelle = periode;
@@ -91,7 +91,7 @@
             chargerDonnees();                                          });                                                                                                                           function chargerDonnees() {
             document.getElementById('conteneurTableau').innerHTML = `<p style="text-align:center; padding: 20px; color: #666;">Chargement des élèves...</p>`;                                            fetch(`/api/eleves/${annee}?periode=${periodeActuelle}`)
                 .then(res => res.json())                                       .then(data => {                                                    listeEleves = Array.isArray(data) ? data : (data.eleves || []);                                                               cachePeriodes[periodeActuelle] = listeEleves;
-                    filtrer(classeFiltreeActuelle);                            })                                                             .catch(err => {                                                    console.error("Erreur chargement:", err);                      document.getElementById('conteneurTableau').innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement des données.</p>`;                                                });                                                    }                                                      
+                    filtrer(classeFiltreeActuelle);                            })                                                             .catch(err => {                                                    console.error("Erreur chargement:", err);                      document.getElementById('conteneurTableau').innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement des données.</p>`;                                                });                                                    }
         function getCoefficientDiviseur(niveau, periode) {
             let nivUpper = niveau ? niveau.toUpperCase() : '';
             let coeff = 8.5;                                               if (nivUpper === 'CP1' && periode === 'COMPO1') {
@@ -136,16 +136,16 @@
                 html += `<th>${m.toUpperCase()}</th>`;                     });
             html += `<th>Total</th>                                            <th>${libelleMoyen}</th>                                       <th>Rang</th>
                 <th>Decision</th>
-            </tr>`;                                            
+            </tr>`;
             data.forEach((e, index) => {                                       let decisionVal = e.decision ?? '';                            html += `<tr data-id="${e.matricule || ''}" data-niveau="${e.niveau || ''}">                                                      <td>${index + 1}</td>                                          <td>${e.matricule || ''}</td>                                  <td style="text-align: left;">${e.nom || ''}</td>
                     <td style="text-align: left;">${e.prenoms || ''}</td>                                                                         <td>${e.niveau || ''}</td>
                     <td>${e.date_naissance || ''}</td>
                     <td>${e.sexe || ''}</td>`;
 
-                let sommeNotesCalcul = 0;                                      matieres.forEach(m => {                                            let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});                                 let valeurNote = notesObj[m] !== undefined ? notesObj[m] : (e[m] !== undefined ? e[m] : '');                                  if (valeurNote !== '') {                                           let nNum = parseFloat(valeurNote);                             if (!isNaN(nNum)) sommeNotesCalcul += nNum;                                                                               }                                                              html += `<td><input type="number" step="0.5" class="edit-note" data-matiere="${m}" value="${valeurNote}" ${!modeEditionActif ? 'disabled' : ''}></td>`;                                  });                                                                                                                           let specificMoyen = 0;                                         if (periodeActuelle === 'COMPO1') specificMoyen = e.moyen_compo1;                                                             else if (periodeActuelle === 'COMPO2') specificMoyen = e.moyen_compo2;                                                        else if (periodeActuelle === 'COMPO3') specificMoyen = e.moyen_compo3;                                                        else if (periodeActuelle === 'PASSAGE') specificMoyen = e.moyen_compo_de_passage;                             
+                let sommeNotesCalcul = 0;                                      matieres.forEach(m => {                                            let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});                                 let valeurNote = notesObj[m] !== undefined ? notesObj[m] : (e[m] !== undefined ? e[m] : '');                                  if (valeurNote !== '') {                                           let nNum = parseFloat(valeurNote);                             if (!isNaN(nNum)) sommeNotesCalcul += nNum;                                                                               }                                                              html += `<td><input type="number" step="0.5" class="edit-note" data-matiere="${m}" value="${valeurNote}" ${!modeEditionActif ? 'disabled' : ''}></td>`;                                  });                                                                                                                           let specificMoyen = 0;                                         if (periodeActuelle === 'COMPO1') specificMoyen = e.moyen_compo1;                                                             else if (periodeActuelle === 'COMPO2') specificMoyen = e.moyen_compo2;                                                        else if (periodeActuelle === 'COMPO3') specificMoyen = e.moyen_compo3;                                                        else if (periodeActuelle === 'PASSAGE') specificMoyen = e.moyen_compo_de_passage;
                 let valeurMoyen = 0;                                           if (specificMoyen !== undefined && specificMoyen !== null && specificMoyen !== '') {                                              valeurMoyen = parseFloat(specificMoyen);                   } else if (e.moyen !== undefined && e.moyen !== null && e.moyen !== '') {                                                         valeurMoyen = parseFloat(e.moyen);                         } else if (sommeNotesCalcul > 0) {
-                    let diviseur = getCoefficientDiviseur(e.niveau || niveauFiltre, periodeActuelle);                                             valeurMoyen = sommeNotesCalcul / diviseur;                 }                                                              valeurMoyen = isNaN(valeurMoyen) ? 0 : valeurMoyen;                                                           
-                let valeurTotal = (e.total !== undefined && e.total !== null && e.total !== '') ? parseFloat(e.total) : sommeNotesCalcul;                                                                    valeurTotal = isNaN(valeurTotal) ? 0 : valeurTotal;                                                                           let valeurRang = e.rang ?? (index + 1);        
+                    let diviseur = getCoefficientDiviseur(e.niveau || niveauFiltre, periodeActuelle);                                             valeurMoyen = sommeNotesCalcul / diviseur;                 }                                                              valeurMoyen = isNaN(valeurMoyen) ? 0 : valeurMoyen;
+                let valeurTotal = (e.total !== undefined && e.total !== null && e.total !== '') ? parseFloat(e.total) : sommeNotesCalcul;                                                                    valeurTotal = isNaN(valeurTotal) ? 0 : valeurTotal;                                                                           let valeurRang = e.rang ?? (index + 1);
                 html += `<td><input type="number" step="0.01" class="edit-total" value="${valeurTotal.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>
                     <td><input type="number" step="0.01" class="edit-mg edit-moyen" value="${valeurMoyen.toFixed(2)}" ${!modeEditionActif ? 'disabled' : ''}></td>                                               <td><input type="number" class="edit-rang" value="${valeurRang}" ${!modeEditionActif ? 'disabled' : ''}></td>
                     <td>
@@ -162,7 +162,7 @@
             if (niveau !== 'Tous') {
                 btnDL.textContent = `Télécharger ${niveau}`;               } else {                                                           btnDL.textContent = "Télécharger Excel Global";            }
             if (niveau === 'Tous') {                                           afficherTableau(listeEleves, 'Tous');                      } else {                                                           afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()), niveau);            }
-        }                                                      
+        }
         function basculerModeEdition() {
             modeEditionActif = !modeEditionActif;                          const btn = document.getElementById('btnActiverModif');
             btn.innerText = modeEditionActif ? "Verrouiller" : "Modifier";
@@ -173,7 +173,7 @@
                 } else {
                     let notesObj = {};
                     tr.querySelectorAll('.edit-note').forEach(input => {                                                                              notesObj[input.getAttribute('data-matiere')] = input.value;                                                               });                                                            let dataPayload = {                                                matricule: tr.getAttribute('data-id'),
-                        notes: notesObj,                                               total: tr.querySelector('.edit-total').value,                                                                                 moyen: tr.querySelector('.edit-mg').value,                                                                                    rang: tr.querySelector('.edit-rang').value,                                                                                   decision: tr.querySelector('.dfa-select').value                                                                           };                                                             if (periodeActuelle === 'COMPO1') dataPayload.moyen_compo1 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'COMPO2') dataPayload.moyen_compo2 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'COMPO3') dataPayload.moyen_compo3 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'PASSAGE') dataPayload.moyen_compo_de_passage = tr.querySelector('.edit-mg').value;                                                              
+                        notes: notesObj,                                               total: tr.querySelector('.edit-total').value,                                                                                 moyen: tr.querySelector('.edit-mg').value,                                                                                    rang: tr.querySelector('.edit-rang').value,                                                                                   decision: tr.querySelector('.dfa-select').value                                                                           };                                                             if (periodeActuelle === 'COMPO1') dataPayload.moyen_compo1 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'COMPO2') dataPayload.moyen_compo2 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'COMPO3') dataPayload.moyen_compo3 = tr.querySelector('.edit-mg').value;                              if (periodeActuelle === 'PASSAGE') dataPayload.moyen_compo_de_passage = tr.querySelector('.edit-mg').value;
                     updates.push(dataPayload);                                 }                                                          });                                                                                                                           fetch('/api/update-notes', {                                       method: 'POST',                                                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ updates: updates, annee: annee, periode: periodeActuelle })                                        })
             .then(res => res.json())                                       .then(data => {                                                    if (data.success) {
@@ -200,7 +200,7 @@
                     const feuille = workbook.Sheets[workbook.SheetNames[0]];
                     const donneesBrutes = XLSX.utils.sheet_to_json(feuille);
                                                                                    if (!donneesBrutes || donneesBrutes.length === 0) {                                                                               alert("Le fichier Excel est vide ou mal formaté.");                                                                           return;
-                    }                                          
+                    }
                     const updates = [];                                                                                                           donneesBrutes.forEach(row => {                                     // Normalisation des clés pour s'affranchir de la casse (majuscules/minuscules) et des espaces
                         let normalizedRow = {};
                         Object.keys(row).forEach(k => {
@@ -225,7 +225,7 @@
                             let moyenKey = Object.keys(normalizedRow).find(k => k.includes('moyen') || k.includes('moy'));
                             let moyen = moyenKey ? parseFloat(normalizedRow[moyenKey]) : 0;
                             let rang = normalizedRow['rang'] || 1;
-                            let decision = normalizedRow['decision'] || '';                                               
+                            let decision = normalizedRow['decision'] || '';
                             let dataPayload = {                                                matricule: String(matricule).trim(),
                                 notes: notesObj,
                                 total: isNaN(total) ? 0 : total.toFixed(2),
@@ -233,7 +233,7 @@
                                 rang: rang,                                                    decision: decision
                             };
                                                                                            if (periodeActuelle === 'COMPO1') dataPayload.moyen_compo1 = isNaN(moyen) ? 0 : moyen.toFixed(2);                             if (periodeActuelle === 'COMPO2') dataPayload.moyen_compo2 = isNaN(moyen) ? 0 : moyen.toFixed(2);                             if (periodeActuelle === 'COMPO3') dataPayload.moyen_compo3 = isNaN(moyen) ? 0 : moyen.toFixed(2);
-                            if (periodeActuelle === 'PASSAGE') dataPayload.moyen_compo_de_passage = isNaN(moyen) ? 0 : moyen.toFixed(2);                                                     
+                            if (periodeActuelle === 'PASSAGE') dataPayload.moyen_compo_de_passage = isNaN(moyen) ? 0 : moyen.toFixed(2);
                             updates.push(dataPayload);
                         }                                                          });                                                                                                                           if (updates.length === 0) {                                        alert("Aucun élève valide (avec un matricule) n'a été trouvé dans le fichier.");                                              return;
                     }
@@ -241,7 +241,7 @@
                         headers: { 'Content-Type': 'application/json' },                                                                              body: JSON.stringify({ updates: updates, annee: annee, periode: periodeActuelle })                                        });
                                                                                    const resData = await response.json();
                     if (resData.success) {                                             alert(`✅ Importation réussie ! ${updates.length} lignes importées avec leurs valeurs d'origine.`);
-                        chargerDonnees();                                          } else {                                                           alert("⚠️ Erreur lors de l'enregistrement des données importées.");                                                        }                                          
+                        chargerDonnees();                                          } else {                                                           alert("⚠️ Erreur lors de l'enregistrement des données importées.");                                                        }
                 } catch (erreur) {                                                 console.error("Erreur lecture:", erreur);
                     alert("Erreur lors de la lecture ou de l'analyse du fichier Excel.");
                 }                                                          };
@@ -253,57 +253,106 @@
             return letter;
         }
                                                                        async function telechargerExcelActuel() {
-            let dataEleves = classeFiltreeActuelle === 'Tous' ? listeEleves : listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase());                       if (!dataEleves || dataEleves.length === 0) {                      alert("Aucune donnée à télécharger pour cette sélection.");
+            let dataEleves = classeFiltreeActuelle === 'Tous' ? listeEleves : listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase());
+            if (!dataEleves || dataEleves.length === 0) {
+                alert("Aucune donnée à télécharger pour cette sélection.");
                 return;
-            }                                                  
-            try {                                                              let wb = XLSX.utils.book_new();                                                                                               if (periodeActuelle === 'FIN_ANNEE') {
+            }
+            try {
+                let wb = XLSX.utils.book_new();
+
+                if (periodeActuelle === 'FIN_ANNEE') {
                     let headers = ['N°', 'Matricule', 'Nom', 'Prénoms', 'Niveau', 'Date Naiss.', 'Sexe', 'MOYEN COMPO1', 'MOYEN COMPO2', 'MOYEN COMPO3', 'moyen_compoN', 'moyen_passage', 'moyen_total', 'Decision'];
-                    let aoa = [headers];                       
-                    dataEleves.forEach((e, index) => {                                 let R = index + 2;                                             let m1 = parseFloat(e.moyen_compo1 ?? e.m1 ?? 0);
-                        let m2 = parseFloat(e.moyen_compo2 ?? e.m2 ?? 0);                                                                             let m3 = parseFloat(e.moyen_compo3 ?? e.m3 ?? 0);                                                                             let mPassage = parseFloat(e.moyen_compo_de_passage ?? 0);
+                    let aoa = [headers];
+                    dataEleves.forEach((e, index) => {
+                        let R = index + 2;
+                        let m1 = parseFloat(e.moyen_compo1 ?? e.m1 ?? 0);
+                        let m2 = parseFloat(e.moyen_compo2 ?? e.m2 ?? 0);
+                        let m3 = parseFloat(e.moyen_compo3 ?? e.m3 ?? 0);
+                        let mPassage = parseFloat(e.moyen_compo_de_passage ?? 0);
                         let decisionVal = e.decision ?? '';
-                                                                                       aoa.push([
+
+                        aoa.push([
                             index + 1,
                             e.matricule || '',
-                            e.nom || '',                                                   e.prenoms || '',                                               e.niveau || '',                                                e.date_naissance || '',                                        e.sexe || '',
-                            m1,                                                            m2,                                                            m3,
-                            { f: `(H${R}+I${R}+J${R})/3`, v: (m1 + m2 + m3) / 3 },                                                                        mPassage,
+                            e.nom || '',
+                            e.prenoms || '',
+                            e.niveau || '',
+                            e.date_naissance || '',
+                            e.sexe || '',
+                            m1,
+                            m2,
+                            m3,
+                            { f: `(H${R}+I${R}+J${R})/3`, v: (m1 + m2 + m3) / 3 },
+                            mPassage,
                             { f: `(K${R}+L${R})/2`, v: 0 },
-                            decisionVal                                                ]);                                                        });                                                                                                                           let ws = XLSX.utils.aoa_to_sheet(aoa);
+                            decisionVal
+                        ]);
+                    });
+
+                    let ws = XLSX.utils.aoa_to_sheet(aoa);
                     XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
-                } else {                                                           let niveauUtilise = classeFiltreeActuelle === 'Tous' ? (dataEleves[0]?.niveau || 'CP1') : classeFiltreeActuelle;                                                                             let matieres = getMatieresNiveau(niveauUtilise, periodeActuelle);                                                                                                                            let headers = ['N°', 'Matricule', 'Nom', 'Prénoms', 'Niveau', 'Date Naiss.', 'Sexe', ...matieres.map(m => m.toUpperCase()), 'Total', `MOYEN ${periodeActuelle}`, 'Rang', 'Decision'];
+                } else {
+                    let niveauUtilise = classeFiltreeActuelle === 'Tous' ? (dataEleves[0]?.niveau || 'CP1') : classeFiltreeActuelle;
+                    let matieres = getMatieresNiveau(niveauUtilise, periodeActuelle);
+
+                    let headers = ['N°', 'Matricule', 'Nom', 'Prénoms', 'Niveau', 'Date Naiss.', 'Sexe', ...matieres.map(m => m.toUpperCase()), 'Total', `MOYEN ${periodeActuelle}`, 'Rang', 'Decision'];
                     let aoa = [headers];
 
                     dataEleves.forEach((e, index) => {
                         let R = index + 2;
-                        let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});                                 let rowData = [                                                    index + 1,                                                     e.matricule || '',                                             e.nom || '',                                                   e.prenoms || '',
-                            e.niveau || '',                                                e.date_naissance || '',
-                            e.sexe || ''                                               ];
+                        let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});
+                        let rowData = [
+                            index + 1,
+                            e.matricule || '',
+                            e.nom || '',
+                            e.prenoms || '',
+                            e.niveau || '',
+                            e.date_naissance || '',
+                            e.sexe || ''
+                        ];
 
                         matieres.forEach(m => {
-                            let val = notesObj[m] !== undefined ? notesObj[m] : (e[m] !== undefined ? e[m] : '');                                         rowData.push(val !== '' ? parseFloat(val) : '');                                                                          });                                                                                                                           let startColLetter = colToLetter(7);
-                        let endColLetter = colToLetter(7 + matieres.length - 1);                                                                      let totalColLetter = colToLetter(7 + matieres.length);                                                                        let diviseur = getCoefficientDiviseur(e.niveau || niveauUtilise, periodeActuelle);
+                            let val = notesObj[m] !== undefined ? notesObj[m] : (e[m] !== undefined ? e[m] : '');
+                            rowData.push(val !== '' ? parseFloat(val) : '');
+                        });
 
-                        rowData.push({ f: `SUM(${startColLetter}${R}:${endColLetter}${R})`, v: 0 });                                                  rowData.push({ f: `${totalColLetter}${R}/${diviseur}`, v: 0 });                                                               rowData.push(e.rang ?? (index + 1));                           rowData.push(e.decision ?? '');        
+                        let startColLetter = colToLetter(7);
+                        let endColLetter = colToLetter(7 + matieres.length - 1);
+                        let totalColLetter = colToLetter(7 + matieres.length);
+                        let moyenColLetter = colToLetter(7 + matieres.length + 1);
+                        let diviseur = getCoefficientDiviseur(e.niveau || niveauUtilise, periodeActuelle);
+
+                        rowData.push({ f: `SUM(${startColLetter}${R}:${endColLetter}${R})`, v: 0 });
+                        rowData.push({ f: `${totalColLetter}${R}/${diviseur}`, v: 0 });
+                        rowData.push({ f: `RANK(${moyenColLetter}${R}, ${moyenColLetter}$2:${moyenColLetter}${dataEleves.length + 1})`, v: e.rang ?? (index + 1) });
+                        rowData.push(e.decision ?? '');
                         aoa.push(rowData);
                     });
-                                                                                   let ws = XLSX.utils.aoa_to_sheet(aoa);                         XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
-                }                                                                                                                             let nomFichier = `Notes_${periodeActuelle}_${classeFiltreeActuelle}_${annee}.xlsx`;                                           XLSX.writeFile(wb, nomFichier);                            } catch (e) {
+
+                    let ws = XLSX.utils.aoa_to_sheet(aoa);
+                    XLSX.utils.book_append_sheet(wb, ws, periodeActuelle);
+                }
+
+                let nomFichier = `Notes_${periodeActuelle}_${classeFiltreeActuelle}_${annee}.xlsx`;
+                XLSX.writeFile(wb, nomFichier);
+            } catch (e) {
                 console.error("Erreur export Excel:", e);
                 alert("Erreur lors du téléchargement du fichier Excel.");
-            }                                                          }                                                                                                                             function recalculerLigne(tr, niveauClasse) {
+            }
+        }
+                                                                       function recalculerLigne(tr, niveauClasse) {
             let nivUpper = niveauClasse ? niveauClasse.toUpperCase() : '';                                                                if (periodeActuelle === 'FIN_ANNEE') {                             let m1 = parseFloat(tr.querySelector('.edit-m1')?.value) || 0;                                                                let m2 = parseFloat(tr.querySelector('.edit-m2')?.value) || 0;
                 let m3 = parseFloat(tr.querySelector('.edit-m3')?.value) || 0;
                 let moyenCompoN = (m1 + m2 + m3) / 3;
                 tr.querySelector('.edit-mcompon').value = moyenCompoN.toFixed(2);                                                             let mPassage = parseFloat(tr.querySelector('.edit-mpassage')?.value) || 0;
                 let moyenTotal = (moyenCompoN + mPassage) / 2;                 tr.querySelector('.edit-mtotal').value = moyenTotal.toFixed(2);
                 return;
-            }                                                  
+            }
             let inputsNotes = tr.querySelectorAll('.edit-note');
             let sommeTotal = 0;                                            inputsNotes.forEach(input => {                                     let val = parseFloat(input.value);                             if (!isNaN(val)) sommeTotal += val;
-            });                                                
+            });
             tr.querySelector('.edit-total').value = sommeTotal.toFixed(2);                                                                let diviseur = getCoefficientDiviseur(nivUpper, periodeActuelle);                                                             let moyenne = sommeTotal / diviseur;
             tr.querySelector('.edit-mg').value = moyenne.toFixed(2);                                                                  }                                                                                                                             document.addEventListener('input', function(e) {
             if (e.target.classList.contains('edit-note') || e.target.classList.contains('edit-m1') || e.target.classList.contains('edit-m2') || e.target.classList.contains('edit-m3') || e.target.classList.contains('edit-mpassage')) {                                   let tr = e.target.closest('tr');                               if (tr) {                                                          let niv = tr.querySelectorAll('td')[4]?.textContent.trim() || classeFiltreeActuelle;                                          recalculerLigne(tr, niv);
                 }                                                          }                                                          });                                                        </script>                                                  </body>                                                        </html>
-
