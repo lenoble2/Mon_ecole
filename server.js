@@ -1048,6 +1048,111 @@ app.get('/api/get-personnel', async (req, res) => {
 });
 
 // ==========================================
+// ROUTE : GÉNÉRATION DE CODE ET VÉRIFICATION D'ACTEUR
+// ==========================================
+app.post('/api/generer-code', async (req, res) => {
+    const { tel, code } = req.body;
+    const nomEcole = req.session.nomEcole;
+
+    if (!tel) {
+        return res.status(400).json({ status: 'erreur', message: 'Numéro de téléphone manquant.' });
+    }
+
+    try {
+        const telephoneRecherche = tel.trim();
+
+        // 1. Vérification dans la table "personnel" (Etat du personnel - CONTACT) pour l'école connectée
+        const { data: personnelData, error: personnelError } = await supabase
+            .from('personnel')
+            .select('*')
+            .eq('nom_ecole', nomEcole)
+            .eq('contact', telephoneRecherche);
+
+        if (personnelError) throw personnelError;
+
+        if (personnelData && personnelData.length > 0) {
+            const enseignantTrouve = personnelData[0];
+
+            // Stockage en session pour les routes et la session courante
+            req.session.enseignant = enseignantTrouve;
+            req.session.typeUtilisateur = 'maitre';
+
+            return res.json({
+                status: 'succes',
+                type: 'maitre',
+                message: 'Numéro trouvé dans le personnel.',
+                id: enseignantTrouve.id, // Envoi de l'ID exact au frontend
+                enseignant: enseignantTrouve
+            });
+        }
+
+        // 2. Vérification dans la table "eleves" (Fichier élèves - Contact Parent) pour l'école
+        const { data: elevesData, error: elevesError } = await supabase
+            .from('eleves')
+            .select('*')
+            .eq('nom_ecole', nomEcole)
+            .eq('contact', telephoneRecherche);
+
+        if (elevesError) throw elevesError;
+
+        if (elevesData && elevesData.length > 0) {
+            // Enregistrement de l'élève en session pour l'espace parent
+            req.session.eleve = elevesData[0];
+            req.session.typeUtilisateur = 'parent';
+
+            return res.json({
+                status: 'succes',
+                type: 'parent',
+                message: 'Numéro trouvé dans les parents d\'élèves.',
+                eleve: elevesData[0]
+            });
+        }
+
+        // 3. Si le numéro n'existe ni dans le personnel ni chez les parents pour cette école
+        return res.json({
+            status: 'inexistant',
+            message: "Ce numéro n'existe pas dans notre base."
+        });
+
+    } catch (err) {
+        console.error("❌ Erreur lors de la vérification du numéro :", err);
+        res.status(500).json({ status: 'erreur', message: 'Erreur serveur lors de la vérification' });
+    }
+});
+
+app.get('/api/maitre/current-session', (req, res) => {
+    if (req.session && req.session.enseignant) {
+        res.json({
+            success: true,
+            enseignant: req.session.enseignant
+        });
+    } else {
+        res.status(401).json({
+            success: false,
+            message: "Aucune session active"
+        });
+    }
+});
+
+
+// Route pour récupérer l'élève connecté via la session
+app.get('/api/parent/current-session', (req, res) => {
+    if (req.session && req.session.eleve) {
+        return res.json({
+            success: true,
+            eleve: req.session.eleve
+        });
+    } else {
+        return res.status(401).json({
+            success: false,
+            message: "Aucune session parent active."
+        });
+    }
+});
+
+
+
+// ==========================================
 // 9. LANCEMENT DU SERVEUR
 // ==========================================
 async function startServer() {

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Codes - Directeur</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 { color: #2c3e50; margin-bottom: 1.5rem; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #219150; }
+        #resultat { margin-top: 1.5rem; font-weight: 600; color: #34495e; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Générateur de Code</h2>
+        <input type="text" id="tel" placeholder="Numéro de l'enseignant ou du parent" required>
+        <button onclick="genererCode()">Générer et Enregistrer</button>
+        <div id="resultat"></div>
+    </div>
+
+    <script>
+        function genererCode() {
+            const tel = document.getElementById('tel').value.trim();
+            const resultat = document.getElementById('resultat');
+            
+            if (!tel) {
+                alert("Veuillez entrer un numéro de téléphone.");
+                return;
+            }
+
+            // Génération d'un code aléatoire à 5 chiffres (10000 à 99999)
+            const code = Math.floor(10000 + Math.random() * 90000).toString();
+
+            fetch('/api/generer-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tel, code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'inexistant' || !data.type) {
+                    resultat.style.color = '#e74c3c';
+                    resultat.innerText = "Ce numéro n'existe pas dans notre base.";
+                } else {
+                    resultat.style.color = '#27ae60';
+                    let redirection = data.type === 'maitre' ? 'maitre.html' : 'parent.html';
+                    let acteur = data.type === 'maitre' ? 'Enseignant (CONTACT)' : 'Parent (Contact Parent)';
+                    
+                    resultat.innerHTML = `
+                        ${data.message || 'Code généré avec succès !'}<br>
+                        <span style="color: #2c3e50; font-size: 0.9em;">Catégorie : ${acteur}</span><br>
+                        <span style="color: #2c3e50; font-size: 0.9em;">Redirection prévue : ${redirection}</span><br>
+                        <strong>Code à 5 chiffres : <span style="font-size: 1.2em; color: #d35400;">${code}</span></strong>
+                    `;
+                }
+            })
+            .catch(err => {
+                resultat.style.color = '#e74c3c';
+                resultat.innerText = "Erreur lors de l'enregistrement ou de la communication avec le serveur.";
+            });
+        }
+    </script>
+</body>
+</html>
+

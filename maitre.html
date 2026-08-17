@@ -1,0 +1,202 @@
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Maître - Accueil</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        .header-top {
+            background-color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .logo-img {
+            max-height: 120px;
+            object-fit: contain;
+        }
+        .school-title {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2e7d32;
+            margin: 25px 15px 5px 15px;
+            line-height: 1.3;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .grid-menu {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(140px, 220px));
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .card-btn {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 25px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #2e7d32;
+            font-weight: bold;
+            font-size: 1.1em;
+            aspect-ratio: 1 / 1;
+        }
+        .card-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+        }
+        .content-section {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .section-title {
+            color: #2e7d32;
+            border-bottom: 2px solid #2e7d32;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-top">
+    <img src="icon.png" alt="Logo École" class="logo-img" onerror="this.style.display='none'">
+</div>
+
+<div class="container">
+    <!-- Cible dynamique pour afficher NOM ET PRÉNOMS — CLASSE TENUE -->
+    <div id="teacherInfoContainer" class="school-title">Chargement...</div>
+
+    <div id="menuPrincipal" class="grid-menu">
+        <button type="button" class="card-btn" onclick="afficherSection('sectionMoyennes')">
+            <div class="card-icon">📊</div> Moyenne
+        </button>
+        <button type="button" class="card-btn" onclick="afficherSection('sectionTableauRecap')">
+            <div class="card-icon">📚</div> Tableau Récapitulatif
+        </button>
+        <button type="button" class="card-btn" onclick="afficherSection('sectionRegistreAppel')">
+            <div class="card-icon">📝</div> Registre d'Appel
+        </button>
+        <button type="button" class="card-btn" onclick="afficherSection('sectionSansExtrait')">
+            <div class="card-icon">📁</div> Sans extrait
+        </button>
+    </div>
+
+    <div id="sectionMoyennes" class="content-section">
+        <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
+        <div class="section-title">Gestion et Consultation des Moyennes</div>
+    </div>
+    <div id="sectionTableauRecap" class="content-section">
+        <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
+        <div class="section-title">Tableau Récapitulatif</div>
+    </div>
+    <div id="sectionRegistreAppel" class="content-section">
+        <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
+        <div class="section-title">Registre d'Appel</div>
+    </div>
+    <div id="sectionSansExtrait" class="content-section">
+        <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
+        <div class="section-title">Sans extrait</div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('DOMContentLoaded', async () => {
+        await chargerDonneesPersonnelConnecte();
+    });
+
+    function afficherSection(idSection) {
+        document.getElementById('menuPrincipal').style.display = 'none';
+        document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(idSection).classList.add('active');
+    }
+
+    function retourMenu() {
+        document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById('menuPrincipal').style.display = 'grid';
+    }
+
+    async function chargerDonneesPersonnelConnecte() {
+        const infoContainer = document.getElementById('teacherInfoContainer');
+
+        try {
+            // Interrogation de la session active du serveur
+            const response = await fetch('/api/maitre/current-session');
+            const data = await response.json();
+
+            if (data.success && data.enseignant) {
+                const enseignant = data.enseignant;
+                const nom = enseignant.nom_prenoms || enseignant.nom || "NOM ET PRÉNOMS";
+                const classe = enseignant.classe_tenue || enseignant.classe || "CLASSE TENUE";
+                
+                infoContainer.innerHTML = `${nom} — <br>${classe}`;
+            } else {
+                infoContainer.innerHTML = `Session expirée ou non connectée`;
+            }
+
+        } catch (err) {
+            console.error("Erreur de chargement :", err);
+            infoContainer.innerHTML = `NOM ET PRÉNOMS — <br>CLASSE TENUE`;
+        }
+    }
+</script>
+</body>
+</html>

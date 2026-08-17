@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Parent - Accueil</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f6f9; color: #333; }
+        .header-top { background-color: #ffffff; padding: 20px; text-align: center; border-bottom: 1px solid #eaeaea; }
+        .logo-img { max-height: 120px; object-fit: contain; }
+        .school-title { text-align: center; font-size: 1.5em; font-weight: bold; color: #2e7d32; margin: 25px 15px 5px 15px; line-height: 1.3; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .grid-menu { display: grid; grid-template-columns: repeat(2, minmax(140px, 220px)); gap: 20px; justify-content: center; margin-top: 20px; }
+        .card-btn { background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); padding: 25px 15px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #2e7d32; font-weight: bold; font-size: 1.1em; aspect-ratio: 1 / 1; }
+        .card-btn:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); }
+        .card-icon { font-size: 2.5em; margin-bottom: 12px; }
+        .content-section { background: #ffffff; border-radius: 12px; padding: 20px; margin-top: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: none; }
+        .content-section.active { display: block; }
+        .section-title { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 8px; margin-bottom: 20px; font-size: 1.3em; }
+        .btn-back { background-color: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-top">
+        <img src="icon.png" alt="Logo École" class="logo-img" onerror="this.style.display='none'">
+    </div>
+
+    <div class="container">
+        <!-- Cible dynamique pour afficher NOM, PRÉNOMS ET NIVEAU -->
+        <div id="eleveInfoContainer" class="school-title">Chargement...</div>
+
+        <div id="menuPrincipal" class="grid-menu">
+            <button type="button" class="card-btn" onclick="afficherSection('sectionMoyennes')">
+                <div class="card-icon">📊</div> Moyennes
+            </button>
+            <button type="button" class="card-btn" onclick="afficherSection('sectionAbsences')">
+                <div class="card-icon">📋</div> Absences
+            </button>
+            <button type="button" class="card-btn" onclick="afficherSection('sectionPaiement')">
+                <div class="card-icon">💰</div> Paiement
+            </button>
+        </div>
+
+        <div id="sectionMoyennes" class="content-section">
+            <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
+            <div class="section-title">Consultation des Moyennes</div>
+        </div>
+
+        <div id="sectionAbsences" class="content-section">
+            <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
+            <div class="section-title">Suivi des Absences</div>
+        </div>
+
+        <div id="sectionPaiement" class="content-section">
+            <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
+            <div class="section-title">Historique des Paiements</div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            await chargerDonneesEleveConnecte();
+        });
+
+        function afficherSection(idSection) {
+            document.getElementById('menuPrincipal').style.display = 'none';
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(idSection).classList.add('active');
+        }
+
+        function retourMenu() {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('menuPrincipal').style.display = 'grid';
+        }
+
+        async function chargerDonneesEleveConnecte() {
+            const infoContainer = document.getElementById('eleveInfoContainer');
+            try {
+                // Récupération d'un éventuel ID ou matricule passé dans l'URL ou stocké localement
+                const urlParams = new URLSearchParams(window.location.search);
+                const parentId = urlParams.get('id') || localStorage.getItem('current_parent_id') || '';
+
+                // On essaie d'abord de récupérer via la route avec l'ID/paramètre s'il existe, sinon session courante
+                let endpoint = '/api/parent/current-session';
+                if (parentId) {
+                    endpoint = `/api/get-eleve-by-parent?id=${parentId}`;
+                }
+
+                const response = await fetch(endpoint);
+                
+                // Vérification si la réponse est bien du JSON pour éviter les plantages HTML
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Route API introuvable ou renvoyant du HTML.");
+                }
+
+                const data = await response.json();
+                
+                // Traitement selon la structure de la réponse (objet direct ou objet enveloppé dans .eleve ou .success)
+                let eleve = null;
+                if (data.eleve) {
+                    eleve = data.eleve;
+                } else if (data.success && data.nom) {
+                    eleve = data;
+                } else if (data.nom) {
+                    eleve = data;
+                }
+
+                if (eleve) {
+                    const nom = eleve.nom || "";
+                    const prenoms = eleve.prenoms || "";
+                    const niveau = eleve.niveau || eleve.classe || "Niveau non spécifié";
+                    
+                    infoContainer.innerHTML = `${nom} ${prenoms} — <br>${niveau}`;
+                } else {
+                    infoContainer.innerHTML = `Élève non trouvé — <br>Veuillez vérifier vos accès`;
+                }
+            } catch (err) {
+                console.error("Erreur de chargement des données parent :", err);
+                infoContainer.innerHTML = `Erreur de connexion au serveur — <br>Actualisez la page`;
+            }
+        }
+    </script>
+</body>
+</html>
