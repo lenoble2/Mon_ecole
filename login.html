@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -14,7 +15,6 @@
             height: 100vh;
             margin: 0;
         }
-
         .login-card {
             background: white;
             padding: 30px;
@@ -24,12 +24,10 @@
             max-width: 350px;
             text-align: center;
         }
-
         /* Logo agrandi à 150px */
         .logo-icon { width: 150px; margin-bottom: 15px; }
 
         h1 { color: #2e7d32; font-size: 1.5em; margin-bottom: 20px; }
-
         .input-group { margin-bottom: 15px; text-align: left; }
         label { display: block; font-size: 0.85em; color: #666; margin-bottom: 5px; }
         input {
@@ -40,7 +38,10 @@
             box-sizing: border-box;
             font-size: 1em;
         }
-
+        /* Style pour forcer visuellement l'affichage en majuscules */
+        #schoolName {
+            text-transform: uppercase;
+        }
         .toggle-pass {
             text-align: left;
             font-size: 0.8em;
@@ -59,9 +60,7 @@
             font-weight: bold;
             cursor: pointer;
         }
-
         button:hover { background-color: #1b5e20; }
-
         .footer-link {
             margin-top: 20px;
             font-size: 0.9em;
@@ -75,18 +74,16 @@
     </style>
 </head>
 <body>
-
     <div class="login-card">
         <img src="icon.png" alt="Armoiries" class="logo-icon">
-
         <h1>Connexion</h1>
 
         <form action="/login" method="POST">
             <div class="input-group">
                 <label for="schoolName">Nom de l'école</label>
-                <input type="text" id="schoolName" name="schoolName" required>
+                <input type="text" id="schoolName" name="schoolName" required oninput="this.value = this.value.toUpperCase();">
             </div>
-
+            
             <div class="input-group">
                 <label for="password">Mot de passe</label>
                 <input type="password" id="password" name="password" required>
@@ -96,7 +93,6 @@
                 <input type="checkbox" id="showPass" onclick="togglePassword()">
                 <label style="display:inline;" for="showPass">Voir le mot de passe</label>
             </div>
-
             <button type="submit">Accéder à mon espace</button>
         </form>
 
