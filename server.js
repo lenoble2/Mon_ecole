@@ -777,7 +777,16 @@ app.post('/api/basculer-eleves', async (req, res) => {
     const { decisions, annee_source } = req.body;
     const annee_cible = (parseInt(annee_source) + 1).toString();
     const nomEcole = req.session.nomEcole;
-    const passageNiveau = { 'CP1': 'CP2', 'CP2': 'CE1', 'CE1': 'CE2', 'CE2': 'CM1', 'CM1': 'CM2', 'CM2': 'FIN' };
+    
+    // Table de correspondance pour le passage en classe supérieure en cas d'admission (A)
+    const passageNiveau = { 
+        'CP1': 'CP2', 
+        'CP2': 'CE1', 
+        'CE1': 'CE2', 
+        'CE2': 'CM1', 
+        'CM1': 'CM2',
+        'CM2': '6EME' 
+    };
 
     try {
         const matricules = decisions.map(d => d.matricule);
@@ -792,9 +801,16 @@ app.post('/api/basculer-eleves', async (req, res) => {
         for (const item of decisions) {
             const e = elevesExistants?.find(el => el.matricule === item.matricule);
             if (e) {
-                // Nettoyage et mise en majuscule du niveau pour correspondre à passageNiveau
+                // Nettoyage et mise en majuscule du niveau actuel
                 const niveauActuel = e.niveau ? e.niveau.trim().toUpperCase() : '';
-                let nouveauNiveau = (item.decision === 'A' && passageNiveau[niveauActuel]) ? passageNiveau[niveauActuel] : niveauActuel;
+                
+                // Détermination du nouveau niveau :
+                // - Si l'élève est Admis ('A') et qu'un niveau supérieur existe, on avance.
+                // - Si l'élève est Redoublant ('R') ou si aucun niveau supérieur n'est défini, il conserve son niveau actuel.
+                let nouveauNiveau = niveauActuel;
+                if (item.decision === 'A' && passageNiveau[niveauActuel]) {
+                    nouveauNiveau = passageNiveau[niveauActuel];
+                }
 
                 insertData.push({
                     annee: annee_cible,
@@ -815,14 +831,13 @@ app.post('/api/basculer-eleves', async (req, res) => {
                     date_etab: e.date_etab,
                     lieu_etab: e.lieu_etab,
                     ecole: e.ecole,
-                    niveau: nouveauNiveau, // Utilisation du nouveau niveau calculé (ou le même si redoublement / fin)
+                    niveau: nouveauNiveau, // Application correcte du nouveau niveau
                     nom_ecole: nomEcole
                 });
             }
         }
 
         if (insertData.length > 0) {
-            // Retrait de "ignoreDuplicates: true" pour permettre la mise à jour du niveau si l'élève existe déjà
             const { error } = await supabase.from('eleves').upsert(insertData, {
                 onConflict: 'nom_ecole,annee,matricule'
             });

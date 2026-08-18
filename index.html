@@ -26,7 +26,8 @@
             width: 100%;
             max-width: 380px;
         }
-        .logo { width: 80px; margin-bottom: 10px; }                                                       .header-text { margin-bottom: 15px; }
+        .logo { width: 80px; margin-bottom: 10px; }
+        .header-text { margin-bottom: 15px; }
         .header-text p { font-weight: bold; font-size: 13px; margin: 0 0 8px 0; color: #333; }
 
         .flag-bar { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 15px; }
@@ -48,52 +49,95 @@
         .link-text { margin-top: 15px; font-size: 13px; color: #666; text-align: center; }
         .link-text a { color: #2e7d32; text-decoration: none; font-weight: bold; }
     </style>
-</head>                                          <body>
-                                                 <div class="container">                              <img src="Armoiries.jpg" alt="Armoiries" class="logo">
+</head>
+<body>
+<div class="container">
+    <img src="Armoiries.jpg" alt="Armoiries" class="logo">
     <div class="header-text">
-        <p>RÉPUBLIQUE DE CÔTE D'IVOIRE</p>               <div class="flag-bar">
-            <div class="orange"></div><div class="white"></div><div class="green"></div>                  </div>
-    </div>                                           <h2>MonÉcole Portail</h2>                        <div class="role-grid">
+        <p>RÉPUBLIQUE DE CÔTE D'IVOIRE</p>
+        <div class="flag-bar">
+            <div class="orange"></div><div class="white"></div><div class="green"></div>
+        </div>
+    </div>
+    <h2>MonÉcole Portail</h2>
+    <div class="role-grid">
         <div class="role-card active" onclick="switchRole('directeur', this)">
             <span class="role-icon">👨‍💼</span><span class="role-title">Directeur</span>
-        </div>                                           <div class="role-card" onclick="switchRole('enseignant', this)">
+        </div>
+        <div class="role-card" onclick="switchRole('enseignant', this)">
             <span class="role-icon">👨‍🏫</span><span class="role-title">Enseignant</span>
-        </div>                                           <div class="role-card" onclick="switchRole('parent', this)">                                          <span class="role-icon">👨‍👩‍👧‍👦</span><span class="role-title">Parent</span>
-        </div>                                       </div>                                       
+        </div>
+        <div class="role-card" onclick="switchRole('parent', this)">
+            <span class="role-icon">👨‍👩‍👧‍👦</span><span class="role-title">Parent</span>
+        </div>
+    </div>
+
     <!-- DIRECTEUR : Inscription + Lien Connexion -->
-    <form id="form-directeur" class="form-section active" action="/inscription" method="POST">            <input type="text" name="schoolName" placeholder="Nom de l'école" required style="text-transform: uppercase;">                                     <input type="tel" name="telephone" placeholder="Numéro de téléphone" required>
-        <input type="password" id="p1" name="password" placeholder="Mot de passe" required>               <input type="password" id="p2" name="confirmPassword" placeholder="Confirmer mot de passe" required>
+    <form id="form-directeur" class="form-section active" action="/inscription" method="POST" onsubmit="forcerMajuscules(event)">
+        <input type="text" id="schoolNameInput" name="schoolName" placeholder="Nom de l'école" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
+        <input type="tel" name="telephone" placeholder="Numéro de téléphone" required>
+        <input type="password" id="p1" name="password" placeholder="Mot de passe" required>
+        <input type="password" id="p2" name="confirmPassword" placeholder="Confirmer mot de passe" required>
         <div class="toggle-container"><label><input type="checkbox" onclick="togglePass('p1', 'p2')"> Voir les mots de passe</label></div>
         <button type="submit" class="submit-btn">S'inscrire</button>
         <div class="link-text">Déjà inscrit ? <a href="login.html">Se connecter</a></div>
     </form>
-                                                     <!-- ENSEIGNANT -->
-    <form id="form-enseignant" class="form-section" onsubmit="connexionEnseignant(event)">                <input type="tel" id="tel-enseignant" name="telephone" placeholder="Numéro de téléphone" required>                                                 <input type="text" id="code-enseignant" name="code_acces" placeholder="Code d'accès Enseignant" required style="text-align:center;">               <button type="submit" class="submit-btn">Accéder</button>
+
+    <!-- ENSEIGNANT -->
+    <form id="form-enseignant" class="form-section" onsubmit="connexionEnseignant(event)">
+        <input type="tel" id="tel-enseignant" name="telephone" placeholder="Numéro de téléphone" required>
+        <input type="text" id="code-enseignant" name="code_acces" placeholder="Code d'accès Enseignant" required style="text-align:center;">
+        <button type="submit" class="submit-btn">Accéder</button>
         <p id="erreur-enseignant" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>
-    </form>                                                                                           <!-- PARENT -->
-    <form id="form-parent" class="form-section" onsubmit="connexionParent(event)">                     
+    </form>
+
+    <!-- PARENT -->
+    <form id="form-parent" class="form-section" onsubmit="connexionParent(event)">
         <input type="tel" id="tel-parent" name="telephone" placeholder="Numéro de téléphone" required>
         <input type="text" id="code-parent" name="code_acces" placeholder="Code d'accès Parent" required style="text-align:center;">
-        <button type="submit" class="submit-btn">Consulter</button>                                   
+        <button type="submit" class="submit-btn">Consulter</button>
         <p id="erreur-parent" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>
     </form>
 </div>
-                                                 <script>
-    function switchRole(role, el) {                      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));               el.classList.add('active');
+
+<script>
+    function switchRole(role, el) {
+        document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
         document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
-        document.getElementById('form-' + role).classList.add('active');                              }                                            
+        document.getElementById('form-' + role).classList.add('active');
+    }
+
     function togglePass(id1, id2) {
         let x = document.getElementById(id1), y = document.getElementById(id2);
         let type = (x.type === "password") ? "text" : "password";
-        x.type = y.type = type;                      }                                            
-    function connexionEnseignant(event) {                event.preventDefault();                          const tel = document.getElementById('tel-enseignant').value.trim();                               const code = document.getElementById('code-enseignant').value.trim();                             const msgErreur = document.getElementById('erreur-enseignant');                           
-        msgErreur.innerText = "";                                                                         fetch('/api/generer-code', {
+        x.type = y.type = type;
+    }
+
+    function forcerMajuscules(event) {
+        let inputField = document.getElementById('schoolNameInput');
+        if (inputField) {
+            inputField.value = inputField.value.toUpperCase();
+        }
+    }
+
+    function connexionEnseignant(event) {
+        event.preventDefault();
+        const tel = document.getElementById('tel-enseignant').value.trim();
+        const code = document.getElementById('code-enseignant').value.trim();
+        const msgErreur = document.getElementById('erreur-enseignant');
+        msgErreur.innerText = "";
+        fetch('/api/generer-code', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },                                                  body: JSON.stringify({ tel, code })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tel, code })
         })
         .then(res => res.json())
-        .then(data => {                                      if (data.status === 'succes' && data.type === 'maitre') {                                             window.location.href = 'maitre.html';
-            } else {                                             msgErreur.innerText = data.message || "Numéro ou code d'accès incorrect.";
+        .then(data => {
+            if (data.status === 'succes' && data.type === 'maitre') {
+                window.location.href = 'maitre.html';
+            } else {
+                msgErreur.innerText = data.message || "Numéro ou code d'accès incorrect.";
             }
         })
         .catch(err => {
@@ -106,7 +150,6 @@
         const tel = document.getElementById('tel-parent').value.trim();
         const code = document.getElementById('code-parent').value.trim();
         const msgErreur = document.getElementById('erreur-parent');
-        
         msgErreur.innerText = "";
         fetch('/login-parent', {
             method: 'POST',
@@ -122,10 +165,9 @@
             }
         })
         .catch(err => {
-            // Si le backend renvoie directement une redirection de page ou s'il s'agit d'une soumission classique, 
-            // on force la redirection vers parent.html en cas de succès ou on gère via fetch.
             window.location.href = 'parent.html';
         });
     }
 </script>
-</body>                                          </html>
+</body>
+</html>
