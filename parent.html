@@ -32,25 +32,15 @@
         <div id="eleveInfoContainer" class="school-title">Chargement...</div>
 
         <div id="menuPrincipal" class="grid-menu">
-            <button type="button" class="card-btn" onclick="afficherSection('sectionMoyennes')">
+            <a href="bulparent.html" class="card-btn">
                 <div class="card-icon">📊</div> Moyennes
-            </button>
-            <button type="button" class="card-btn" onclick="afficherSection('sectionAbsences')">
+            </a>
+            <a href="Absent.html" class="card-btn">
                 <div class="card-icon">📋</div> Absences
-            </button>
+            </a>
             <button type="button" class="card-btn" onclick="afficherSection('sectionPaiement')">
                 <div class="card-icon">💰</div> Paiement
             </button>
-        </div>
-
-        <div id="sectionMoyennes" class="content-section">
-            <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
-            <div class="section-title">Consultation des Moyennes</div>
-        </div>
-
-        <div id="sectionAbsences" class="content-section">
-            <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
-            <div class="section-title">Suivi des Absences</div>
         </div>
 
         <div id="sectionPaiement" class="content-section">
@@ -89,7 +79,6 @@
                 }
 
                 const response = await fetch(endpoint);
-                
                 // Vérification si la réponse est bien du JSON pour éviter les plantages HTML
                 const contentType = response.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
@@ -97,7 +86,6 @@
                 }
 
                 const data = await response.json();
-                
                 // Traitement selon la structure de la réponse (objet direct ou objet enveloppé dans .eleve ou .success)
                 let eleve = null;
                 if (data.eleve) {
@@ -112,7 +100,7 @@
                     const nom = eleve.nom || "";
                     const prenoms = eleve.prenoms || "";
                     const niveau = eleve.niveau || eleve.classe || "Niveau non spécifié";
-                    
+
                     infoContainer.innerHTML = `${nom} ${prenoms} — <br>${niveau}`;
                 } else {
                     infoContainer.innerHTML = `Élève non trouvé — <br>Veuillez vérifier vos accès`;

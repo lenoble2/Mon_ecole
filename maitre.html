@@ -33,9 +33,11 @@
             line-height: 1.3;
         }
         .container {
-            max-width: 900px;
+            width: 100%;
+            max-width: none;
             margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
+            box-sizing: border-box;
         }
         .grid-menu {
             display: grid;
@@ -74,10 +76,12 @@
         .content-section {
             background: #ffffff;
             border-radius: 12px;
-            padding: 20px;
-            margin-top: 30px;
+            padding: 15px;
+            margin-top: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             display: none;
+            width: 100%;
+            box-sizing: border-box;
         }
         .content-section.active {
             display: block;
@@ -143,18 +147,34 @@
     <div id="sectionMoyennes" class="content-section">
         <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
         <div class="section-title">Gestion et Consultation des Moyennes</div>
+        <!-- Iframe pour compo.html en mode bureau avec défilement horizontal -->
+        <div style="width: 100%; overflow-x: auto;">
+            <iframe id="iframeMoyennes" src="" style="width: 1280px; height: 900px; border: none; display: block;"></iframe>
+        </div>
     </div>
     <div id="sectionTableauRecap" class="content-section">
         <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
         <div class="section-title">Tableau Récapitulatif</div>
+        <!-- Iframe pour recap.html en mode bureau avec défilement horizontal -->
+        <div style="width: 100%; overflow-x: auto;">
+            <iframe id="iframeRecap" src="" style="width: 1280px; height: 900px; border: none; display: block;"></iframe>
+        </div>
     </div>
     <div id="sectionRegistreAppel" class="content-section">
         <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
         <div class="section-title">Registre d'Appel</div>
+        <!-- Conteneur avec défilement horizontal fluide pour la version bureau sur mobile -->
+        <div style="width: 100%; overflow-x: auto;">
+            <iframe id="iframeRegi" src="" style="width: 1280px; height: 900px; border: none; display: block;"></iframe>
+        </div>
     </div>
     <div id="sectionSansExtrait" class="content-section">
         <button type="button" class="btn-back" onclick="retourMenu()">← Retour</button>
         <div class="section-title">Sans extrait</div>
+        <!-- Iframe pour sansext.html en mode bureau avec défilement horizontal -->
+        <div style="width: 100%; overflow-x: auto;">
+            <iframe id="iframeSansExtrait" src="" style="width: 1280px; height: 900px; border: none; display: block;"></iframe>
+        </div>
     </div>
 </div>
 
@@ -163,10 +183,59 @@
         await chargerDonneesPersonnelConnecte();
     });
 
-    function afficherSection(idSection) {
+    async function afficherSection(idSection) {
         document.getElementById('menuPrincipal').style.display = 'none';
         document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
         document.getElementById(idSection).classList.add('active');
+
+        // Récupérer la classe de l'enseignant connecté pour la transmettre aux iframes si nécessaire
+        let classeEnseignant = '';
+        try {
+            const resp = await fetch('/api/maitre/current-session');
+            const sessionData = await resp.json();
+            if (sessionData.success && sessionData.enseignant) {
+                classeEnseignant = sessionData.enseignant.classe_tenue || sessionData.enseignant.classe || '';
+            }
+        } catch (e) {
+            console.error("Erreur récupération session pour l'iframe", e);
+        }
+
+        // Fonction utilitaire pour configurer l'iframe avec la vue bureau (1280px)
+        const chargerIframe = (iframeId, baseUrl) => {
+            const iframe = document.getElementById(iframeId);
+            // Ajout dynamique du paramètre classe s'il est disponible
+            const finalUrl = classeEnseignant ? `${baseUrl}&classe=${encodeURIComponent(classeEnseignant)}` : baseUrl;
+            
+            if (!iframe.src || iframe.src === window.location.href || iframe.src === "" || !iframe.src.includes(classeEnseignant)) {
+                iframe.src = finalUrl;
+                
+                iframe.onload = function() {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        let meta = iframeDoc.querySelector("meta[name=viewport]");
+                        if (!meta) {
+                            meta = iframeDoc.createElement('meta');
+                            meta.name = "viewport";
+                            iframeDoc.head.appendChild(meta);
+                        }
+                        meta.content = "width=1280";
+                    } catch (e) {
+                        console.log("Impossible d'injecter la meta viewport (restriction cross-origin possible)");
+                    }
+                };
+            }
+        };
+
+        // Chargement dynamique selon la section cliquée
+        if (idSection === 'sectionRegistreAppel') {
+            chargerIframe('iframeRegi', 'regi.html?mode=maitre');
+        } else if (idSection === 'sectionMoyennes') {
+            chargerIframe('iframeMoyennes', 'compo.html?mode=maitre');
+        } else if (idSection === 'sectionTableauRecap') {
+            chargerIframe('iframeRecap', 'recap.html?mode=maitre');
+        } else if (idSection === 'sectionSansExtrait') {
+            chargerIframe('iframeSansExtrait', 'sansext.html?mode=maitre');
+        }
     }
 
     function retourMenu() {

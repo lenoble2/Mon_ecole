@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -109,7 +108,7 @@
             <option value="Avril">Avril</option>
             <option value="Mai">Mai</option>
         </select>
-        <span style="font-weight: bold; margin-left: 15px; margin-right: 5px; color: #475569;">Niveau :</span>
+        <span id="filtre-niveau-container" style="font-weight: bold; margin-left: 15px; margin-right: 5px; color: #475569;">Niveau :</span>
         <button class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>
         <button class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
         <button class="filter-btn" onclick="filtrer('CP2', this)">CP2</button>
@@ -126,7 +125,7 @@
         </table>
     </div>
 
-    <div class="taux-container">
+    <div class="taux-container" id="section-taux-frequentation">
         <h3>📊 Tableau de Calcul du Taux de Fréquentation Mensuel</h3>
         <table class="table-taux">
             <thead>
@@ -145,7 +144,7 @@
     </div>
 
     <div class="actions-bar">
-        <button type="button" class="btn" style="background-color: #2563eb;" onclick="sauvegarderAbsences()">💾 Enregistrer les absences</button>
+        <button type="button" id="btn-sauvegarder-abs" class="btn" style="background-color: #2563eb;" onclick="sauvegarderAbsences()">💾 Enregistrer les absences</button>
         <button type="button" class="btn" style="background-color: #0284c7;" onclick="imprimerRegistre()">🖨️ Imprimer Registre</button>
         <span id="conteneurBoutonRetour"></span>
     </div>
@@ -170,10 +169,13 @@
         let classeFiltreeActuelle = 'Tous';
         let moisFiltreActuel = 'Septembre';
         let donneesAbsencesRecuperees = [];
-        
+
+        // Identification de l'élève connecté (si mode parent / élève)
+        const parentIdUrl = urlParamsGlobal.get('id');
+        const currentParentId = parentIdUrl || localStorage.getItem('current_parent_id') || null;
+
         const urlParams = new URLSearchParams(window.location.search);
         let anneeSelectionnee = urlParams.get('annee') || '2025';
-
         const selectAnneeElement = document.getElementById('select-annee-courante');
         if (selectAnneeElement) {
             selectAnneeElement.value = anneeSelectionnee;
@@ -206,6 +208,14 @@
             'V': { bg: '#fee2e2', color: '#991b1b', border: '#fecaca' }
         };
 
+        const joursNomsComplets = {
+            'L': 'Lundi',
+            'Ma': 'Mardi',
+            'Me': 'Mercredi',
+            'J': 'Jeudi',
+            'V': 'Vendredi'
+        };
+
         function getDatesSemaineTexte(anneeBase, moisIndex, semaineNum) {
             let year = parseInt(anneeBase);
             let realMonth = moisIndex + 8;
@@ -224,7 +234,8 @@
         function changerAnnee(nouvelleAnnee) {
             let currentMode = urlParamsGlobal.get('mode');
             let modeParam = currentMode ? `&mode=${currentMode}` : '';
-            window.location.href = `?annee=${nouvelleAnnee}${modeParam}`;
+            let idParam = currentParentId ? `&id=${currentParentId}` : '';
+            window.location.href = `?annee=${nouvelleAnnee}${modeParam}${idParam}`;
         }
 
         function changerMois(valeur) {
@@ -236,6 +247,19 @@
         function construireEntete() {
             const thead = document.getElementById('entete-tableau');
             const moisAffiches = moisFiltreActuel === 'Tous' ? moisAnnee : moisAnnee.filter(m => m.nom === moisFiltreActuel);
+
+            // Si un élève est connecté, on adapte l'en-tête pour afficher clairement ses absences par mois et par jour/heure
+            if (currentParentId) {
+                document.getElementById('titre-registre').textContent = `Mon Registre d'Absences ${anneeSelectionnee}-${anneeSuivante}`;
+                let tr1 = `<tr>
+                    <th class="sticky-col-1">Mois</th>
+                    <th class="sticky-col-2">Semaine</th>
+                    <th>Jour & Heures d'Absence</th>
+                    <th>État</th>
+                </tr>`;
+                thead.innerHTML = tr1;
+                return;
+            }
 
             let tr1 = `<tr>
                 <th rowspan="4" class="checkbox-cell sticky-col-0"><input type="checkbox" id="select-all"></th>
@@ -286,6 +310,9 @@
             construireEntete();
             initialiserTableauTauxMensuel();
 
+            // Si on est en mode élève connecté, on récupère d'abord les infos de l'élève connecté
+            let endpointEleve = currentParentId ? `/api/get-eleve-by-parent?id=${currentParentId}` : `/api/eleves/${anneeSelectionnee}`;
+
             fetch(`/api/absences/${anneeSelectionnee}`)
                 .then(res => res.json())
                 .then(data => {
@@ -300,16 +327,25 @@
                     }
                 })
                 .finally(() => {
-                    fetch(`/api/eleves/${anneeSelectionnee}`)
+                    fetch(endpointEleve)
                         .then(res => res.json())
-                        .then(eleves => {
-                            listeEleves = Array.isArray(eleves) ? eleves : (eleves.eleves || []);
+                        .then(elevesRes => {
+                            if (currentParentId) {
+                                let eleveTrouve = elevesRes.eleve || elevesRes;
+                                listeEleves = eleveTrouve ? [eleveTrouve] : [];
+                                // Masquer les filtres de classe et les boutons d'enregistrement pour l'élève connecté
+                                document.querySelector('.filter-container').style.display = 'none';
+                                document.getElementById('btn-sauvegarder-abs').style.display = 'none';
+                                document.getElementById('section-taux-frequentation').style.display = 'none';
+                            } else {
+                                listeEleves = Array.isArray(elevesRes) ? elevesRes : (elevesRes.eleves || []);
+                            }
                             filtrer(classeFiltreeActuelle, null);
                         })
                         .catch(err => {
                             console.error("Erreur chargement élèves :", err);
-                            const totalCols = 3 + (moisFiltreActuel === 'Tous' ? 180 : 20);
-                            document.getElementById('corps-tableau').innerHTML = `<tr><td colspan="${totalCols}" style="text-align:center; color:red; padding:20px;">Erreur de chargement des élèves de la base.</td></tr>`;
+                            const totalCols = currentParentId ? 4 : (3 + (moisFiltreActuel === 'Tous' ? 180 : 20));
+                            document.getElementById('corps-tableau').innerHTML = `<tr><td colspan="${totalCols}" style="text-align:center; color:red; padding:20px;">Erreur de chargement des données de l'élève.</td></tr>`;
                         });
                 });
         }
@@ -319,6 +355,44 @@
         function afficherTableau(data) {
             const tbody = document.getElementById('corps-tableau');
             tbody.innerHTML = '';
+
+            if (currentParentId) {
+                const totalCols = 4;
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${totalCols}" style="text-align:center; color:#666; padding:20px;">Aucune information trouvée pour cet élève.</td></tr>`;
+                    return;
+                }
+
+                let eleveCourant = data[0];
+                let matriculeEleve = eleveCourant.matricule || eleveCourant.id || '';
+                document.getElementById('titre-registre').textContent = `Registre d'Absences de : ${eleveCourant.nom || ''} ${eleveCourant.prenoms || ''} (${matriculeEleve})`;
+
+                // Filtrer les absences qui concernent cet élève spécifique
+                let absencesEleve = donneesAbsencesRecuperees.filter(ab => String(ab.matricule) === String(matriculeEleve));
+
+                if (absencesEleve.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${totalCols}" style="text-align:center; color:#047857; padding:25px; font-weight:bold;">🎉 Aucune absence enregistrée pour vous. Excellent parcours !</td></tr>`;
+                    return;
+                }
+
+                let htmlLignes = '';
+                absencesEleve.forEach(ab => {
+                    let libEtat = ab.etat === 2 ? 'Absence Journée complète (2 traits)' : (ab.etat === 1 ? 'Absence Demi-journée (1 trait)' : 'Présent');
+                    let badgeColor = ab.etat === 2 ? '#dc2626' : '#d97706';
+                    let nomJourComplet = joursNomsComplets[ab.jour] || ab.jour;
+                    let heureTexte = ab.etat === 2 ? 'Journée complète (Matin & Soir)' : 'Demi-journée';
+
+                    htmlLignes += `<tr>
+                        <td class="sticky-col-1" style="font-weight:bold; background:#f8fafc;">${ab.mois}</td>
+                        <td class="sticky-col-2">Semaine ${ab.semaine}</td>
+                        <td style="text-align:left; font-weight:600;">🗓️ ${nomJourComplet} — 🕒 ${heureTexte}</td>
+                        <td><span style="background:${badgeColor}; color:white; padding:3px 8px; border-radius:4px; font-size:0.85em; font-weight:bold;">${libEtat}</span></td>
+                    </tr>`;
+                });
+                tbody.innerHTML = htmlLignes;
+                return;
+            }
+
             const totalCols = 3 + (moisFiltreActuel === 'Tous' ? 180 : 20);
 
             if (!data || data.length === 0) {
@@ -376,6 +450,7 @@
         }
 
         function gererClicCellule(cellule) {
+            if (currentParentId) return; // Lecture seule pour l'élève connecté
             let etatActuel = parseInt(cellule.getAttribute('data-etat')) || 0;
             let nouvelEtat = (etatActuel + 1) % 3;
             cellule.setAttribute('data-etat', nouvelEtat);
@@ -390,6 +465,7 @@
 
         function initialiserTableauTauxMensuel() {
             const corpsTaux = document.getElementById('corps-tableau-taux');
+            if (!corpsTaux) return;
             corpsTaux.innerHTML = '';
 
             moisAnnee.forEach((m, idx) => {
@@ -408,6 +484,7 @@
         }
 
         function mettreAJourTableauTaux() {
+            if (currentParentId) return;
             const elevesActifs = classeFiltreeActuelle === 'Tous'
                 ? listeEleves
                 : listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase());
@@ -434,7 +511,6 @@
                 const inputJours = document.getElementById(`jours-${idx}`);
                 const joursOuvrables = inputJours ? (parseInt(inputJours.value) || 0) : 20;
                 const presPotentielles = effectif * joursOuvrables;
-
                 let totalAbsences = 0;
                 matriculesActifsSet.forEach(mat => {
                     for (let s = 1; s <= 4; s++) {
@@ -473,7 +549,9 @@
                     else b.classList.remove('active');
                 });
             }
-            if (niveau === 'Tous') {
+            if (currentParentId) {
+                afficherTableau(listeEleves);
+            } else if (niveau === 'Tous') {
                 afficherTableau(listeEleves);
             } else {
                 afficherTableau(listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === niveau.toUpperCase()));
@@ -487,6 +565,7 @@
         });
 
         function sauvegarderAbsences() {
+            if (currentParentId) return;
             const mapEtatActuel = {};
             donneesAbsencesRecuperees.forEach(ab => {
                 const cle = `${ab.matricule}_${ab.mois}_${ab.semaine}_${ab.jour}`;
@@ -547,3 +626,4 @@
     </script>
 </body>
 </html>
+

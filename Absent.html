@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Historique des Absences - Élèves</title>
+    <!-- Inclusion de SheetJS (xlsx) pour l'export Excel éventuel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 15px; background-color: #f4f6f9; color: #333; }
+        h2 { color: #2c3e50; margin-bottom: 10px; }
+        h3 { color: #1e293b; margin-top: 0; margin-bottom: 15px; font-size: 1.1em; }
+        .filter-container { margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .filter-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 4px; font-weight: 600; color: #475569; transition: all 0.2s; }
+        .filter-btn:hover { background-color: #f1f5f9; }
+        .filter-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+        .select-annee { padding: 8px 12px; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 4px; font-weight: 600; color: #1e293b; cursor: pointer; }
+        #conteneurTableau { overflow: auto; background: white; padding: 0; border-radius: 6px; border: 1px solid #cbd5e1; max-height: 650px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { border-collapse: collapse; width: 100%; font-size: 0.88em; }
+        th, td { border: 1px solid #e2e8f0; padding: 10px 12px; text-align: center; white-space: nowrap; }
+        th { background-color: #f8fafc; color: #1e293b; font-weight: 700; position: sticky; top: 0; z-index: 10; }
+        .btn { padding: 10px 16px; color: white; text-decoration: none; border-radius: 4px; display: inline-block; cursor: pointer; border: none; font-size: 0.9em; font-weight: 600; transition: background-color: 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .blue-text { color: #0000CD; font-weight: bold; }
+        .red-text { color: #DC143C; font-weight: bold; }
+        .actions-bar { margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        /* Configuration spécifique pour l'impression */
+        @media print {
+            body { background-color: #ffffff; margin: 0; padding: 0; }
+            .filter-container, .actions-bar { display: none !important; }
+            #conteneurTableau { max-height: none !important; overflow: visible !important; border: none !important; box-shadow: none !important; }
+            table { width: 100% !important; font-size: 0.8em !important; }
+            th, td { border: 1px solid #94a3b8 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <h2 id="titre-registre">Suivi Global des Absences</h2>
+    
+    <div class="filter-container">
+        <span style="font-weight: bold; margin-right: 5px; color: #475569;">Année :</span>
+        <select id="select-annee-courante" class="select-annee" onchange="changerAnnee(this.value)">
+            <option value="2021">2021-2022</option>
+            <option value="2022">2022-2023</option>
+            <option value="2023">2023-2024</option>
+            <option value="2024">2024-2025</option>
+            <option value="2025">2025-2026</option>
+            <option value="2026" selected>2026-2027</option>
+            <option value="2027">2027-2028</option>
+            <option value="2028">2028-2029</option>
+            <option value="2029">2029-2030</option>
+        </select>
+        
+        <span style="font-weight: bold; margin-left: 15px; margin-right: 5px; color: #475569;">Mois :</span>
+        <select id="select-mois-courant" class="select-annee" onchange="filtrerParMois(this.value)">
+            <option value="Tous">Tous les mois</option>
+            <option value="Septembre">Septembre</option>
+            <option value="Octobre">Octobre</option>
+            <option value="Novembre">Novembre</option>
+            <option value="Décembre">Décembre</option>
+            <option value="Janvier">Janvier</option>
+            <option value="Février">Février</option>
+            <option value="Mars">Mars</option>
+            <option value="Avril">Avril</option>
+            <option value="Mai">Mai</option>
+        </select>
+
+        <span style="font-weight: bold; margin-left: 15px; margin-right: 5px; color: #475569;">Recherche :</span>
+        <input type="text" id="input-recherche" class="select-annee" placeholder="Filtrer par nom ou matricule..." oninput="filtrerTableau()" style="width: 220px;">
+    </div>
+
+    <div id="conteneurTableau">
+        <table id="tableauAbsents">
+            <thead>
+                <tr>
+                    <th>Matricule</th>
+                    <th>Nom & Prénoms</th>
+                    <th>Niveau</th>
+                    <th>Mois</th>
+                    <th>Semaine</th>
+                    <th>Jour & Heure d'Absence</th>
+                    <th>État / Gravité</th>
+                </tr>
+            </thead>
+            <tbody id="corps-tableau">
+                <!-- Les lignes seront injectées dynamiquement ici -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="actions-bar">
+        <button type="button" class="btn" style="background-color: #0284c7;" onclick="window.print()">🖨️ Imprimer la liste</button>
+        <span id="conteneurBoutonRetour">
+            <a href="parent.html" class="btn" style="background-color: #64748b;">Retour vers Espace Parent</a>
+        </span>
+    </div>
+
+    <script>
+        const urlParamsGlobal = new URLSearchParams(window.location.search);
+        let anneeSelectionnee = urlParamsGlobal.get('annee') || '2026';
+        
+        const selectAnneeElement = document.getElementById('select-annee-courante');
+        if (selectAnneeElement) {
+            selectAnneeElement.value = anneeSelectionnee;
+        }
+
+        const anneeSuivante = parseInt(anneeSelectionnee) + 1;
+        document.getElementById('titre-registre').textContent = `Suivi Global des Absences (${anneeSelectionnee}-${anneeSuivante})`;
+
+        const joursNomsComplets = {
+            'L': 'Lundi',
+            'Ma': 'Mardi',
+            'Me': 'Mercredi',
+            'J': 'Jeudi',
+            'V': 'Vendredi'
+        };
+
+        let listeAbsencesBrutes = [];
+        let listeElevesGlobale = [];
+
+        function changerAnnee(nouvelleAnnee) {
+            window.location.href = `?annee=${nouvelleAnnee}`;
+        }
+
+        function chargerToutesLesDonnees() {
+            // Récupération simultanée des élèves et des absences enregistrées
+            Promise.all([
+                fetch(`/api/eleves/${anneeSelectionnee}`).then(res => res.json()).catch(() => []),
+                fetch(`/api/absences/${anneeSelectionnee}`).then(res => res.json()).catch(() => {
+                    const localData = localStorage.getItem(`absences_${anneeSelectionnee}`);
+                    return localData ? JSON.parse(localData) : [];
+                })
+            ])
+            .then(([elevesRes, absencesRes]) => {
+                listeElevesGlobale = Array.isArray(elevesRes) ? elevesRes : (elevesRes.eleves || []);
+                listeAbsencesBrutes = Array.isArray(absencesRes) ? absencesRes : (absencesRes.absences || []);
+                
+                afficherAbsences(listeAbsencesBrutes);
+            })
+            .catch(err => {
+                console.error("Erreur lors du chargement des données :", err);
+                document.getElementById('corps-tableau').innerHTML = `<tr><td colspan="7" style="text-align:center; color:red; padding:20px;">Erreur de chargement des informations.</td></tr>`;
+            });
+        }
+
+        function afficherAbsences(donnees) {
+            const tbody = document.getElementById('corps-tableau');
+            tbody.innerHTML = '';
+
+            if (!donnees || donnees.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#666; padding:25px; font-weight:bold;">🎉 Aucune absence enregistrée pour cette période.</td></tr>`;
+                return;
+            }
+
+            // Création d'une map pour retrouver rapidement les infos d'un élève à partir de son matricule
+            const mapEleves = {};
+            listeElevesGlobale.forEach(e => {
+                mapEleves[String(e.matricule)] = e;
+            });
+
+            let html = '';
+            donnees.forEach(ab => {
+                let eleve = mapEleves[String(ab.matricule)] || { nom: 'Inconnu', prenoms: '', niveau: '-', sexe: 'M' };
+                let nomComplet = `${eleve.nom || ''} ${eleve.prenoms || ''}`;
+                
+                const sexeClean = (eleve.sexe || '').trim().toUpperCase();
+                const estMasculin = (sexeClean === 'M' || sexeClean === 'MASCULIN' || sexeClean === 'GARÇON' || sexeClean === 'GARCON');
+                const couleurClasse = estMasculin ? 'blue-text' : 'red-text';
+
+                let libEtat = ab.etat === 2 ? 'Journée complète' : 'Demi-journée';
+                let badgeColor = ab.etat === 2 ? '#dc2626' : '#d97706';
+                let nomJourComplet = joursNomsComplets[ab.jour] || ab.jour;
+
+                html += `<tr>
+                    <td style="font-weight: bold;">${ab.matricule}</td>
+                    <td style="text-align: left;" class="${couleurClasse}">${nomComplet}</td>
+                    <td>${eleve.niveau || '-'}</td>
+                    <td style="font-weight: 600; background: #f8fafc;">${ab.mois}</td>
+                    <td>Semaine ${ab.semaine}</td>
+                    <td style="text-align: left;">🗓️ ${nomJourComplet} — 🕒 ${libEtat}</td>
+                    <td><span style="background:${badgeColor}; color:white; padding:4px 10px; border-radius:4px; font-size:0.85em; font-weight:bold;">${ab.etat === 2 ? '2 Traits (Journée)' : '1 Trait (Demi-j.)'}</span></td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function filtrerParMois(mois) {
+            filtrerTableau();
+        }
+
+        function filtrerTableau() {
+            let moisFiltre = document.getElementById('select-mois-courant').value;
+            let texteRecherche = document.getElementById('input-recherche').value.toLowerCase();
+
+            let donneesFiltrees = listeAbsencesBrutes.filter(ab => {
+                // Filtre par mois
+                if (moisFiltre !== 'Tous' && ab.mois !== moisFiltre) {
+                    return false;
+                }
+                // Filtre par texte (Matricule ou Nom de l'élève)
+                if (texteRecherche) {
+                    let eleve = listeElevesGlobale.find(e => String(e.matricule) === String(ab.matricule)) || {};
+                    let chaineEleve = `${ab.matricule} ${eleve.nom || ''} ${eleve.prenoms || ''}`.toLowerCase();
+                    if (!chaineEleve.includes(texteRecherche)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            afficherAbsences(donneesFiltrees);
+        }
+
+        // Lancer le chargement au démarrage
+        chargerToutesLesDonnees();
+    </script>
+</body>
+</html>
