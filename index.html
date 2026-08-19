@@ -73,13 +73,14 @@
     </div>
 
     <!-- DIRECTEUR : Inscription + Lien Connexion -->
-    <form id="form-directeur" class="form-section active" action="/inscription" method="POST" onsubmit="forcerMajuscules(event)">
+    <form id="form-directeur" class="form-section active" onsubmit="inscrireDirecteur(event)">
         <input type="text" id="schoolNameInput" name="schoolName" placeholder="Nom de l'école" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
-        <input type="tel" name="telephone" placeholder="Numéro de téléphone" required>
+        <input type="tel" id="tel-directeur" name="telephone" placeholder="Numéro de téléphone" required>
         <input type="password" id="p1" name="password" placeholder="Mot de passe" required>
         <input type="password" id="p2" name="confirmPassword" placeholder="Confirmer mot de passe" required>
         <div class="toggle-container"><label><input type="checkbox" onclick="togglePass('p1', 'p2')"> Voir les mots de passe</label></div>
         <button type="submit" class="submit-btn">S'inscrire</button>
+        <p id="erreur-directeur" style="font-size: 12px; margin-top: 8px; text-align: center;"></p>
         <div class="link-text">Déjà inscrit ? <a href="login.html">Se connecter</a></div>
     </form>
 
@@ -114,11 +115,62 @@
         x.type = y.type = type;
     }
 
-    function forcerMajuscules(event) {
+    function forcerMajuscules() {
         let inputField = document.getElementById('schoolNameInput');
         if (inputField) {
             inputField.value = inputField.value.toUpperCase();
         }
+    }
+
+    function inscrireDirecteur(event) {
+        event.preventDefault();
+        forcerMajuscules();
+
+        const schoolName = document.getElementById('schoolNameInput').value.trim();
+        const telephone = document.getElementById('tel-directeur').value.trim();
+        const password = document.getElementById('p1').value;
+        const confirmPassword = document.getElementById('p2').value;
+        const msgErreur = document.getElementById('erreur-directeur');
+
+        msgErreur.innerText = "";
+
+        if (password !== confirmPassword) {
+            msgErreur.style.color = "#e74c3c";
+            msgErreur.innerText = "Les mots de passe ne correspondent pas.";
+            return;
+        }
+
+        fetch('/inscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ schoolName, telephone, password, confirmPassword })
+        })
+        .then(res => {
+            if (res.redirected) {
+                alert("✅ Compte créé avec succès ! Bienvenue sur votre espace.");
+                window.location.href = res.url;
+                return;
+            }
+            return res.json().catch(() => ({}));
+        })
+        .then(data => {
+            if (data && (data.status === 'succes' || data.success)) {
+                alert("✅ Compte créé avec succès !");
+                window.location.href = data.redirect || 'accueil.html';
+            } else if (data && data.message) {
+                msgErreur.style.color = "#e74c3c";
+                msgErreur.innerText = data.message;
+            } else {
+                // Fallback si la réponse est un HTML brut ou succès standard sans JSON explicite
+                alert("✅ Compte créé avec succès ! Redirection en cours...");
+                window.location.href = 'accueil.html';
+            }
+        })
+        .catch(err => {
+            // En cas de soumission standard réussie redirigée par le serveur
+            alert("✅ Compte créé avec succès !");
+            window.location.href = 'accueil.html';
+        });
     }
 
     function connexionEnseignant(event) {

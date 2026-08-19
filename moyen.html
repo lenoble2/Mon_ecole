@@ -93,28 +93,37 @@
                 document.getElementById('tableau-moyennes').innerHTML = `<tr><td colspan="10" style="color:red; text-align:center;">Erreur de chargement des données.</td></tr>`;
             });
 
+        function getMoyenneNumerique(e) {
+            let val = 0;
+            if (e.moyen_total !== undefined && e.moyen_total !== null && e.moyen_total !== '') {
+                val = parseFloat(e.moyen_total);
+            } else if (e.moyenne !== undefined && e.moyenne !== null && e.moyenne !== '') {
+                val = parseFloat(e.moyenne);
+            } else if (e.moyen !== undefined && e.moyen !== null && e.moyen !== '') {
+                val = parseFloat(e.moyen);
+            } else if (e.mg !== undefined && e.mg !== null && e.mg !== '') {
+                val = parseFloat(e.mg);
+            }
+            return isNaN(val) ? 0 : val;
+        }
+
         function afficherTableau(data) {
             const tbody = document.getElementById('tableau-moyennes');
             tbody.innerHTML = '';
-            
+
             if (!data || data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="10" style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</td></tr>`;
                 return;
             }
 
-            data.forEach((e, index) => {
-                let totalValue = '0.00';
-                if (e.moyen_total !== undefined && e.moyen_total !== null && e.moyen_total !== '') {
-                    totalValue = parseFloat(e.moyen_total).toFixed(2);
-                } else if (e.moyenne !== undefined && e.moyenne !== null && e.moyenne !== '') {
-                    totalValue = parseFloat(e.moyenne).toFixed(2);
-                } else if (e.moyen !== undefined && e.moyen !== null && e.moyen !== '') {
-                    totalValue = parseFloat(e.moyen).toFixed(2);
-                } else if (e.mg !== undefined && e.mg !== null && e.mg !== '') {
-                    totalValue = parseFloat(e.mg).toFixed(2);
-                }
+            // Tri automatique par ordre décroissant de la moyenne pour que le calcul/affichage du rang soit cohérent
+            let dataTriee = [...data].sort((a, b) => getMoyenneNumerique(b) - getMoyenneNumerique(a));
 
-                let rangValue = e.rang !== undefined && e.rang !== null && e.rang !== '' ? e.rang : (index + 1);
+            dataTriee.forEach((e, index) => {
+                let totalValue = getMoyenneNumerique(e).toFixed(2);
+                
+                // Si le rang n'est pas défini en base, on lui attribue sa position triée (index + 1)
+                let rangValue = (e.rang !== undefined && e.rang !== null && e.rang !== '' && e.rang !== 0) ? e.rang : (index + 1);
                 let decisionVal = e.decision ?? '';
                 let niveauEleve = e.niveau || '';
 
@@ -185,15 +194,9 @@
         }
 
         function validerBascule() {
-            // Modification ici : Pour s'assurer de récupérer toutes les décisions modifiées, 
-            // même si un filtre de classe était actif, on parcourt la liste globale des élèves 
-            // ou on extrait l'état depuis le DOM actuel combiné. 
-            // Le plus simple est de récupérer les valeurs depuis le DOM affiché, 
-            // mais l'idéal est de prévenir l'utilisateur s'il y a un filtre actif.
-            
             const rows = document.querySelectorAll('tbody tr[data-id]');
             const decisions = [];
-            
+
             rows.forEach(tr => {
                 const select = tr.querySelector('.dfa-select');
                 if(select && select.value) {
