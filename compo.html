@@ -41,6 +41,14 @@
         td:nth-child(3), td:nth-child(4) { text-align: left; }
         input[type="number"] { width: 65px; padding: 4px; text-align: center; }
         select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+
+        /* Styles spécifiques pour le tableau de Synthèse */
+        .synthese-container { margin-top: 25px; background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd; max-width: 650px; }
+        .synthese-container h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+        .synthese-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .synthese-table th, .synthese-table td { border: 1px solid #ccc; padding: 8px 12px; text-align: center; }
+        .synthese-table th { background-color: #f8f9fa; font-weight: bold; }
+        .synthese-table td:first-child { text-align: left; font-weight: bold; background-color: #fcfcfc; }
     </style>
 </head>
 <body>
@@ -95,10 +103,54 @@
         <button type="button" class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>
         <button type="button" class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>
     </div>
+    
     <div id="conteneurTableau">
         <p style="text-align:center; padding: 20px; color: #666;">Chargement des élèves...</p>
     </div>
+
+    <!-- Tableau de Synthèse -->
+    <div class="synthese-container">
+        <h3>SYNTHÈSE</h3>
+        <table class="synthese-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%;"></th>
+                    <th>Garçon</th>
+                    <th>Fille</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Inscrit</td>
+                    <td id="synth-inscrit-G">0</td>
+                    <td id="synth-inscrit-F">0</td>
+                    <td id="synth-inscrit-T">0</td>
+                </tr>
+                <tr>
+                    <td>Ayant composés</td>
+                    <td id="synth-composes-G">0</td>
+                    <td id="synth-composes-F">0</td>
+                    <td id="synth-composes-T">0</td>
+                </tr>
+                <tr>
+                    <td>Admis</td>
+                    <td id="synth-admis-G">0</td>
+                    <td id="synth-admis-F">0</td>
+                    <td id="synth-admis-T">0</td>
+                </tr>
+                <tr>
+                    <td>Pourcentage des admis</td>
+                    <td id="synth-pct-G">0,00%</td>
+                    <td id="synth-pct-F">0,00%</td>
+                    <td id="synth-pct-T">0,00%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
     <input type="file" id="inputFichierExcel" accept=".xlsx, .xls, .csv" style="display: none;" onchange="afficherNomFichier(this)">
+    
     <div class="btn-group">
         <div class="btn-group-left">
             <button type="button" id="btnActiverModif" class="btn" style="background-color: #ffc107; color: #212529;" onclick="basculerModeEdition()">Modifier</button>
@@ -176,13 +228,11 @@
             const conteneurRetour = document.getElementById('conteneurBoutonRetour');
             if (!conteneurRetour) return;
 
-            // Récupération sécurisée du rôle utilisateur (à adapter selon votre implémentation globale, ex: window.userRole ou sessionStorage)
             let roleUtilisateur = window.userRole || sessionStorage.getItem('userRole') || 'professeur';
 
             if (roleUtilisateur === 'directeur') {
                 conteneurRetour.innerHTML = `<a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour</a>`;
             } else {
-                // Non-directeur : bouton masqué ou rendu inutilisable/grisé
                 conteneurRetour.innerHTML = `<button type="button" class="btn" style="background-color: #d6d8db; color: #6c757d; cursor: not-allowed;" disabled title="Accès réservé au directeur">Retour</button>`;
             }
         }
@@ -268,8 +318,110 @@
             return coeff;
         }
 
+        function mettreAJourSynthese(dataEleves) {
+            let inscritG = 0, inscritF = 0;
+            let composesG = 0, composesF = 0;
+            let admisG = 0, admisF = 0;
+
+            dataEleves.forEach(e => {
+                let sexe = (e.sexe || '').trim().toUpperCase();
+                let niveauEleve = (e.niveau || '').trim().toUpperCase();
+                let isF = (sexe === 'F' || sexe === 'FILLE');
+                let isG = (sexe === 'M' || sexe === 'G' || sexe === 'GARCON');
+
+                if (isG) inscritG++;
+                else if (isF) inscritF++;
+                else inscritG++; // Par défaut si non spécifié
+
+                // Vérification si l'élève a composé (notes remplies ou moyenne > 0 ou décision présente)
+                let aCompose = false;
+                let decision = (e.decision || '').trim().toUpperCase();
+
+                if (periodeActuelle === 'FIN_ANNEE') {
+                    let mTotal = parseFloat(e.moyen_total ?? e.moyen ?? 0);
+                    if (mTotal > 0 || e.moyen_compo1 !== undefined || decision !== '') {
+                        aCompose = true;
+                    }
+                } else {
+                    let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});
+                    let hasNotes = Object.values(notesObj).some(val => val !== '' && val !== null && val !== undefined);
+                    let moyenVal = parseFloat(e.moyen || e.moyen_compo1 || e.moyen_compo2 || e.moyen_compo3 || 0);
+                    if (hasNotes || moyenVal > 0 || decision !== '') {
+                        aCompose = true;
+                    }
+                }
+
+                if (aCompose) {
+                    if (isG) composesG++;
+                    else if (isF) composesF++;
+                    else composesG++;
+                }
+
+                // Critère d'admission spécifique pour CM1 et CM2 (moyenne >= 10), et standard pour les autres classes
+                let estAdmis = false;
+                if (niveauEleve === 'CM1' || niveauEleve === 'CM2') {
+                    let moyenneRef = 0;
+                    if (periodeActuelle === 'FIN_ANNEE') {
+                        moyenneRef = parseFloat(e.moyen_total ?? e.moyen ?? 0);
+                    } else {
+                        moyenneRef = parseFloat(e.moyen || 0);
+                    }
+                    if (decision === 'A' || (moyenneRef >= 10 && decision !== 'R')) {
+                        estAdmis = true;
+                    }
+                } else {
+                    if (decision === 'A') {
+                        estAdmis = true;
+                    } else {
+                        let moyenneRef = 0;
+                        if (periodeActuelle === 'FIN_ANNEE') {
+                            moyenneRef = parseFloat(e.moyen_total ?? e.moyen ?? 0);
+                        } else {
+                            moyenneRef = parseFloat(e.moyen || 0);
+                        }
+                        if (moyenneRef >= 5 && decision !== 'R') {
+                            estAdmis = true;
+                        }
+                    }
+                }
+
+                if (estAdmis) {
+                    if (isG) admisG++;
+                    else if (isF) admisF++;
+                    else admisG++;
+                }
+            });
+
+            let inscritT = inscritG + inscritF;
+            let composesT = composesG + composesF;
+            let admisT = admisG + admisF;
+
+            let pctG = composesG > 0 ? (admisG / composesG) * 100 : 0;
+            let pctF = composesF > 0 ? (admisF / composesF) * 100 : 0;
+            let pctT = composesT > 0 ? (admisT / composesT) * 100 : 0;
+
+            document.getElementById('synth-inscrit-G').textContent = inscritG;
+            document.getElementById('synth-inscrit-F').textContent = inscritF;
+            document.getElementById('synth-inscrit-T').textContent = inscritT;
+
+            document.getElementById('synth-composes-G').textContent = composesG;
+            document.getElementById('synth-composes-F').textContent = composesF;
+            document.getElementById('synth-composes-T').textContent = composesT;
+
+            document.getElementById('synth-admis-G').textContent = admisG;
+            document.getElementById('synth-admis-F').textContent = admisF;
+            document.getElementById('synth-admis-T').textContent = admisT;
+
+            document.getElementById('synth-pct-G').textContent = pctG.toFixed(2).replace('.', ',') + '%';
+            document.getElementById('synth-pct-F').textContent = pctF.toFixed(2).replace('.', ',') + '%';
+            document.getElementById('synth-pct-T').textContent = pctT.toFixed(2).replace('.', ',') + '%';
+        }
+
         function afficherTableau(data, niveauFiltre) {
             const conteneur = document.getElementById('conteneurTableau');
+
+            // Mise à jour de la synthèse avec les données filtrées actuelles
+            mettreAJourSynthese(data);
 
             if (!data || data.length === 0) {
                 conteneur.innerHTML = `<p style="padding:15px; color:#666; text-align:center;">Aucun élève trouvé.</p>`;
