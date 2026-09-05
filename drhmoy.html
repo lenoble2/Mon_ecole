@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1.0">
+    <title>Espace DRH - Moyens des Écoles (IEP)</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; min-width: 1150px; }
+        h2 { color: #333; margin-bottom: 5px; }
+        .iep-banner { font-size: 1.1em; font-weight: bold; color: #007bff; margin-bottom: 15px; background: #e9ecef; padding: 8px 12px; border-radius: 4px; display: inline-block; }
+        .top-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .compo-nav-container { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        .compo-nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .compo-btn { padding: 9px 16px; cursor: pointer; border: 1px solid #00acc1; background-color: #00bcd4; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+        .dropdown-nav { position: relative; display: inline-block; }
+        .dropdown-select { padding: 9px 16px; cursor: pointer; border: 1px solid #00acc1; background-color: #00bcd4; color: white; border-radius: 4px; font-weight: bold; font-size: 0.9em; appearance: none; padding-right: 30px; }
+        .dropdown-select option { background-color: #fff; color: #333; font-weight: normal; }
+        .filter-container { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 4px; font-weight: bold; }
+        .filter-btn.active { background-color: #007bff; color: white; border-color: #007bff; }
+        .btn-group { display: flex; gap: 8px; margin-top: 15px; align-items: center; justify-content: space-between; }
+        .btn { padding: 10px 15px; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; border: none; font-size: 0.9em; font-weight: bold; }
+        #conteneurTableau { overflow-x: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ddd; max-height: 550px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.75em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; white-space: nowrap; }
+        th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }
+        td:nth-child(3), td:nth-child(4) { text-align: left; font-weight: 500; }
+        .synthese-container { margin-top: 25px; background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd; max-width: 650px; }
+        .synthese-container h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; color: #333; text-transform: uppercase; }
+        .synthese-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .synthese-table th, .synthese-table td { border: 1px solid #ccc; padding: 8px 12px; text-align: center; }
+        .synthese-table th { background-color: #f8f9fa; font-weight: bold; }
+        .synthese-table td:first-child { text-align: left; font-weight: bold; background-color: #fcfcfc; }
+    </style>
+</head>
+<body>
+    <div class="top-container">
+        <div>
+            <h2>Espace DRH - Moyens des Écoles (IEP)</h2>
+            <div id="iep-banner" class="iep-banner" style="display:none;"></div>
+        </div>
+        <select id="annee-select" onchange="changerAnnee()">
+            <option value="2029">2029-2030</option>
+            <option value="2028">2028-2029</option>
+            <option value="2027">2027-2028</option>
+            <option value="2026">2026-2027</option>
+            <option value="2025" selected>2025-2026</option>
+            <option value="2024">2024-2025</option>
+            <option value="2023">2023-2024</option>
+            <option value="2022">2022-2023</option>
+            <option value="2021">2021-2022</option>
+        </select>
+    </div>
+    <div class="compo-nav-container">
+        <div class="compo-nav-group">
+            <div class="dropdown-nav">
+                <select id="select-ecoles" class="dropdown-select compo-btn" onchange="changerEcoleSelectionnee()">
+                    <option value="" disabled selected>Chargement des écoles...</option>
+                </select>
+            </div>
+            <div class="dropdown-nav">
+                <select id="select-compositions" class="dropdown-select compo-btn" onchange="gererSelectionCompo(this)">
+                    <option value="" disabled selected>Compositions</option>
+                    <option value="COMPO1">Compo1</option>
+                    <option value="COMPO2">Compo2</option>
+                    <option value="COMPO3">Compo3</option>
+                    <option value="PASSAGE">Compo de passage</option>
+                    <option value="FIN_ANNEE">Résultats Fin année</option>
+                </select>
+            </div>
+            <button type="button" class="btn" style="background-color: #28a745;" onclick="chargerDonneesEcole()">Voir Moyens</button>
+        </div>
+    </div>
+    <div class="filter-container">
+        <button type="button" class="filter-btn active" onclick="filtrer('Tous', this)">Tous</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CP1', this)">CP1</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CP2', this)">CP2</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CE1', this)">CE1</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CE2', this)">CE2</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CM1', this)">CM1</button>
+        <button type="button" class="filter-btn" onclick="filtrer('CM2', this)">CM2</button>
+    </div>
+    <div id="conteneurTableau">
+        <p style="text-align:center; padding: 20px; color: #666;">Veuillez sélectionner une école et cliquer sur "Voir Moyens".</p>
+    </div>
+    <div class="synthese-container">
+        <h3>SYNTHÈSE DE L'ÉCOLE</h3>
+        <table class="synthese-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%;"></th>
+                    <th>Garçon</th>
+                    <th>Fille</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Inscrit</td><td id="synth-inscrit-G">0</td><td id="synth-inscrit-F">0</td><td id="synth-inscrit-T">0</td></tr>
+                <tr><td>Ayant composés</td><td id="synth-composes-G">0</td><td id="synth-composes-F">0</td><td id="synth-composes-T">0</td></tr>
+                <tr><td>Admis</td><td id="synth-admis-G">0</td><td id="synth-admis-F">0</td><td id="synth-admis-T">0</td></tr>
+                <tr><td>Pourcentage des admis</td><td id="synth-pct-G">0,00%</td><td id="synth-pct-F">0,00%</td><td id="synth-pct-T">0,00%</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="btn-group">
+        <button type="button" id="btnTelechargerExcel" class="btn" style="background-color: #007bff;" onclick="telechargerExcelActuel()">Télécharger Excel</button>
+        <a href="accueil.html" class="btn" style="background-color: #6c757d;">Retour Accueil</a>
+    </div>
+    <script>
+        let listeEleves = [];
+        let classeFiltreeActuelle = 'Tous';
+        let periodeActuelle = 'COMPO1';
+        const urlParams = new URLSearchParams(window.location.search);
+        let annee = urlParams.get('annee') || '2025';
+        let iepActuel = urlParams.get('iep') || '';
+
+        if (iepActuel) {
+            const banner = document.getElementById('iep-banner');
+            banner.textContent = `IEPP Connectée : ${iepActuel}`;
+            banner.style.display = 'block';
+        }
+
+        const colonnesParNiveau = {
+            'CP1': {
+                'COMPO1': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'dessin', 'lecture'],
+                'COMPO2': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'COMPO3': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'PASSAGE': ['exp_ecrite', 'copie', 'ecriture', 'dictee', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'FIN_ANNEE': ['graphisme', 'disc_visuelle', 'math', 'edhc', 'lecture', 'dessin']
+            },
+            'CP2': {
+                'COMPO1': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'COMPO2': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'COMPO3': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie'],
+                'PASSAGE': ['exp_ecrite', 'copie', 'dictee', 'ecriture', 'math', 'edhc', 'dessin', 'lecture', 'poesie']
+            },
+            'CE1': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math', 'lecture'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math', 'lecture']
+            },
+            'CE2': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
+            },
+            'CM1': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
+            },
+            'CM2': {
+                'COMPO1': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO2': ['exp_texte', 'dictee', 'aem', 'math'],
+                'COMPO3': ['exp_texte', 'dictee', 'aem', 'math'],
+                'PASSAGE': ['exp_texte', 'dictee', 'aem', 'math']
+            }
+        };
+
+        function getMatieresNiveau(niveau, periode) {
+            if (!niveau || niveau === 'Tous') return [];
+            const nivUpper = niveau.toUpperCase();
+            if (colonnesParNiveau[nivUpper]) {
+                if (colonnesParNiveau[nivUpper][periode]) {
+                    return colonnesParNiveau[nivUpper][periode];
+                }
+                return colonnesParNiveau[nivUpper]['COMPO1'] || [];
+            }
+            return [];
+        }
+
+        function getCoefficientDiviseur(niveau, periode) {
+            let nivUpper = niveau ? niveau.toUpperCase() : '';
+            let coeff = 8.5;
+            if (nivUpper === 'CP1' && periode === 'COMPO1') {
+                coeff = 6;
+            } else if (nivUpper === 'CP1' || nivUpper === 'CP2') {
+                coeff = 9;
+            } else if (nivUpper === 'CE2') {
+                coeff = 11;
+            } else if (nivUpper === 'CE1') {
+                coeff = 12;
+            }
+            return coeff;
+        }
+
+        document.getElementById('annee-select').value = annee;
+        const urlPeriode = urlParams.get('periode');
+        if (urlPeriode) {
+            periodeActuelle = urlPeriode;
+            document.getElementById('select-compositions').value = periodeActuelle;
+        }
+
+        function changerAnnee() {
+            annee = document.getElementById('annee-select').value;
+            changerEcoleSelectionnee();
+        }
+        function changerEcoleSelectionnee() {
+            const ecole = document.getElementById('select-ecoles').value;
+            window.history.replaceState({}, '', `drhmoy.html?annee=${annee}&periode=${periodeActuelle}&ecole=${encodeURIComponent(ecole)}${iepActuel ? '&iep=' + encodeURIComponent(iepActuel) : ''}`);
+        }
+        function gererSelectionCompo(select) {
+            if(select.value) {
+                periodeActuelle = select.value;
+                changerEcoleSelectionnee();
+                chargerDonneesEcole();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const select = document.getElementById('select-ecoles');
+            let ecolesSet = new Set();
+
+            try {
+                const res = await fetch(`/api/drh/ecoles${iepActuel ? '?iep=' + encodeURIComponent(iepActuel) : ''}`);
+                if (res.ok) {
+                    const dataDrh = await res.json();
+                    if (Array.isArray(dataDrh)) {
+                        dataDrh.forEach(e => ecolesSet.add(e.trim()));
+                    }
+                }
+            } catch (err) {
+                console.log("Route /api/drh/ecoles non disponible.");
+            }
+
+            select.innerHTML = '<option value="" disabled selected>Sélectionner une école</option>';
+            if (ecolesSet.size > 0) {
+                ecolesSet.forEach(ecole => {
+                    let opt = document.createElement('option');
+                    opt.value = ecole;
+                    opt.textContent = ecole;
+                    select.appendChild(opt);
+                });
+                const urlEcole = urlParams.get('ecole');
+                if(urlEcole) {
+                    select.value = urlEcole;
+                    chargerDonneesEcole();
+                }
+            } else {
+                let opt = document.createElement('option');
+                opt.value = "";
+                opt.textContent = "Aucune école enregistrée pour cet IEPP";
+                select.appendChild(opt);
+            }
+        });
+
+        function chargerDonneesEcole() {
+            const ecoleSelectionnee = document.getElementById('select-ecoles').value;
+            if(!ecoleSelectionnee) return alert("Veuillez choisir une école.");
+
+            changerEcoleSelectionnee();
+            const infoDiv = document.getElementById('conteneurTableau');
+            infoDiv.innerHTML = `<p style='text-align:center; padding: 20px; color: #666;'>Chargement des données pour l'année ${annee} (${ecoleSelectionnee})...</p>`;
+
+            fetch(`/api/eleves/${annee}?periode=${periodeActuelle}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Erreur réseau lors de la récupération des élèves.");
+                return res.json();
+            })
+            .then(data => {
+                let listeDistante = Array.isArray(data) ? data : (data.eleves || data.data || []);
+                listeEleves = listeDistante.filter(c => {
+                    const ecoleEleve = (c.nom_ecole || c.ecole_origine || c.ecole || '').trim();
+                    return ecoleEleve.toUpperCase() === ecoleSelectionnee.trim().toUpperCase();
+                });
+
+                if (listeEleves.length === 0) {
+                    infoDiv.innerHTML = `<p style='text-align:center; padding: 20px; color: orange;'>Aucun élève trouvé pour l'école "${ecoleSelectionnee}" pour l'année ${annee}.</p>`;
+                    mettreAJourSynthese([]);
+                    return;
+                }
+
+                filtrer(classeFiltreeActuelle);
+                mettreAJourSynthese(listeEleves);
+            })
+            .catch(err => {
+                console.log("Erreur de chargement distant :", err);
+                infoDiv.innerHTML = `<p style='text-align:center; padding: 20px; color: red;'>Erreur lors du chargement des données pour cette école.</p>`;
+            });
+        }
+
+        function afficherTableau(data, niveauFiltre) {
+            const conteneur = document.getElementById('conteneurTableau');
+            mettreAJourSynthese(data);
+
+            if(!data.length) {
+                conteneur.innerHTML = "<p style='text-align:center;padding:15px; color: red;'>Aucun élève trouvé pour cette école et cette année.</p>";
+                return;
+            }
+
+            if (periodeActuelle === 'FIN_ANNEE') {
+                let html = "<table><tr><th>N°</th><th>Matricule</th><th style='text-align:left;'>Nom</th><th style='text-align:left;'>Prénoms</th><th>Niveau</th><th>Date Naiss.</th><th>Sexe</th><th>MOYEN COMPO1</th><th>MOYEN COMPO2</th><th>MOYEN COMPO3</th><th>moyen_compoN</th><th>moyen_passage</th><th>moyen_total</th><th>Decision</th></tr>";
+                data.forEach((e, idx) => {
+                    let m1 = parseFloat(e.moyen_compo1 ?? e.m1 ?? 0);
+                    let m2 = parseFloat(e.moyen_compo2 ?? e.m2 ?? 0);
+                    let m3 = parseFloat(e.moyen_compo3 ?? e.m3 ?? 0);
+                    let mPassage = parseFloat(e.moyen_compo_de_passage ?? 0);
+                    let mN = parseFloat(e.moyen_compoN ?? ((m1 + m2 + m3) / 3));
+                    let mTotal = parseFloat(e.moyen_total ?? ((mN + mPassage) / 2));
+                    let decisionVal = e.decision ?? '';
+
+                    html += `<tr>
+                        <td>${idx + 1}</td>
+                        <td>${e.matricule || ''}</td>
+                        <td style='text-align:left;'>${e.nom || ''}</td>
+                        <td style='text-align:left;'>${e.prenoms || ''}</td>
+                        <td>${e.niveau || ''}</td>
+                        <td>${e.date_naissance || ''}</td>
+                        <td>${e.sexe || ''}</td>
+                        <td>${m1.toFixed(2)}</td>
+                        <td>${m2.toFixed(2)}</td>
+                        <td>${m3.toFixed(2)}</td>
+                        <td>${mN.toFixed(2)}</td>
+                        <td>${mPassage.toFixed(2)}</td>
+                        <td>${mTotal.toFixed(2)}</td>
+                        <td>${decisionVal || '--'}</td>
+                    </tr>`;
+                });
+                html += "</table>";
+                conteneur.innerHTML = html;
+                return;
+            }
+
+            if (niveauFiltre === 'Tous') {
+                conteneur.innerHTML = `<p style="padding:20px; color:#666; text-align:center;">Veuillez sélectionner une classe spécifique (CP1, CP2, CE1, CE2, CM1, CM2) pour afficher les matières et les tableaux adaptés.</p>`;
+                return;
+            }
+
+            let matieres = getMatieresNiveau(niveauFiltre, periodeActuelle);
+            let libelleMoyen = `MOYEN ${periodeActuelle}`;
+            let html = "<table><tr><th>N°</th><th>Matricule</th><th style='text-align:left;'>Nom</th><th style='text-align:left;'>Prénoms</th><th>Niveau</th><th>Date Naiss.</th><th>Sexe</th>";
+            matieres.forEach(m => {
+                html += `<th>${m.toUpperCase()}</th>`;
+            });
+            html += `<th>Total</th><th>${libelleMoyen}</th><th>Rang</th><th>Decision</th></tr>`;
+
+            data.forEach((e, index) => {
+                let decisionVal = e.decision ?? '';
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${e.matricule || ''}</td>
+                    <td style='text-align:left;'>${e.nom || ''}</td>
+                    <td style='text-align:left;'>${e.prenoms || ''}</td>
+                    <td>${e.niveau || ''}</td>
+                    <td>${e.date_naissance || ''}</td>
+                    <td>${e.sexe || ''}</td>`;
+
+                let sommeNotesCalcul = 0;
+                let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});
+
+                matieres.forEach(m => {
+                    let valeurNote = notesObj[m] !== undefined ? notesObj[m] : (e[m] !== undefined ? e[m] : '');
+                    if (valeurNote !== '' && valeurNote !== null && valeurNote !== undefined) {
+                        let nNum = parseFloat(valeurNote);
+                        if (!isNaN(nNum)) sommeNotesCalcul += nNum;
+                    }
+                    html += `<td>${valeurNote !== '' && valeurNote !== null && valeurNote !== undefined ? valeurNote : '--'}</td>`;
+                });
+
+                let specificMoyen = 0;
+                if (periodeActuelle === 'COMPO1') specificMoyen = e.moyen_compo1;
+                else if (periodeActuelle === 'COMPO2') specificMoyen = e.moyen_compo2;
+                else if (periodeActuelle === 'COMPO3') specificMoyen = e.moyen_compo3;
+                else if (periodeActuelle === 'PASSAGE') specificMoyen = e.moyen_compo_de_passage;
+
+                let valeurMoyen = 0;
+                if (specificMoyen !== undefined && specificMoyen !== null && specificMoyen !== '') {
+                    valeurMoyen = parseFloat(specificMoyen);
+                } else if (e.moyen !== undefined && e.moyen !== null && e.moyen !== '') {
+                    valeurMoyen = parseFloat(e.moyen);
+                } else if (sommeNotesCalcul > 0) {
+                    let diviseur = getCoefficientDiviseur(e.niveau || niveauFiltre, periodeActuelle);
+                    valeurMoyen = sommeNotesCalcul / diviseur;
+                }
+                valeurMoyen = isNaN(valeurMoyen) ? 0 : valeurMoyen;
+                let valeurTotal = (e.total !== undefined && e.total !== null && e.total !== '') ? parseFloat(e.total) : sommeNotesCalcul;
+                valeurTotal = isNaN(valeurTotal) ? 0 : valeurTotal;
+                let valeurRang = e.rang ?? (index + 1);
+                html += `<td>${valeurTotal.toFixed(2)}</td>
+                    <td>${valeurMoyen.toFixed(2)}</td>
+                    <td>${valeurRang}</td>
+                    <td>${decisionVal || '--'}</td>
+                </tr>`;
+            });
+            html += "</table>";
+            conteneur.innerHTML = html;
+        }
+
+        function mettreAJourSynthese(data) {
+            let inscritG = 0, inscritF = 0;
+            let composesG = 0, composesF = 0;
+            let admisG = 0, admisF = 0;
+
+            data.forEach(e => {
+                let sexe = (e.sexe || '').trim().toUpperCase();
+                let niveauEleve = (e.niveau || '').trim().toUpperCase();
+                let isF = (sexe === 'F' || sexe === 'FILLE');
+                let isG = (sexe === 'M' || sexe === 'G' || sexe === 'GARCON');
+
+                if (isG) inscritG++;
+                else if (isF) inscritF++;
+                else inscritG++;
+
+                let aCompose = false;
+                let decision = (e.decision || '').trim().toUpperCase();
+                if (periodeActuelle === 'FIN_ANNEE') {
+                    let mTotal = parseFloat(e.moyen_total ?? e.moyen ?? 0);
+                    if (mTotal > 0 || e.moyen_compo1 !== undefined || decision !== '') {
+                        aCompose = true;
+                    }
+                } else {
+                    let notesObj = (typeof e.notes === 'string') ? JSON.parse(e.notes || '{}') : (e.notes || {});
+                    let hasNotes = Object.values(notesObj).some(val => val !== '' && val !== null && val !== undefined);
+                    let moyenVal = parseFloat(e.moyen || e.moyen_compo1 || e.moyen_compo2 || e.moyen_compo3 || 0);
+                    if (hasNotes || moyenVal > 0 || decision !== '') {
+                        aCompose = true;
+                    }
+                }
+
+                if (aCompose) {
+                    if (isG) composesG++;
+                    else if (isF) composesF++;
+                    else composesG++;
+                }
+
+                let estAdmis = false;
+                if (niveauEleve === 'CM1' || niveauEleve === 'CM2') {
+                    let moyenneRef = 0;
+                    if (periodeActuelle === 'FIN_ANNEE') {
+                        moyenneRef = parseFloat(e.moyen_total ?? e.moyen ?? 0);
+                    } else {
+                        moyenneRef = parseFloat(e.moyen || 0);
+                    }
+                    if (decision === 'A' || (moyenneRef >= 10 && decision !== 'R')) {
+                        estAdmis = true;
+                    }
+                } else {
+                    if (decision === 'A') {
+                        estAdmis = true;
+                    } else {
+                        let moyenneRef = 0;
+                        if (periodeActuelle === 'FIN_ANNEE') {
+                            moyenneRef = parseFloat(e.moyen_total ?? e.moyen ?? 0);
+                        } else {
+                            moyenneRef = parseFloat(e.moyen || 0);
+                        }
+                        if (moyenneRef >= 5 && decision !== 'R') {
+                            estAdmis = true;
+                        }
+                    }
+                }
+
+                if (estAdmis) {
+                    if (isG) admisG++;
+                    else if (isF) admisF++;
+                    else admisG++;
+                }
+            });
+
+            let totalInscrit = inscritG + inscritF;
+            let totalComposes = composesG + composesF;
+            let totalAdmis = admisG + admisF;
+            let pctG = composesG > 0 ? (admisG / composesG) * 100 : 0;
+            let pctF = composesF > 0 ? (admisF / composesF) * 100 : 0;
+            let pctT = totalComposes > 0 ? (totalAdmis / totalComposes) * 100 : 0;
+
+            document.getElementById('synth-inscrit-G').textContent = inscritG;
+            document.getElementById('synth-inscrit-F').textContent = inscritF;
+            document.getElementById('synth-inscrit-T').textContent = totalInscrit;
+
+            document.getElementById('synth-composes-G').textContent = composesG;
+            document.getElementById('synth-composes-F').textContent = composesF;
+            document.getElementById('synth-composes-T').textContent = totalComposes;
+
+            document.getElementById('synth-admis-G').textContent = admisG;
+            document.getElementById('synth-admis-F').textContent = admisF;
+            document.getElementById('synth-admis-T').textContent = totalAdmis;
+
+            document.getElementById('synth-pct-G').textContent = pctG.toFixed(2).replace('.', ',') + '%';
+            document.getElementById('synth-pct-F').textContent = pctF.toFixed(2).replace('.', ',') + '%';
+            document.getElementById('synth-pct-T').textContent = pctT.toFixed(2).replace('.', ',') + '%';
+        }
+
+        function filtrer(niveau, btn) {
+            classeFiltreeActuelle = niveau;
+            if(btn) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            } else {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    if (b.textContent.trim() === niveau) b.classList.add('active');
+                    else b.classList.remove('active');
+                });
+            }
+            const btnDL = document.getElementById('btnTelechargerExcel');
+            if (niveau !== 'Tous') {
+                btnDL.textContent = `Télécharger ${niveau}`;
+            } else {
+                btnDL.textContent = "Télécharger Excel";
+            }
+
+            if (niveau === 'Tous') {
+                afficherTableau(listeEleves, 'Tous');
+            } else {
+                afficherTableau(listeEleves.filter(e => (e.niveau || '').toUpperCase() === niveau.toUpperCase()), niveau);
+            }
+        }
+
+        function telechargerExcelActuel() {
+            let dataEleves = classeFiltreeActuelle === 'Tous' ? listeEleves : listeEleves.filter(e => e.niveau && e.niveau.toUpperCase() === classeFiltreeActuelle.toUpperCase());
+            if(!dataEleves.length) return alert("Rien à exporter.");
+            let ws = XLSX.utils.json_to_sheet(dataEleves);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Moyens");
+            XLSX.writeFile(wb, `Moyens_${periodeActuelle}_${annee}.xlsx`);
+        }
+    </script>
+</body>
+</html>

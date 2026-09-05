@@ -403,15 +403,23 @@
                             historiqueCalculee.forEach(h => {
                                 const anneeSuivante = parseInt(h.annee) + 1;
                                 const anneeAffichage = `${h.annee}-${anneeSuivante}`;
-                                let totalValue = (h.moyen_total !== undefined && h.moyen_total !== null && h.moyen_total !== '') ? h.moyen_total : '0.00';
+                                let totalValue = (h.moyen_total !== undefined && h.moyen_total !== null && h.moyen_total !== '') ? h.moyen_total : '';
                                 const m = parseFloat(totalValue);
                                 const niv = (h.niveau || '').toUpperCase();
-                                let moyAffichage = !isNaN(m) ? m.toFixed(2) : totalValue;
+                                
+                                let moyAffichage = '';
+                                if (!isNaN(m) && m > 0) {
+                                    moyAffichage = m.toFixed(2);
+                                } else {
+                                    moyAffichage = '...';
+                                }
+
                                 let obs = h.observation || '';
                                 if (['CP1', 'CP2', 'CE1', 'CE2'].includes(niv)) {
-                                    if (moyAffichage !== '') moyAffichage += ' /10';
+                                    if (moyAffichage !== '...') moyAffichage += ' /10';
                                     if (!obs) {
-                                        if (m < 3) obs = "Insuffisant";
+                                        if (isNaN(m) || m === 0) obs = "";
+                                        else if (m < 3) obs = "Insuffisant";
                                         else if (m < 5) obs = "Médiocre";
                                         else if (m < 6) obs = "Passable";
                                         else if (m < 8) obs = "Assez-bien";
@@ -419,9 +427,10 @@
                                         else obs = "Très-bien";
                                     }
                                 } else if (['CM1', 'CM2'].includes(niv)) {
-                                    if (moyAffichage !== '') moyAffichage += ' /20';
+                                    if (moyAffichage !== '...') moyAffichage += ' /20';
                                     if (!obs) {
-                                        if (m < 6) obs = "Insuffisant";
+                                        if (isNaN(m) || m === 0) obs = "";
+                                        else if (m < 6) obs = "Insuffisant";
                                         else if (m < 10) obs = "Médiocre";
                                         else if (m < 12) obs = "Passable";
                                         else if (m < 15) obs = "Assez-bien";
@@ -458,7 +467,7 @@
                                     trEffectif += `<td>${h.effectif || ''}</td>`;
                                     let totalValue = (h.moyen_total !== undefined && h.moyen_total !== null && h.moyen_total !== '') ? h.moyen_total : '';
                                     const m = parseFloat(totalValue);
-                                    let moyAffichage = !isNaN(m) ? m.toFixed(2) : totalValue;
+                                    let moyAffichage = (!isNaN(m) && m > 0) ? m.toFixed(2) : '...';
                                     trMoyenne += `<td>${moyAffichage}</td>`;
                                     let rangAffichage = (h.rang !== undefined && h.rang !== null && h.rang !== '') ? String(h.rang).trim() : '';
                                     if (rangAffichage && rangAffichage !== 'N/A' && rangAffichage !== '0') {
