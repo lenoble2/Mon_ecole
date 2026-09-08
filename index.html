@@ -1,116 +1,302 @@
 
 <!DOCTYPE html>
-<html lang="fr">                                                             <head>                                                                           <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">       <link rel="manifest" href="/manifest.json">
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
     <title>Espace MonÉcole</title>
-    <style>                                                                          body {                                                                           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
             display: flex;
             justify-content: center;
-            align-items: center;                                                         min-height: 100vh;                                                           margin: 0;                                                                   padding: 10px;                                                           }                                                                            .container {                                                                     background: white;                                                           padding: 25px;
-            border-radius: 12px;                                                         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;                                                          width: 100%;
-            max-width: 400px;                                                        }                                                                            .logo { width: 80px; margin-bottom: 10px; }
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo { width: 80px; margin-bottom: 10px; }
         .header-text { margin-bottom: 15px; }
-        .header-text p { font-weight: bold; font-size: 13px; margin: 0 0 8px 0; color: #333; }                                                                    .flag-bar { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 15px; }
+        .header-text p { font-weight: bold; font-size: 13px; margin: 0 0 8px 0; color: #333; }
+        .flag-bar { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 15px; }
         .orange { background-color: #FF8C00; flex: 1; }
         .white { background-color: #FFFFFF; flex: 1; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
-        .green { background-color: #009E60; flex: 1; }                       
+        .green { background-color: #009E60; flex: 1; }
         h2 { color: #333; margin: 10px 0 20px 0; font-size: 20px; }
         .role-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 20px; }
         .role-card { background: #ffffff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 8px 2px; cursor: pointer; transition: all 0.2s; }
-        .role-card:hover, .role-card.active { border-color: #2e7d32; background-color: #f4faf4; }                                                                 .role-icon { font-size: 18px; display: block; }                              .role-title { font-size: 10px; font-weight: bold; color: #2e7d32; }
+        .role-card:hover, .role-card.active { border-color: #2e7d32; background-color: #f4faf4; }
+        .role-icon { font-size: 18px; display: block; }
+        .role-title { font-size: 10px; font-weight: bold; color: #2e7d32; }
         .form-section { display: none; text-align: left; }
-        .form-section.active { display: block; }                                     input { margin: 8px 0; padding: 10px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; }
-        button.submit-btn { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }                                                             .toggle-container { font-size: 12px; margin-bottom: 10px; }
-        .link-text { margin-top: 15px; font-size: 13px; color: #666; text-align: center; }                                                                        .link-text a { color: #2e7d32; text-decoration: none; font-weight: bold; }
-    </style>                                                                 </head>
-<body>                                                                       <div class="container">
-    <img src="Armoiries.jpg" alt="Armoiries" class="logo">
-    <div class="header-text">
-        <p>RÉPUBLIQUE DE CÔTE D'IVOIRE</p>
-        <div class="flag-bar">
-            <div class="orange"></div><div class="white"></div><div class="green"></div>
+        .form-section.active { display: block; }
+        input { margin: 8px 0; padding: 10px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; }
+        button.submit-btn { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .toggle-container { font-size: 12px; margin-bottom: 10px; }
+        .link-text { margin-top: 15px; font-size: 13px; color: #666; text-align: center; }
+        .link-text a { color: #2e7d32; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="Armoiries.jpg" alt="Armoiries" class="logo">
+        <div class="header-text">
+            <p>RÉPUBLIQUE DE CÔTE D'IVOIRE</p>
+            <div class="flag-bar">
+                <div class="orange"></div>
+                <div class="white"></div>
+                <div class="green"></div>
+            </div>
         </div>
+        <h2>MonÉcole Portail</h2>
+        
+        <div class="role-grid">
+            <div class="role-card" onclick="switchRole('drh', this)">
+                <span class="role-icon">🏛️</span>
+                <span class="role-title">DRH</span>
+            </div>
+            <div class="role-card active" onclick="switchRole('directeur', this)">
+                <span class="role-icon">👨‍💼</span>
+                <span class="role-title">Directeur</span>
+            </div>
+            <div class="role-card" onclick="switchRole('enseignant', this)">
+                <span class="role-icon">👨‍🏫</span>
+                <span class="role-title">Enseignant</span>
+            </div>
+            <div class="role-card" onclick="switchRole('parent', this)">
+                <span class="role-icon">👨‍👩‍👧‍👦</span>
+                <span class="role-title">Parent</span>
+            </div>
+        </div>
+
+        <!-- DRH / CONSEILLER -->
+        <form id="form-drh" class="form-section" onsubmit="connexionDrh(event)">
+            <input type="text" id="iep-drh" name="iep" placeholder="Nom de l'IEP (ex: ADIAKE)" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
+            <input type="password" id="code-drh" name="code_acces" placeholder="Code d'accès DRH / Conseiller" required>
+            <div class="toggle-container">
+                <label><input type="checkbox" onclick="toggleSinglePass('code-drh')"> Voir le code</label>
+            </div>
+            <button type="submit" class="submit-btn">Se connecter</button>
+            <p id="erreur-drh" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>
+        </form>
+
+        <!-- DIRECTEUR : Inscription + Lien Connexion -->
+        <form id="form-directeur" class="form-section active" onsubmit="inscrireDirecteur(event)">
+            <input type="text" id="schoolNameInput" name="schoolName" placeholder="Nom de l'école" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
+            <input type="tel" id="tel-directeur" name="telephone" placeholder="Numéro de téléphone" required>
+            <input type="password" id="p1" name="password" placeholder="Mot de passe" required>
+            <input type="password" id="p2" name="confirmPassword" placeholder="Confirmer mot de passe" required>
+            <div class="toggle-container">
+                <label><input type="checkbox" onclick="togglePass('p1', 'p2')"> Voir les mots de passe</label>
+            </div>
+            <button type="submit" class="submit-btn">S'inscrire</button>
+            <p id="erreur-directeur" style="font-size: 12px; margin-top: 8px; text-align: center;"></p>
+            <div class="link-text">Déjà inscrit ? <a href="login.html">Se connecter</a></div>
+        </form>
+
+        <!-- ENSEIGNANT -->
+        <form id="form-enseignant" class="form-section" onsubmit="connexionEnseignant(event)">
+            <input type="tel" id="tel-enseignant" name="telephone" placeholder="Numéro de téléphone" required>
+            <input type="password" id="code-enseignant" name="code_acces" placeholder="Code d'accès Enseignant" required style="text-align:center;">
+            <div class="toggle-container">
+                <label><input type="checkbox" onclick="toggleSinglePass('code-enseignant')"> Voir le code</label>
+            </div>
+            <button type="submit" class="submit-btn">Accéder</button>
+            <p id="erreur-enseignant" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>
+        </form>
+
+        <!-- PARENT -->
+        <form id="form-parent" class="form-section" onsubmit="connexionParent(event)">
+            <input type="tel" id="tel-parent" name="telephone" placeholder="Numéro de téléphone" required>
+            <input type="password" id="code-parent" name="code_acces" placeholder="Code d'accès Parent" required style="text-align:center;">
+            <div class="toggle-container">
+                <label><input type="checkbox" onclick="toggleSinglePass('code-parent')"> Voir le code</label>
+            </div>
+            <button type="submit" class="submit-btn">Consulter</button>
+            <p id="erreur-parent" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>
+        </form>
     </div>
-    <h2>MonÉcole Portail</h2>                                                    <div class="role-grid">                                                          <div class="role-card" onclick="switchRole('drh', this)">
-            <span class="role-icon">🏛️</span><span class="role-title">DRH</span>                                                                                   </div>
-        <div class="role-card active" onclick="switchRole('directeur', this)">                                                                                        <span class="role-icon">👨‍💼</span><span class="role-title">Directeur</span>                                                                          </div>
-        <div class="role-card" onclick="switchRole('enseignant', this)">                 <span class="role-icon">👨‍🏫</span><span class="role-title">Enseignant</span>                                                                         </div>                                                                       <div class="role-card" onclick="switchRole('parent', this)">                     <span class="role-icon">👨‍👩‍👧‍👦</span><span class="role-title">Parent</span>
-        </div>                                                                   </div>                                                                                                                                                    <!-- DRH / CONSEILLER -->                                                    <form id="form-drh" class="form-section" onsubmit="connexionDrh(event)">         <input type="text" id="iep-drh" name="iep" placeholder="Nom de l'IEP (ex: ADIAKE)" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">                                                       <input type="password" id="code-drh" name="code_acces" placeholder="Code d'accès DRH / Conseiller" required>                                              <div class="toggle-container"><label><input type="checkbox" onclick="toggleSinglePass('code-drh')"> Voir le code</label></div><button type="submit" class="submit-btn">Se connecter</button>               <p id="erreur-drh" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>                                                 </form>                                                                                                                                                   <!-- DIRECTEUR : Inscription + Lien Connexion -->                            <form id="form-directeur" class="form-section active" onsubmit="inscrireDirecteur(event)">                                                                    <input type="text" id="schoolNameInput" name="schoolName" placeholder="Nom de l'école" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">                                                   <input type="tel" id="tel-directeur" name="telephone" placeholder="Numéro de téléphone" required>                                                         <input type="password" id="p1" name="password" placeholder="Mot de passe" required>                                                                       <input type="password" id="p2" name="confirmPassword" placeholder="Confirmer mot de passe" required>                                                      <div class="toggle-container"><label><input type="checkbox" onclick="togglePass('p1', 'p2')"> Voir les mots de passe</label></div>                        <button type="submit" class="submit-btn">S'inscrire</button>                 <p id="erreur-directeur" style="font-size: 12px; margin-top: 8px; text-align: center;"></p>                                                               <div class="link-text">Déjà inscrit ? <a href="login.html">Se connecter</a></div>                                                                     </form>                                                                                                                                                   <!-- ENSEIGNANT -->                                                          <form id="form-enseignant" class="form-section" onsubmit="connexionEnseignant(event)">                                                                        <input type="tel" id="tel-enseignant" name="telephone" placeholder="Numéro de téléphone" required>                                                        <input type="password" id="code-enseignant" name="code_acces" placeholder="Code d'accès Enseignant" required style="text-align:center;">
-        <div class="toggle-container"><label><input type="checkbox" onclick="toggleSinglePass('code-enseignant')"> Voir le code</label></div>
-        <button type="submit" class="submit-btn">Accéder</button>
-        <p id="erreur-enseignant" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>
-    </form>                                                                  
-    <!-- PARENT -->                                                              <form id="form-parent" class="form-section" onsubmit="connexionParent(event)">
-        <input type="tel" id="tel-parent" name="telephone" placeholder="Numéro de téléphone" required>
-        <input type="password" id="code-parent" name="code_acces" placeholder="Code d'accès Parent" required style="text-align:center;">                              
-        <div class="toggle-container"><label><input type="checkbox" onclick="toggleSinglePass('code-parent')"> Voir le code</label></div>
-        <button type="submit" class="submit-btn">Consulter</button>
-        <p id="erreur-parent" style="color: #e74c3c; font-size: 12px; margin-top: 8px; text-align: center;"></p>                                              </form>                                                                  </div>                                                                                                                                                    <script>                                                                         function switchRole(role, el) {                                                  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));                                                                       el.classList.add('active');                                                  document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));                                                                    document.getElementById('form-' + role).classList.add('active');
-    }                                                                        
-    function togglePass(id1, id2) {                                                  let x = document.getElementById(id1), y = document.getElementById(id2);
-        let type = (x.type === "password") ? "text" : "password";
-        x.type = y.type = type;
-    }                                                                        
 
-    function toggleSinglePass(id) {
-        let x = document.getElementById(id);
-        x.type = (x.type === "password") ? "text" : "password";
-    }
+    <script>
+        function switchRole(role, el) {
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+            document.getElementById('form-' + role).classList.add('active');
+        }
 
-    function forcerMajuscules() {                                                    let inputField = document.getElementById('schoolNameInput');
-        if (inputField) {                                                                inputField.value = inputField.value.toUpperCase();
-        }                                                                        }
-                                                                                 function connexionDrh(event) {                                                   event.preventDefault();                                                      const iep = document.getElementById('iep-drh').value.trim().toUpperCase();                                                                                const code = document.getElementById('code-drh').value.trim();
-        const msgErreur = document.getElementById('erreur-drh');                     msgErreur.innerText = "";                                                                                                                                 // Vérification automatique du format : iep@monecole@iep
-        const iepLower = iep.toLowerCase();                                          const codeAttendu = `${iepLower}@monecole@${iepLower}`;              
-        if (code !== codeAttendu) {                                                      msgErreur.innerText = "Code d'accès incorrect pour cet IEP.";
-            return;                                                                  }                                                                                                                                                         fetch('/login-drh', {                                                            method: 'POST',                                                              headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ iep: iep, code_acces: code })                     })
-        .then(res => res.json())                                                     .then(data => {
-            if (data.status === 'succes' || data.success) {                                  window.location.href = data.redirect || 'drhmoy.html?iep=' + encodeURIComponent(iep);
-            } else {                                                                         window.location.href = 'drhmoy.html?iep=' + encodeURIComponent(iep);                                                                                  }                                                                        })
-        .catch(err => {                                                                  window.location.href = 'drhmoy.html?iep=' + encodeURIComponent(iep);                                                                                  });                                                                      }                                                                        
-    function inscrireDirecteur(event) {
-        event.preventDefault();                                                      forcerMajuscules();                                                  
-        const schoolName = document.getElementById('schoolNameInput').value.trim();                                                                               const telephone = document.getElementById('tel-directeur').value.trim();                                                                                  const password = document.getElementById('p1').value;                        const confirmPassword = document.getElementById('p2').value;                 const msgErreur = document.getElementById('erreur-directeur');
-                                                                                     msgErreur.innerText = "";
-                                                                                     if (password !== confirmPassword) {
-            msgErreur.style.color = "#e74c3c";                                           msgErreur.innerText = "Les mots de passe ne correspondent pas.";
-            return;                                                                  }                                                                                                                                                         fetch('/inscription', {                                                          method: 'POST',                                                              headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ schoolName, telephone, password, confirmPassword })
-        })                                                                           .then(res => {
-            if (res.redirected) {                                                            alert("✅ Compte créé avec succès ! Bienvenue sur votre espace.");                                                                                        window.location.href = res.url;                                              return;                                                                  }                                                                            return res.json().catch(() => ({}));                                     })
-        .then(data => {                                                                  if (data && (data.status === 'succes' || data.success)) {                        alert("✅ Compte créé avec succès !");                                       window.location.href = data.redirect || 'accueil.html';                  } else if (data && data.message) {                                               msgErreur.style.color = "#e74c3c";                                           msgErreur.innerText = data.message;
-            } else {                                                                         alert("✅ Compte créé avec succès ! Redirection en cours...");                                                                                            window.location.href = 'accueil.html';                                   }                                                                        })                                                                           .catch(err => {                                                                  alert("✅ Compte créé avec succès !");                                       window.location.href = 'accueil.html';                                   });
-    }                                                                        
-    function connexionEnseignant(event) {                                            event.preventDefault();
-        const tel = document.getElementById('tel-enseignant').value.trim();          const code = document.getElementById('code-enseignant').value.trim();        const msgErreur = document.getElementById('erreur-enseignant');              msgErreur.innerText = "";
-        fetch('/api/generer-code', {
-            method: 'POST',                                                              headers: { 'Content-Type': 'application/json' },                             body: JSON.stringify({ tel, code })                                      })                                                                           .then(res => res.json())
-        .then(data => {                                                                  if (data.status === 'succes' && data.type === 'maitre') {                        window.location.href = 'maitre.html';                                    } else {                                                                         msgErreur.innerText = data.message || "Numéro ou code d'accès incorrect.";                                                                            }
-        })
-        .catch(err => {
-            msgErreur.innerText = "Erreur de connexion au serveur.";
-        });
-    }                                                                        
-    function connexionParent(event) {
-        event.preventDefault();
-        const tel = document.getElementById('tel-parent').value.trim();
-        const code = document.getElementById('code-parent').value.trim();
-        const msgErreur = document.getElementById('erreur-parent');
-        msgErreur.innerText = "";
-        fetch('/login-parent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },                             body: JSON.stringify({ telephone: tel, code_acces: code })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'succes' || data.success) {                                  window.location.href = 'parent.html';
-            } else {
-                msgErreur.innerText = data.message || "Numéro ou code d'accès incorrect.";
+        function togglePass(id1, id2) {
+            let x = document.getElementById(id1), y = document.getElementById(id2);
+            let type = (x.type === "password") ? "text" : "password";
+            x.type = y.type = type;
+        }
+
+        function toggleSinglePass(id) {
+            let x = document.getElementById(id);
+            x.type = (x.type === "password") ? "text" : "password";
+        }
+
+        function forcerMajuscules() {
+            let inputField = document.getElementById('schoolNameInput');
+            if (inputField) {
+                inputField.value = inputField.value.toUpperCase();
             }
-        })
-        .catch(err => {                                                                  window.location.href = 'parent.html';
-        });                                                                      }                                                                        </script>                                                                    </body>                                                                      </html>
+        }
+
+        function connexionDrh(event) {
+            event.preventDefault();
+            const iep = document.getElementById('iep-drh').value.trim().toUpperCase();
+            const code = document.getElementById('code-drh').value.trim();
+            const msgErreur = document.getElementById('erreur-drh');
+            msgErreur.innerText = "";
+
+            const iepLower = iep.toLowerCase();
+            const codeAttendu = `${iepLower}@monecole@${iepLower}`;
+            if (code !== codeAttendu) {
+                msgErreur.innerText = "Code d'accès incorrect pour cet IEP.";
+                return;
+            }
+
+            fetch('/login-drh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ iep: iep, code_acces: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'succes' || data.success) {
+                    window.location.href = data.redirect || 'drhmoy.html?iep=' + encodeURIComponent(iep);
+                } else {
+                    window.location.href = 'drhmoy.html?iep=' + encodeURIComponent(iep);
+                }
+            })
+            .catch(err => {
+                window.location.href = 'drhmoy.html?iep=' + encodeURIComponent(iep);
+            });
+        }
+
+        function inscrireDirecteur(event) {
+            event.preventDefault();
+            forcerMajuscules();
+
+            const schoolName = document.getElementById('schoolNameInput').value.trim();
+            const telephone = document.getElementById('tel-directeur').value.trim();
+            const password = document.getElementById('p1').value;
+            const confirmPassword = document.getElementById('p2').value;
+            const msgErreur = document.getElementById('erreur-directeur');
+
+            msgErreur.innerText = "";
+
+            if (password !== confirmPassword) {
+                msgErreur.style.color = "#e74c3c";
+                msgErreur.innerText = "Les mots de passe ne correspondent pas.";
+                return;
+            }
+
+            fetch('/inscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ schoolName, telephone, password, confirmPassword })
+            })
+            .then(res => {
+                if (res.redirected) {
+                    alert("✅ Compte créé avec succès ! Bienvenue sur votre espace.");
+                    window.location.href = res.url;
+                    return;
+                }
+                return res.json().catch(() => ({}));
+            })
+            .then(data => {
+                if (data && (data.status === 'succes' || data.success)) {
+                    alert("✅ Compte créé avec succès !");
+                    window.location.href = data.redirect || 'accueil.html';
+                } else if (data && data.message) {
+                    msgErreur.style.color = "#e74c3c";
+                    msgErreur.innerText = data.message;
+                } else {
+                    alert("✅ Compte créé avec succès ! Redirection en cours...");
+                    window.location.href = 'accueil.html';
+                }
+            })
+            .catch(err => {
+                alert("✅ Compte créé avec succès !");
+                window.location.href = 'accueil.html';
+            });
+        }
+
+        function connexionEnseignant(event) {
+            event.preventDefault();
+            const tel = document.getElementById('tel-enseignant').value.trim();
+            const code = document.getElementById('code-enseignant').value.trim();
+            const msgErreur = document.getElementById('erreur-enseignant');
+            msgErreur.innerText = "";
+
+            fetch('/api/generer-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tel, code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'succes' && data.type === 'maitre') {
+                    window.location.href = 'maitre.html';
+                } else {
+                    msgErreur.innerText = data.message || "Numéro ou code d'accès incorrect.";
+                }
+            })
+            .catch(err => {
+                msgErreur.innerText = "Erreur de connexion au serveur.";
+            });
+        }
+
+        function connexionParent(event) {
+            event.preventDefault();
+            const tel = document.getElementById('tel-parent').value.trim();
+            const code = document.getElementById('code-parent').value.trim();
+            const msgErreur = document.getElementById('erreur-parent');
+            msgErreur.innerText = "";
+
+            fetch('/login-parent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telephone: tel, code_acces: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'succes' || data.success) {
+                    window.location.href = 'parent.html';
+                } else {
+                    msgErreur.innerText = data.message || "Numéro ou code d'accès incorrect.";
+                }
+            })
+            .catch(err => {
+                window.location.href = 'parent.html';
+            });
+        }
+
+        // Enregistrement automatique du Service Worker pour la PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => {
+                        console.log("Service Worker enregistré avec succès, scope : ", reg.scope);
+                    })
+                    .catch(err => {
+                        console.error("Échec de l'enregistrement du Service Worker : ", err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
